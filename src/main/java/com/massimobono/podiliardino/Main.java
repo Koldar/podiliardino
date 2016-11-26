@@ -4,9 +4,14 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Function;
+
+import com.massimobono.podiliardino.view.PlayerHandlingController;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
 import javafx.scene.layout.AnchorPane;
@@ -34,7 +39,8 @@ public class Main extends Application {
 		
 		try {
 			this.loadAndShowRootLayout();
-			this.setMainTo("PlayerHandling");
+			this.setMainTo("PlayerHandling", (PlayerHandlingController c) -> {
+			});
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
@@ -50,7 +56,15 @@ public class Main extends Application {
 		this.primaryStage.show();
 	}
 	
-	private void setMainTo(String fxmlFile) throws IOException {
+	/**
+	 * Set the scene inside the {@link #rootScene}. Use it to swap scene in your application  
+	 * 
+	 * @param fxmlFile the FXML file inside "view" package, with or without ".fxml" extension
+	 * @param initializeController a consumer that initialize the controller associated to the "fxml" view. If it's null, no  controller will be <b>loaded</b> at all;
+	 * @throws FileNotFoundException if we couldn't fetch the file you requested
+	 * @throws IOException if something goes very wrong
+	 */
+	private <CONTROLLER> void setMainTo(String fxmlFile, Consumer<CONTROLLER> initializeController) throws IOException {
 		
 		if (!fxmlFile.endsWith(".fxml")) {
 			fxmlFile +=".fxml";
@@ -65,7 +79,66 @@ public class Main extends Application {
 			this.rootScene.setCenter(loader.load());
 		}
 		
-		
+		if (initializeController != null) {
+			CONTROLLER c = loader.getController();
+			initializeController.accept(c);
+		}
+	}
+	
+	/**
+	 * like {@link #setMainTo(String, Consumer)}, but the controller isn't loaded at all
+	 * @param fxmlFile
+	 * @throws IOException
+	 */
+	private <CONTROLLER> void setMainTo(String fxmlFile) throws IOException {
+		this.setMainTo(fxmlFile, null);
+	}
+	
+	/**
+	 * Show a dialog and waits until the user closes the dialog
+	 * 
+	 * The dialog is a modal one.
+	 * 
+	 * <b>This function blocks the program</b>
+	 * 
+	 * @param fxmlFile the file to fetch the content of the modal from. You may add ".fxml" or not to this parameter
+	 * @param dialogTitle the title of the dialog itself
+	 * @param initializeController the controller that will handle the dialog
+	 * @param returnValueFunction a function called after the user closed the dialog that computes the return value of this function itself
+	 * @return the value computed by returnValueFunction
+	 * @throws FileNotFoundException if we couldn't fetch the fxml file inside "view" package.
+	 * @throws IOException if something goes very wrong 
+	 * 
+	 */
+	public <CONTROLLER, OUTPUT> OUTPUT showPersonEditDialog(String fxmlFile, String dialogTitle, Consumer<CONTROLLER> initializeController, Function<CONTROLLER, OUTPUT> returnValueFunction) throws IOException {
+		if (!fxmlFile.endsWith(".fxml")) {
+			fxmlFile +=".fxml";
+		}
+		FXMLLoader loader = new FXMLLoader();
+		String baseUrl = String.format("view/%s", fxmlFile);
+		Optional<URL> resourceURL = Optional.of(this.getClass().getResource(baseUrl));
+		if (!resourceURL.isPresent()) {
+			throw new FileNotFoundException(String.format("Couldn't find %s", baseUrl));
+		} else {
+			loader.setLocation(resourceURL.get());
+			Pane page = loader.load();
+			
+			// Create the dialog Stage.
+	        Stage dialogStage = new Stage();
+	        dialogStage.setTitle(dialogTitle);
+	        dialogStage.initModality(Modality.WINDOW_MODAL);
+	        dialogStage.initOwner(primaryStage);
+	        Scene scene = new Scene(page);
+	        dialogStage.setScene(scene);
+
+	        // Initialize the controller of the dialog
+	        CONTROLLER c = loader.getController();
+	        initializeController.accept(c);
+	        // Show the dialog and wait until the user closes it
+	        dialogStage.showAndWait();
+
+	        return returnValueFunction.apply(c);
+		}
 	}
 	
 }
