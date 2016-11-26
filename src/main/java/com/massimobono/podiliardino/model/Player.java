@@ -2,6 +2,8 @@ package com.massimobono.podiliardino.model;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.ObjectProperty;
@@ -11,18 +13,14 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
 public class Player {
-
-	private static long nextID;
+	
+	public static final String BIRTHDAY_PATTERN = "dd-MM-yyyy";
 	
 	private final LongProperty id;
 	private final StringProperty name;
 	private final StringProperty surname;
 	private final ObjectProperty<LocalDate> birthday;
 	private final StringProperty phone;
-	
-	static {
-		nextID = 0;
-	}
 	
 	public Player(long id, String name, String surname, LocalDate birthday, String phone) {
 		super();
@@ -34,7 +32,7 @@ public class Player {
 	}
 	
 	public Player() {
-		this(nextID++, "", "", LocalDate.now(), "");
+		this(0, "", "", LocalDate.now(), "");
 	}
 
 	/**
@@ -71,6 +69,24 @@ public class Player {
 	public LocalDate getBirthday() {
 		return birthday.get();
 	}
+	
+	/**
+	 * The {@value #BIRTHDAY_PATTERN} represents the so-called "standardized date".
+	 * This values is stored in the database as well
+	 * 
+	 * @return the birthday date, according to the {@link #BIRTHDAY_PATTERN} pattern
+	 */
+	public String getBirthdayAsStandardString() {
+		return this.getBirthday().format(DateTimeFormatter.ofPattern(BIRTHDAY_PATTERN));
+	}
+	
+	public void setBirthdayFromStandardString(String birthday) throws DateTimeParseException {
+		this.setBirthday(DateTimeFormatter.ofPattern(Player.BIRTHDAY_PATTERN).parse(birthday, LocalDate::from));
+	}
+	
+	public static LocalDate getBirthdayDateFromStandardString(String standardDate) {
+		return DateTimeFormatter.ofPattern(Player.BIRTHDAY_PATTERN).parse(standardDate, LocalDate::from);
+	}
 
 	/**
 	 * @param birthday the birthday to set
@@ -93,6 +109,9 @@ public class Player {
 		this.phone.set(phone);
 	}
 	
+	public long getId() {
+		return this.id.get();
+	}
 	
 	
 	

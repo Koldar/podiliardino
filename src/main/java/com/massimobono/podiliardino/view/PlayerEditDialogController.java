@@ -24,7 +24,6 @@ public class PlayerEditDialogController {
 	private static final String NAME_REGEX = "^[a-zA-Z]+$";
 	private static final String SURNAME_REGEX = "^[a-zA-Z]+$";
 	private static final String PHONE_REGEX = "^[0-9]{10}$";
-	private static final String BIRTHDAY_PATTERN = "dd-MM-yyyy";
 	
 	@FXML
 	private TextField nameTextField;
@@ -70,7 +69,7 @@ public class PlayerEditDialogController {
 		if (this.checkValues()) {
 			this.playerInvolved.setName(this.nameTextField.getText());
 			this.playerInvolved.setSurname(this.surnameTextField.getText());
-			this.playerInvolved.setBirthday(DateTimeFormatter.ofPattern(BIRTHDAY_PATTERN).parse(this.birthdayTextField.getText(), LocalDate::from));
+			this.playerInvolved.setBirthdayFromStandardString(this.birthdayTextField.getText());
 			this.playerInvolved.setPhone(this.phoneTextField.getText());
 			this.dialog.close();
 		}
@@ -93,9 +92,9 @@ public class PlayerEditDialogController {
 		}
 		
 		try {
-			DateTimeFormatter.ofPattern(BIRTHDAY_PATTERN).parse(this.birthdayTextField.getText());
+			DateTimeFormatter.ofPattern(Player.BIRTHDAY_PATTERN).parse(this.birthdayTextField.getText());
 		} catch (DateTimeParseException e) {
-			strs.add("Cannot parse date. It has to be of format "+BIRTHDAY_PATTERN);
+			strs.add("Cannot parse date. It has to be of format "+Player.BIRTHDAY_PATTERN);
 		}
 		
 		if (!this.phoneTextField.getText().matches(PHONE_REGEX)) {
@@ -118,7 +117,7 @@ public class PlayerEditDialogController {
 		
 		this.nameTextField.setText(player.getName());
 		this.surnameTextField.setText(player.getSurname());
-		this.birthdayTextField.setText(player.getBirthday().format(DateTimeFormatter.ofPattern(BIRTHDAY_PATTERN)));
+		this.birthdayTextField.setText(player.getBirthdayAsStandardString());
 		this.phoneTextField.setText(player.getPhone());
 	}
 
