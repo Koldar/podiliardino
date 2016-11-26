@@ -13,6 +13,8 @@ public class PlayerHandlingController {
 
 	@FXML
 	private Button newPlayer;
+	@FXML
+	private Button editPlayer;
 
 	private Main mainApp;
 
@@ -30,6 +32,24 @@ public class PlayerHandlingController {
 			this.mainApp.showCustomDialog(
 					"PlayerEditDialog", 
 					"New Player", 
+					(PlayerEditDialogController c, Stage s) -> {
+						c.setDialog(s);
+						c.setPlayer(new Player());
+					},
+					(c) -> {return c.isClickedOK();}
+					);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	@FXML
+	public void handleEditPlayer() {
+		try {
+			this.mainApp.showCustomDialog(
+					"PlayerEditDialog", 
+					"Edit Player", 
 					(PlayerEditDialogController c, Stage s) -> {
 						c.setDialog(s);
 						c.setPlayer(new Player());
