@@ -1,5 +1,6 @@
 package com.massimobono.podiliardino.model;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import javafx.beans.property.LongProperty;
@@ -11,19 +12,29 @@ import javafx.beans.property.StringProperty;
 
 public class Player {
 
+	private static long nextID;
+	
 	private final LongProperty id;
 	private final StringProperty name;
 	private final StringProperty surname;
-	private final ObjectProperty<LocalDateTime> birthday;
+	private final ObjectProperty<LocalDate> birthday;
 	private final StringProperty phone;
 	
-	public Player(long id, String name, String surname, LocalDateTime birthday, String phone) {
+	static {
+		nextID = 0;
+	}
+	
+	public Player(long id, String name, String surname, LocalDate birthday, String phone) {
 		super();
 		this.id = new SimpleLongProperty(id);
 		this.name = new SimpleStringProperty(name);
 		this.surname = new SimpleStringProperty(surname);
-		this.birthday = new SimpleObjectProperty<LocalDateTime>(birthday);
+		this.birthday = new SimpleObjectProperty<LocalDate>(birthday);
 		this.phone = new SimpleStringProperty(phone);
+	}
+	
+	public Player() {
+		this(nextID++, "", "", LocalDate.now(), "");
 	}
 
 	/**
@@ -57,14 +68,14 @@ public class Player {
 	/**
 	 * @return the birthday
 	 */
-	public LocalDateTime getBirthday() {
+	public LocalDate getBirthday() {
 		return birthday.get();
 	}
 
 	/**
 	 * @param birthday the birthday to set
 	 */
-	public void setBirthday(LocalDateTime birthday) {
+	public void setBirthday(LocalDate birthday) {
 		this.birthday.set(birthday);
 	}
 

@@ -1,27 +1,53 @@
 package com.massimobono.podiliardino.view;
 
+import java.io.IOException;
+
 import com.massimobono.podiliardino.Main;
+import com.massimobono.podiliardino.model.Player;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.stage.Stage;
 
 public class PlayerHandlingController {
 
 	@FXML
 	private Button newPlayer;
-	
+
 	private Main mainApp;
-	
+
 	public PlayerHandlingController() {
 	}
-	
+
 	@FXML
 	public void initialize() {
-		
+
 	}
-	
+
 	@FXML
 	public void handleNewPlayer() {
-		System.out.println("hello world!");
+		try {
+			this.mainApp.showCustomDialog(
+					"PlayerEditDialog", 
+					"New Player", 
+					(PlayerEditDialogController c, Stage s) -> {
+						c.setDialog(s);
+						c.setPlayer(new Player());
+					},
+					(c) -> {return c.isClickedOK();}
+					);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
+
+	/**
+	 * @param mainApp the mainApp to set
+	 */
+	public void setMainApp(Main mainApp) {
+		this.mainApp = mainApp;
+	}
+
+
 }

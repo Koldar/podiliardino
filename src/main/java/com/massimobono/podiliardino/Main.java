@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -40,6 +41,7 @@ public class Main extends Application {
 		try {
 			this.loadAndShowRootLayout();
 			this.setMainTo("PlayerHandling", (PlayerHandlingController c) -> {
+				c.setMainApp(this);
 			});
 		} catch (IOException e1) {
 			e1.printStackTrace();
@@ -97,20 +99,20 @@ public class Main extends Application {
 	/**
 	 * Show a dialog and waits until the user closes the dialog
 	 * 
-	 * The dialog is a modal one.
+	 * The dialog is a <b>modal</b> one.
 	 * 
 	 * <b>This function blocks the program</b>
 	 * 
 	 * @param fxmlFile the file to fetch the content of the modal from. You may add ".fxml" or not to this parameter
 	 * @param dialogTitle the title of the dialog itself
-	 * @param initializeController the controller that will handle the dialog
+	 * @param initializeController a method telling you what you need to do to initialize the controller. In input you have the controller of the FXML file and the dialog created.
 	 * @param returnValueFunction a function called after the user closed the dialog that computes the return value of this function itself
 	 * @return the value computed by returnValueFunction
 	 * @throws FileNotFoundException if we couldn't fetch the fxml file inside "view" package.
 	 * @throws IOException if something goes very wrong 
 	 * 
 	 */
-	public <CONTROLLER, OUTPUT> OUTPUT showPersonEditDialog(String fxmlFile, String dialogTitle, Consumer<CONTROLLER> initializeController, Function<CONTROLLER, OUTPUT> returnValueFunction) throws IOException {
+	public <CONTROLLER, OUTPUT> OUTPUT showCustomDialog(String fxmlFile, String dialogTitle, BiConsumer<CONTROLLER, Stage> initializeController, Function<CONTROLLER, OUTPUT> returnValueFunction) throws IOException {
 		if (!fxmlFile.endsWith(".fxml")) {
 			fxmlFile +=".fxml";
 		}
@@ -133,7 +135,7 @@ public class Main extends Application {
 
 	        // Initialize the controller of the dialog
 	        CONTROLLER c = loader.getController();
-	        initializeController.accept(c);
+	        initializeController.accept(c, dialogStage);
 	        // Show the dialog and wait until the user closes it
 	        dialogStage.showAndWait();
 
