@@ -1,14 +1,35 @@
 package com.massimobono.podiliardino.dao;
 
+import java.io.Closeable;
 import java.util.Collection;
 import java.util.function.Function;
 
 import com.massimobono.podiliardino.model.Player;
 
-public interface DAO {
+/**
+ * 
+ * {@link DAO} is {@link Closeable}: that means you can safely use the try with resource construct, if you want:
+ * 
+ * <pre>{@code
+ * try (DAO d = new SQLiteDAOImpl(new File("data.db3",true))) {
+ * 	d.addPlayer(p1);
+ *  d.addPlayer(p2);
+ *  d.addPlayer(p3);
+ * }</pre>
+ * 
+ * @author massi
+ *
+ */
+public interface DAO extends Closeable{
 	
 	public void clearAll() throws DAOException;
 	
+	/**
+	 * Execute every instruction needed to setup the dao.
+	 * 
+	 * Always call this instruction before using the dao
+	 * @throws DAOException
+	 */
 	public void setup() throws DAOException;
 	
 	public void tearDown() throws DAOException;
@@ -20,7 +41,7 @@ public interface DAO {
 	 * instance to remain synchronized with the DAO
 	 * 
 	 * @param p the player you want to add
-	 * @return the instance added inside the db
+	 * @return the same {@link Player} instane you've provided but with the ID used to synchornize it in the db
 	 * @throws DAOException if somethign bad goes wrong
 	 */
 	public Player addPlayer(Player p) throws DAOException;
@@ -28,7 +49,7 @@ public interface DAO {
 	/**
 	 * Updates the DAO with the changes you've made on a {@link Player} instance you've changed 
 	 * @param player the instance to synchronize
-	 * @return a new {@link Player} synchronized with theDAO
+	 * @return the same {@link Player} instane you've provided but with the ID used to synchornize it in the db
 	 * @throws DAOException if something bad happens
 	 */
 	public Player updatePlayer(Player player) throws DAOException;

@@ -1,6 +1,7 @@
 package com.massimobono.podiliardino.dao;
 
 import java.io.File;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -9,7 +10,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -29,12 +29,22 @@ public class SQLiteDAOImpl implements DAO {
 	private PreparedStatement lastInsertedRow;
 	private boolean preparedStatementCreated;
 
-	public SQLiteDAOImpl(File databaseFileName) {
+	/**
+	 * 
+	 * @param databaseFileName the file sqlite will use to store data.
+	 * @param performSetup true if you want to perform a setup immediately
+	 * @throws DAOException if something bad happens
+	 */
+	public SQLiteDAOImpl(File databaseFileName, boolean performSetup) throws DAOException {
 		this.databaseFileName = databaseFileName;
 		this.insertPlayer = null;
 		this.getAllPlayers = null;
 		this.deletePlayer = null;
 		this.preparedStatementCreated = false;
+		
+		if (performSetup) {
+			this.setup();
+		}
 	}
 
 	@Override
@@ -136,7 +146,7 @@ public class SQLiteDAOImpl implements DAO {
 	public void clearAll() throws DAOException {
 		this.connectAndThenDo(false, (c, s) -> {
 			try {
-				s.executeUpdate("DROP TABLE IF EXISTS player;");
+				s.executeUpdate("DELETE * FROM player;");
 				return null;
 			} catch (SQLException e) {
 				return e;
@@ -164,6 +174,8 @@ public class SQLiteDAOImpl implements DAO {
 			this.insertPlayer.close();
 			this.getAllPlayers.close();
 			this.deletePlayer.close();
+			this.lastInsertedRow.close();
+			this.updatePlayer.close();
 			this.sqliteConnection.close();
 		} catch (SQLException e) {
 			throw new DAOException(e);
@@ -222,6 +234,15 @@ public class SQLiteDAOImpl implements DAO {
 			this.lastInsertedRow = this.sqliteConnection.prepareStatement("SELECT seq as last_inserted_id FROM sqlite_sequence WHERE name=?;");
 			
 			this.preparedStatementCreated = true;
+		}
+	}
+
+	@Override
+	public void close() throws IOException {
+		try {
+			this.tearDown();
+		} catch (DAOException e) {
+			throw new IOException(e);
 		}
 	}
 

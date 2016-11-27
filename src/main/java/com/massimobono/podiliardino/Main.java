@@ -36,11 +36,10 @@ public class Main extends Application {
 	}
 	
 	public Main() throws DAOException {
-		this.dao = new SQLiteDAOImpl(new File("data.db"));
+		this.dao = new SQLiteDAOImpl(new File("data.db"), true);
 		this.dao.clearAll();
-		this.dao.setup();
 	}
-	
+
 	@Override
 	public void start(Stage primaryStage) {
 		this.primaryStage = primaryStage;
@@ -54,6 +53,12 @@ public class Main extends Application {
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
+	}
+	
+	@Override
+	public void stop() throws Exception {
+		this.dao.tearDown();
+		super.stop();
 	}
 	
 	
