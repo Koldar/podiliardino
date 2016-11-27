@@ -71,6 +71,7 @@ public class PlayerEditDialogController {
 			this.playerInvolved.setSurname(this.surnameTextField.getText());
 			this.playerInvolved.setBirthdayFromStandardString(this.birthdayTextField.getText());
 			this.playerInvolved.setPhone(this.phoneTextField.getText());
+			this.clickedOK = true;
 			this.dialog.close();
 		}
 	}
@@ -126,6 +127,14 @@ public class PlayerEditDialogController {
 	 */
 	public boolean isClickedOK() {
 		return clickedOK;
+	}
+	
+	/**
+	 * 
+	 * @return the player we have handled
+	 */
+	public Player getPlayer() {
+		return this.playerInvolved;
 	}
 
 	/**

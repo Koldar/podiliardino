@@ -13,7 +13,25 @@ public interface DAO {
 	
 	public void tearDown() throws DAOException;
 
-	public void addPlayer(Player p) throws DAOException;
+	/**
+	 * Adds a new {@link Player} inside the DAO
+	 * 
+	 * The DAO will return you (if successful) a new {@link Player} instance. You can use that
+	 * instance to remain synchronized with the DAO
+	 * 
+	 * @param p the player you want to add
+	 * @return the instance added inside the db
+	 * @throws DAOException if somethign bad goes wrong
+	 */
+	public Player addPlayer(Player p) throws DAOException;
+	
+	/**
+	 * Updates the DAO with the changes you've made on a {@link Player} instance you've changed 
+	 * @param player the instance to synchronize
+	 * @return a new {@link Player} synchronized with theDAO
+	 * @throws DAOException if something bad happens
+	 */
+	public Player updatePlayer(Player player) throws DAOException;
 	
 	public void removePlayer(Player p) throws DAOException;
 	

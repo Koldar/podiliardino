@@ -113,6 +113,13 @@ public class Player {
 		return this.id.get();
 	}
 	
-	
+	/**
+	 * Do not use this unless you know what you're doing
+	 * 
+	 * @param id
+	 */
+	public void setId(long id) {
+		this.id.set(id);
+	}
 	
 }

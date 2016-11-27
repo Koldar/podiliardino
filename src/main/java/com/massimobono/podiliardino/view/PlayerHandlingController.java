@@ -1,8 +1,10 @@
 package com.massimobono.podiliardino.view;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import com.massimobono.podiliardino.Main;
+import com.massimobono.podiliardino.dao.DAOException;
 import com.massimobono.podiliardino.model.Player;
 
 import javafx.fxml.FXML;
@@ -29,16 +31,20 @@ public class PlayerHandlingController {
 	@FXML
 	public void handleNewPlayer() {
 		try {
-			this.mainApp.showCustomDialog(
+			Optional<Player> p = this.mainApp.showCustomDialog(
 					"PlayerEditDialog", 
 					"New Player", 
 					(PlayerEditDialogController c, Stage s) -> {
 						c.setDialog(s);
 						c.setPlayer(new Player());
 					},
-					(c) -> {return c.isClickedOK();}
+					(c) -> {return Optional.ofNullable(c.isClickedOK() ? c.getPlayer() : null);}
 					);
-		} catch (IOException e) {
+			if (p.isPresent()) {
+				//we have added a new player. We can add it to the DAO
+				this.mainApp.getDAO().addPlayer(p.get());
+			}
+		} catch (IOException | DAOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

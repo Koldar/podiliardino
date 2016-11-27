@@ -9,7 +9,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.function.BiConsumer;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -23,17 +23,22 @@ public class SQLiteDAOImpl implements DAO {
 	private Connection sqliteConnection;
 
 	private PreparedStatement insertPlayer;
-
 	private PreparedStatement getAllPlayers;
-
+	private PreparedStatement updatePlayer;
 	private PreparedStatement deletePlayer;
+	private PreparedStatement lastInsertedRow;
+	private boolean preparedStatementCreated;
 
 	public SQLiteDAOImpl(File databaseFileName) {
 		this.databaseFileName = databaseFileName;
+		this.insertPlayer = null;
+		this.getAllPlayers = null;
+		this.deletePlayer = null;
+		this.preparedStatementCreated = false;
 	}
 
 	@Override
-	public void addPlayer(Player p) throws DAOException {
+	public Player addPlayer(Player p) throws DAOException {
 		this.connectAndThenDo((c, s) -> {
 			try {
 				this.insertPlayer.setString(1, p.getName());
@@ -45,11 +50,42 @@ public class SQLiteDAOImpl implements DAO {
 				c.setAutoCommit(false);
 				this.insertPlayer.executeBatch();
 				c.setAutoCommit(true);
+				
+				this.lastInsertedRow.setString(1, "player");
+				c.setAutoCommit(false);
+				ResultSet rs = this.lastInsertedRow.executeQuery();
+				while (rs.next()) {
+					p.setId(rs.getLong("last_inserted_id"));
+				}
+				c.setAutoCommit(true);
 				return null;
 			} catch (SQLException e) {
 				return e;
 			}
 		}); 
+		return null;
+	}
+	
+	@Override
+	public Player updatePlayer(Player player) throws DAOException {
+		this.connectAndThenDo((c,s) -> {
+			try {
+				this.updatePlayer.setString(0, player.getName());
+				this.updatePlayer.setString(1, player.getSurname());
+				this.updatePlayer.setString(2, player.getBirthdayAsStandardString());
+				this.updatePlayer.setString(3, player.getPhone());
+				this.updatePlayer.setLong(4, player.getId());
+				
+				this.updatePlayer.addBatch();
+				c.setAutoCommit(false);
+				this.updatePlayer.executeBatch();
+				c.setAutoCommit(true);
+				return null;
+			} catch (SQLException e) {
+				return e;
+			}
+		});
+		return null;
 	}
 
 	@Override
@@ -98,7 +134,7 @@ public class SQLiteDAOImpl implements DAO {
 
 	@Override
 	public void clearAll() throws DAOException {
-		this.connectAndThenDo((c, s) -> {
+		this.connectAndThenDo(false, (c, s) -> {
 			try {
 				s.executeUpdate("DROP TABLE IF EXISTS player;");
 				return null;
@@ -110,8 +146,9 @@ public class SQLiteDAOImpl implements DAO {
 
 	@Override
 	public void setup() throws DAOException {
-		this.connectAndThenDo((connection, statement) -> {
+		this.connectAndThenDo(false, (connection, statement) -> {
 			try {
+				statement.executeUpdate("PRAGMA foreign_keys = \"1\";");
 				statement.executeUpdate("CREATE TABLE IF NOT EXISTS player (id integer primary key autoincrement, firstname varchar(100), surname varchar(100), birthday varchar(20), phone varchar(20));");
 				statement.executeUpdate("CREATE INDEX name ON player (firstname, surname);");
 				return null;
@@ -124,15 +161,28 @@ public class SQLiteDAOImpl implements DAO {
 	@Override
 	public void tearDown() throws DAOException {
 		try {
+			this.insertPlayer.close();
+			this.getAllPlayers.close();
+			this.deletePlayer.close();
 			this.sqliteConnection.close();
 		} catch (SQLException e) {
 			throw new DAOException(e);
 		}
 	}
 
-	private void connectAndThenDo(BiFunction<Connection, Statement, Exception> queries) throws DAOException {
+	/**
+	 * Allows you to execute queries on the system. This is the main function of the class
+	 * 
+	 * Remember that in "queries", you need to return the exception you have encountered (null if you stumbled in no exception)
+	 * 
+	 * @param tryPreparedStatement set this to false if you need to setup the database (you still have tables to create): otherwise the SQl engine will complain about
+	 * 	no tables involved in the prepared statements. Otheriwse set this to true
+	 * @param queries a lambda where you can execute all the statement you want. Remeber to return the exception you find, or "null" if you encounter no exception
+	 * @throws DAOException if something bad happen
+	 */
+	private void connectAndThenDo(boolean tryPreparedStatement, BiFunction<Connection, Statement, Exception> queries) throws DAOException {
 		try {
-			this.createPrepareStatement();
+			this.createPrepareStatement(tryPreparedStatement);
 			try (Statement statement = this.sqliteConnection.createStatement();) {
 				statement.setQueryTimeout(QUERY_TIMEOUT);
 				Exception e = queries.apply(this.sqliteConnection, statement);
@@ -144,13 +194,34 @@ public class SQLiteDAOImpl implements DAO {
 			throw new DAOException(e);
 		}
 	}
+	
+	/**
+	 * Like {@link #connectAndThenDo(boolean, BiFunction)}, but we will try to setup prepared statement by default
+	 * 
+	 * @param queries
+	 * @throws DAOException
+	 */
+	private void connectAndThenDo(BiFunction<Connection, Statement, Exception> queries) throws DAOException {
+		this.connectAndThenDo(true, queries);
+	}
 
-	private void createPrepareStatement() throws SQLException {
+	/**
+	 * 
+	 * @param setupPreparedStatement if se tto true, we will initialize prerpared stsatement (if they have already initialized, we do nothing)
+	 * @throws SQLException if something bad goes wrong
+	 */
+	private void createPrepareStatement(boolean setupPreparedStatement) throws SQLException {
 		if (this.sqliteConnection == null) {
 			this.sqliteConnection = DriverManager.getConnection(String.format("jdbc:sqlite:%s", databaseFileName.getAbsolutePath()));
-			this.insertPlayer = this.sqliteConnection.prepareStatement("INSERT INTO player VALUES(?,?,?,?)");
+		}
+		if (setupPreparedStatement && !this.preparedStatementCreated) {
+			this.insertPlayer = this.sqliteConnection.prepareStatement("INSERT INTO player(firstname, surname, birthday, phone) VALUES(?,?,?,?)");
 			this.getAllPlayers = this.sqliteConnection.prepareStatement("SELECT id, firstname, surname, birthday, phone FROM player");
+			this.updatePlayer = this.sqliteConnection.prepareStatement("UPDATE OR ROLLBACK player SET firstname=?, surname=?, birthday=?,phone=? WHERE id=?");
 			this.deletePlayer = this.sqliteConnection.prepareStatement("DELETE FROM player WHERE id=?");
+			this.lastInsertedRow = this.sqliteConnection.prepareStatement("SELECT seq as last_inserted_id FROM sqlite_sequence WHERE name=?;");
+			
+			this.preparedStatementCreated = true;
 		}
 	}
 

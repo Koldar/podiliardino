@@ -1,5 +1,6 @@
 package com.massimobono.podiliardino;
 	
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
@@ -8,6 +9,9 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import com.massimobono.podiliardino.dao.DAO;
+import com.massimobono.podiliardino.dao.DAOException;
+import com.massimobono.podiliardino.dao.SQLiteDAOImpl;
 import com.massimobono.podiliardino.view.PlayerHandlingController;
 
 import javafx.application.Application;
@@ -25,12 +29,16 @@ public class Main extends Application {
 	private Stage primaryStage;
 	private BorderPane rootScene;
 	
+	private DAO dao;
+	
 	public static void main(String[] args) {
 		launch(args);
 	}
 	
-	public Main() {
-		
+	public Main() throws DAOException {
+		this.dao = new SQLiteDAOImpl(new File("data.db"));
+		this.dao.clearAll();
+		this.dao.setup();
 	}
 	
 	@Override
@@ -141,6 +149,10 @@ public class Main extends Application {
 
 	        return returnValueFunction.apply(c);
 		}
+	}
+	
+	public DAO getDAO() {
+		return this.dao;
 	}
 	
 }
