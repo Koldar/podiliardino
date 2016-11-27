@@ -37,7 +37,6 @@ public class Main extends Application {
 	
 	public Main() throws DAOException {
 		this.dao = new SQLiteDAOImpl(new File("data.db"), true);
-		this.dao.clearAll();
 	}
 
 	@Override
@@ -48,7 +47,12 @@ public class Main extends Application {
 		try {
 			this.loadAndShowRootLayout();
 			this.setMainTo("PlayerHandling", (PlayerHandlingController c) -> {
-				c.setMainApp(this);
+				try {
+					c.setup(this);
+				} catch (DAOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			});
 		} catch (IOException e1) {
 			e1.printStackTrace();

@@ -60,8 +60,17 @@ public interface DAO extends Closeable{
 	
 	public default Collection<Player> getPlayerby(String name, String surname) throws DAOException{
 		return this.getAllPlayersThat(p -> {
-			return ((name == null)||(p.getName().equalsIgnoreCase(name))) && ((surname==null)&&(p.getSurname().equalsIgnoreCase(surname)));
+			return ((name == null)||(p.getName().get().equalsIgnoreCase(name))) && ((surname==null)&&(p.getSurname().get().equalsIgnoreCase(surname)));
 		});
+	}
+	
+	/**
+	 * 
+	 * @return all the players inside the database
+	 * @throws DAOException if something bad happens
+	 */
+	public default Collection<Player> getAllPlayers() throws DAOException {
+		return this.getAllPlayersThat(p -> true);
 	}
 	
 	public default Collection<Player> getPlayerByName(String name) throws DAOException {

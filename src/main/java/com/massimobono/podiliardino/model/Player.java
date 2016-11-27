@@ -38,36 +38,22 @@ public class Player {
 	/**
 	 * @return the name
 	 */
-	public String getName() {
-		return name.get();
-	}
-
-	/**
-	 * @param name the name to set
-	 */
-	public void setName(String name) {
-		this.name.set(name);
+	public StringProperty getName() {
+		return name;
 	}
 
 	/**
 	 * @return the surname
 	 */
-	public String getSurname() {
-		return surname.get();
-	}
-
-	/**
-	 * @param surname the surname to set
-	 */
-	public void setSurname(String surname) {
-		this.surname.set(surname);
+	public StringProperty getSurname() {
+		return surname;
 	}
 
 	/**
 	 * @return the birthday
 	 */
-	public LocalDate getBirthday() {
-		return birthday.get();
+	public ObjectProperty<LocalDate> getBirthday() {
+		return birthday;
 	}
 	
 	/**
@@ -77,11 +63,11 @@ public class Player {
 	 * @return the birthday date, according to the {@link #BIRTHDAY_PATTERN} pattern
 	 */
 	public String getBirthdayAsStandardString() {
-		return this.getBirthday().format(DateTimeFormatter.ofPattern(BIRTHDAY_PATTERN));
+		return this.getBirthday().get().format(DateTimeFormatter.ofPattern(BIRTHDAY_PATTERN));
 	}
 	
 	public void setBirthdayFromStandardString(String birthday) throws DateTimeParseException {
-		this.setBirthday(DateTimeFormatter.ofPattern(Player.BIRTHDAY_PATTERN).parse(birthday, LocalDate::from));
+		this.getBirthday().set((DateTimeFormatter.ofPattern(Player.BIRTHDAY_PATTERN).parse(birthday, LocalDate::from)));
 	}
 	
 	public static LocalDate getBirthdayDateFromStandardString(String standardDate) {
@@ -89,24 +75,10 @@ public class Player {
 	}
 
 	/**
-	 * @param birthday the birthday to set
-	 */
-	public void setBirthday(LocalDate birthday) {
-		this.birthday.set(birthday);
-	}
-
-	/**
 	 * @return the phone
 	 */
-	public String getPhone() {
-		return phone.get();
-	}
-
-	/**
-	 * @param phone the phone to set
-	 */
-	public void setPhone(String phone) {
-		this.phone.set(phone);
+	public StringProperty getPhone() {
+		return phone;
 	}
 	
 	public long getId() {

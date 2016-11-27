@@ -7,8 +7,12 @@ import com.massimobono.podiliardino.Main;
 import com.massimobono.podiliardino.dao.DAOException;
 import com.massimobono.podiliardino.model.Player;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.stage.Stage;
 
 public class PlayerHandlingController {
@@ -17,15 +21,37 @@ public class PlayerHandlingController {
 	private Button newPlayer;
 	@FXML
 	private Button editPlayer;
+	@FXML
+	private TableView<Player> playersTable;
+	@FXML
+	private TableColumn<Player, String> nameColumn;
+	@FXML
+	private TableColumn<Player, String> surnameColumn;
 
+	/**
+	 * Main application. Used to get all the data related to the software
+	 */
 	private Main mainApp;
+	/**
+	 * the list of players to show inside the table
+	 */
+	private ObservableList<Player> playerList;
 
 	public PlayerHandlingController() {
+		this.playerList = FXCollections.observableArrayList();
 	}
 
 	@FXML
-	public void initialize() {
-
+	private void initialize() {
+		// Initialize the person table with the two columns.
+        this.nameColumn.setCellValueFactory(cellData -> cellData.getValue().getName());
+        this.surnameColumn.setCellValueFactory(cellData -> cellData.getValue().getSurname());
+	}
+	
+	public void setup(Main mainApp) throws DAOException {
+		this.setMainApp(mainApp);
+		this.playerList.addAll(this.mainApp.getDAO().getAllPlayers());
+		this.playersTable.setItems(this.playerList);
 	}
 
 	@FXML
@@ -42,8 +68,10 @@ public class PlayerHandlingController {
 					);
 			if (p.isPresent()) {
 				//we have added a new player. We can add it to the DAO
-				this.mainApp.getDAO().addPlayer(p.get());
+				Player p1 = this.mainApp.getDAO().addPlayer(p.get());
+				this.playerList.add(p1);
 			}
+			
 		} catch (IOException | DAOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

@@ -67,10 +67,10 @@ public class PlayerEditDialogController {
 	@FXML
 	private void handleOK() {
 		if (this.checkValues()) {
-			this.playerInvolved.setName(this.nameTextField.getText());
-			this.playerInvolved.setSurname(this.surnameTextField.getText());
+			this.playerInvolved.getName().set(this.nameTextField.getText());
+			this.playerInvolved.getSurname().set(this.surnameTextField.getText());
 			this.playerInvolved.setBirthdayFromStandardString(this.birthdayTextField.getText());
-			this.playerInvolved.setPhone(this.phoneTextField.getText());
+			this.playerInvolved.getPhone().set(this.phoneTextField.getText());
 			this.clickedOK = true;
 			this.dialog.close();
 		}
@@ -113,13 +113,19 @@ public class PlayerEditDialogController {
 		return strs.isEmpty();
 	}
 	
+	/**
+	 * Set the player this view needs to handle.
+	 * 
+	 * It also set the textfields presents inside this view with the data of the player
+	 * @param player the player to change
+	 */
 	public void setPlayer(Player player) {
 		this.playerInvolved = player;
 		
-		this.nameTextField.setText(player.getName());
-		this.surnameTextField.setText(player.getSurname());
+		this.nameTextField.setText(player.getName().get());
+		this.surnameTextField.setText(player.getSurname().get());
 		this.birthdayTextField.setText(player.getBirthdayAsStandardString());
-		this.phoneTextField.setText(player.getPhone());
+		this.phoneTextField.setText(player.getPhone().get());
 	}
 
 	/**

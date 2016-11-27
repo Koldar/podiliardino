@@ -48,13 +48,13 @@ public class SQLiteDAOImpl implements DAO {
 	}
 
 	@Override
-	public Player addPlayer(Player p) throws DAOException {
+	public Player addPlayer(final Player p) throws DAOException {
 		this.connectAndThenDo((c, s) -> {
 			try {
-				this.insertPlayer.setString(1, p.getName());
-				this.insertPlayer.setString(2, p.getSurname());
+				this.insertPlayer.setString(1, p.getName().get());
+				this.insertPlayer.setString(2, p.getSurname().get());
 				this.insertPlayer.setString(3, p.getBirthdayAsStandardString());
-				this.insertPlayer.setString(4, p.getPhone());
+				this.insertPlayer.setString(4, p.getPhone().get());
 				this.insertPlayer.addBatch();
 
 				c.setAutoCommit(false);
@@ -73,17 +73,17 @@ public class SQLiteDAOImpl implements DAO {
 				return e;
 			}
 		}); 
-		return null;
+		return p;
 	}
 	
 	@Override
 	public Player updatePlayer(Player player) throws DAOException {
 		this.connectAndThenDo((c,s) -> {
 			try {
-				this.updatePlayer.setString(0, player.getName());
-				this.updatePlayer.setString(1, player.getSurname());
+				this.updatePlayer.setString(0, player.getName().get());
+				this.updatePlayer.setString(1, player.getSurname().get());
 				this.updatePlayer.setString(2, player.getBirthdayAsStandardString());
-				this.updatePlayer.setString(3, player.getPhone());
+				this.updatePlayer.setString(3, player.getPhone().get());
 				this.updatePlayer.setLong(4, player.getId());
 				
 				this.updatePlayer.addBatch();
@@ -146,7 +146,7 @@ public class SQLiteDAOImpl implements DAO {
 	public void clearAll() throws DAOException {
 		this.connectAndThenDo(false, (c, s) -> {
 			try {
-				s.executeUpdate("DELETE * FROM player;");
+				s.executeUpdate("DELETE FROM player;");
 				return null;
 			} catch (SQLException e) {
 				return e;
@@ -159,8 +159,8 @@ public class SQLiteDAOImpl implements DAO {
 		this.connectAndThenDo(false, (connection, statement) -> {
 			try {
 				statement.executeUpdate("PRAGMA foreign_keys = \"1\";");
-				statement.executeUpdate("CREATE TABLE IF NOT EXISTS player (id integer primary key autoincrement, firstname varchar(100), surname varchar(100), birthday varchar(20), phone varchar(20));");
-				statement.executeUpdate("CREATE INDEX name ON player (firstname, surname);");
+				statement.executeUpdate("CREATE TABLE IF NOT EXISTS player (id integer primary key autoincrement, name varchar(100), surname varchar(100), birthday varchar(20), phone varchar(20));");
+				statement.executeUpdate("CREATE INDEX IF NOT EXISTS name ON player (name, surname);");
 				return null;
 			} catch (SQLException e) {
 				return e;
@@ -171,12 +171,16 @@ public class SQLiteDAOImpl implements DAO {
 	@Override
 	public void tearDown() throws DAOException {
 		try {
-			this.insertPlayer.close();
-			this.getAllPlayers.close();
-			this.deletePlayer.close();
-			this.lastInsertedRow.close();
-			this.updatePlayer.close();
-			this.sqliteConnection.close();
+			if (this.preparedStatementCreated) {
+				this.insertPlayer.close();
+				this.getAllPlayers.close();
+				this.deletePlayer.close();
+				this.lastInsertedRow.close();
+				this.updatePlayer.close();
+			}
+			if (sqliteConnection != null) {
+				this.sqliteConnection.close();
+			}
 		} catch (SQLException e) {
 			throw new DAOException(e);
 		}
@@ -227,9 +231,9 @@ public class SQLiteDAOImpl implements DAO {
 			this.sqliteConnection = DriverManager.getConnection(String.format("jdbc:sqlite:%s", databaseFileName.getAbsolutePath()));
 		}
 		if (setupPreparedStatement && !this.preparedStatementCreated) {
-			this.insertPlayer = this.sqliteConnection.prepareStatement("INSERT INTO player(firstname, surname, birthday, phone) VALUES(?,?,?,?)");
-			this.getAllPlayers = this.sqliteConnection.prepareStatement("SELECT id, firstname, surname, birthday, phone FROM player");
-			this.updatePlayer = this.sqliteConnection.prepareStatement("UPDATE OR ROLLBACK player SET firstname=?, surname=?, birthday=?,phone=? WHERE id=?");
+			this.insertPlayer = this.sqliteConnection.prepareStatement("INSERT INTO player(name, surname, birthday, phone) VALUES(?,?,?,?)");
+			this.getAllPlayers = this.sqliteConnection.prepareStatement("SELECT id, name, surname, birthday, phone FROM player");
+			this.updatePlayer = this.sqliteConnection.prepareStatement("UPDATE OR ROLLBACK player SET name=?, surname=?, birthday=?,phone=? WHERE id=?");
 			this.deletePlayer = this.sqliteConnection.prepareStatement("DELETE FROM player WHERE id=?");
 			this.lastInsertedRow = this.sqliteConnection.prepareStatement("SELECT seq as last_inserted_id FROM sqlite_sequence WHERE name=?;");
 			
