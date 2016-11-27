@@ -77,14 +77,14 @@ public class SQLiteDAOImpl implements DAO {
 	}
 	
 	@Override
-	public Player updatePlayer(Player player) throws DAOException {
+	public Player updatePlayer(final Player player) throws DAOException {
 		this.connectAndThenDo((c,s) -> {
 			try {
-				this.updatePlayer.setString(0, player.getName().get());
-				this.updatePlayer.setString(1, player.getSurname().get());
-				this.updatePlayer.setString(2, player.getBirthdayAsStandardString());
-				this.updatePlayer.setString(3, player.getPhone().get());
-				this.updatePlayer.setLong(4, player.getId());
+				this.updatePlayer.setString(1, player.getName().get());
+				this.updatePlayer.setString(2, player.getSurname().get());
+				this.updatePlayer.setString(3, player.getBirthdayAsStandardString());
+				this.updatePlayer.setString(4, player.getPhone().get());
+				this.updatePlayer.setLong(5, player.getId());
 				
 				this.updatePlayer.addBatch();
 				c.setAutoCommit(false);
@@ -95,14 +95,14 @@ public class SQLiteDAOImpl implements DAO {
 				return e;
 			}
 		});
-		return null;
+		return player;
 	}
 
 	@Override
 	public void removePlayer(Player p) throws DAOException {
 		this.connectAndThenDo((c,s) -> {
 			try {
-				this.deletePlayer.setLong(0, p.getId());
+				this.deletePlayer.setLong(1, p.getId());
 				this.deletePlayer.addBatch();
 				
 				c.setAutoCommit(false);
