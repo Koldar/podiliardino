@@ -13,38 +13,36 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.RowConstraints?>
 
-<AnchorPane prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.massimobono.podiliardino.view.PlayerHandlingController">
+<AnchorPane prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.massimobono.podiliardino.view.TeamHandlingController">
    <children>
-      <SplitPane dividerPositions="0.5" prefHeight="600.0" prefWidth="800.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+      <SplitPane dividerPositions="0.5" layoutX="189.0" layoutY="168.0" prefHeight="600.0" prefWidth="800.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <items>
           <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
                <children>
-                  <TableView fx:id="playersTable" prefHeight="598.0" prefWidth="235.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                  <TableView prefHeight="598.0" prefWidth="396.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                     <columns>
-                      <TableColumn fx:id="nameColumn" editable="false" prefWidth="75.0" text="Name" />
-                      <TableColumn fx:id="surnameColumn" editable="false" prefWidth="75.0" text="Surname" />
+                      <TableColumn editable="false" prefWidth="75.0" text="Name" />
+                      <TableColumn editable="false" prefWidth="75.0" text="Members" />
                     </columns>
                      <columnResizePolicy>
                         <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
                      </columnResizePolicy>
                   </TableView>
-               </children></AnchorPane>
+               </children>
+            </AnchorPane>
             <BorderPane prefHeight="200.0" prefWidth="200.0">
-               <top>
-                  <Label text="Player information" BorderPane.alignment="CENTER" />
-               </top>
                <bottom>
                   <ButtonBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
                     <buttons>
-                      <Button fx:id="newPlayer" mnemonicParsing="false" onAction="#handleNewPlayer" text="New" />
-                        <Button fx:id="editPlayer" mnemonicParsing="false" onAction="#handleEditPlayer" text="Edit" />
-                        <Button fx:id="deletePlayer" mnemonicParsing="false" onAction="#handleDeletePlayer" text="Delete" />
+                      <Button mnemonicParsing="false" text="New" />
+                        <Button mnemonicParsing="false" text="Edit" />
+                        <Button mnemonicParsing="false" text="Delete" />
                     </buttons>
                   </ButtonBar>
                </bottom>
-               <padding>
-                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-               </padding>
+               <top>
+                  <Label text="Team information" BorderPane.alignment="CENTER" />
+               </top>
                <center>
                   <AnchorPane prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
                      <children>
@@ -61,18 +59,21 @@
                           </rowConstraints>
                            <children>
                               <Label text="Name" />
-                              <Label text="Surname" GridPane.rowIndex="1" />
-                              <Label text="Birthday" GridPane.rowIndex="2" />
-                              <Label text="Phone" GridPane.rowIndex="3" />
-                              <Label fx:id="nameLabel" GridPane.columnIndex="1" />
-                              <Label fx:id="surnameLabel" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                              <Label fx:id="birthdayLabel" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                              <Label fx:id="phoneLabel" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                              <Label text="Team Member #1" GridPane.rowIndex="1" />
+                              <Label text="Team Member #2" GridPane.rowIndex="2" />
+                              <Label text="Team fundation date" GridPane.rowIndex="3" />
+                              <Label text="Label" GridPane.columnIndex="1" />
+                              <Label text="Label" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                              <Label text="Label" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                              <Label text="Label" GridPane.columnIndex="1" GridPane.rowIndex="3" />
                            </children>
                         </GridPane>
                      </children>
                   </AnchorPane>
                </center>
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
             </BorderPane>
         </items>
       </SplitPane>

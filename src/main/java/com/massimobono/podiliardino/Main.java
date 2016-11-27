@@ -12,13 +12,17 @@ import java.util.function.Function;
 import com.massimobono.podiliardino.dao.DAO;
 import com.massimobono.podiliardino.dao.DAOException;
 import com.massimobono.podiliardino.dao.SQLiteDAOImpl;
+import com.massimobono.podiliardino.util.ExceptionAlert;
 import com.massimobono.podiliardino.view.PlayerHandlingController;
+import com.massimobono.podiliardino.view.TeamHandlingController;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
@@ -46,16 +50,25 @@ public class Main extends Application {
 		
 		try {
 			this.loadAndShowRootLayout();
-			this.setMainTo("PlayerHandling", (PlayerHandlingController c) -> {
+			this.addMainSceneToStage("PlayerHandling", "Player Management", (PlayerHandlingController c) -> {
 				try {
 					c.setup(this);
-				} catch (DAOException e) {
-					// TODO Auto-generated catch block
+				} catch (Exception e) {
 					e.printStackTrace();
+					ExceptionAlert.showAndWait(e);
+				}
+			});
+			this.addMainSceneToStage("TeamHandling", "Team Management", (TeamHandlingController c) -> {
+				try {
+					c.setup(this);
+				} catch (Exception e) {
+					e.printStackTrace();
+					ExceptionAlert.showAndWait(e);
 				}
 			});
 		} catch (IOException e1) {
 			e1.printStackTrace();
+			ExceptionAlert.showAndWait(e1);
 		}
 	}
 	
@@ -69,21 +82,22 @@ public class Main extends Application {
 	private void loadAndShowRootLayout() throws IOException {
 		FXMLLoader loader = new FXMLLoader();
 		loader.setLocation(this.getClass().getResource("view/RootLayout.fxml"));
-		this.rootScene = (BorderPane)loader.load();
+		this.rootScene = loader.load();
 		this.rootScene.getStylesheets().add(this.getClass().getResource("application.css").toExternalForm());
 		this.primaryStage.setScene(new Scene(this.rootScene));
 		this.primaryStage.show();
 	}
 	
 	/**
-	 * Set the scene inside the {@link #rootScene}. Use it to swap scene in your application  
+	 * Add a new tab inside the {@link TabPane} in {@link #rootScene}. Use it to swap scene in your application  
 	 * 
 	 * @param fxmlFile the FXML file inside "view" package, with or without ".fxml" extension
+	 * @param tabName name of the scene attached to the main stage 
 	 * @param initializeController a consumer that initialize the controller associated to the "fxml" view. If it's null, no  controller will be <b>loaded</b> at all;
 	 * @throws FileNotFoundException if we couldn't fetch the file you requested
 	 * @throws IOException if something goes very wrong
 	 */
-	private <CONTROLLER> void setMainTo(String fxmlFile, Consumer<CONTROLLER> initializeController) throws IOException {
+	private <CONTROLLER> void addMainSceneToStage(String fxmlFile, String tabName, Consumer<CONTROLLER> initializeController) throws IOException {
 		
 		if (!fxmlFile.endsWith(".fxml")) {
 			fxmlFile +=".fxml";
@@ -95,7 +109,9 @@ public class Main extends Application {
 			throw new FileNotFoundException(String.format("Couldn't find %s", baseUrl));
 		} else {
 			loader.setLocation(resourceURL.get());
-			this.rootScene.setCenter(loader.load());
+			Tab tab = new Tab(tabName);
+			tab.setContent(loader.load());
+			((TabPane)this.rootScene.getCenter()).getTabs().add(tab);
 		}
 		
 		if (initializeController != null) {
@@ -107,10 +123,11 @@ public class Main extends Application {
 	/**
 	 * like {@link #setMainTo(String, Consumer)}, but the controller isn't loaded at all
 	 * @param fxmlFile
+	 * @param tabName
 	 * @throws IOException
 	 */
-	private <CONTROLLER> void setMainTo(String fxmlFile) throws IOException {
-		this.setMainTo(fxmlFile, null);
+	private <CONTROLLER> void setMainTo(String fxmlFile, String tabName) throws IOException {
+		this.addMainSceneToStage(fxmlFile, tabName, null);
 	}
 	
 	/**

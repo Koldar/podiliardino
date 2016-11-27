@@ -6,6 +6,7 @@ import java.util.Optional;
 import com.massimobono.podiliardino.Main;
 import com.massimobono.podiliardino.dao.DAOException;
 import com.massimobono.podiliardino.model.Player;
+import com.massimobono.podiliardino.util.ExceptionAlert;
 
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -89,19 +90,19 @@ public class PlayerHandlingController {
 				this.playerList.add(p1);
 			}
 
-		} catch (IOException | DAOException e) {
-			// TODO Auto-generated catch block
+		} catch (Exception e) {
 			e.printStackTrace();
+			ExceptionAlert.showAndWait(e);
 		}
 	}
 
 	@FXML
 	public void handleEditPlayer() {
-		if (this.playersTable.getSelectionModel().getSelectedItem() == null) {
-			//the user has selected nothing
-			return;
-		}
 		try {
+			if (this.playersTable.getSelectionModel().getSelectedItem() == null) {
+				//the user has selected nothing
+				return;
+			}
 			Optional<Player> p = this.mainApp.showCustomDialog(
 					"PlayerEditDialog", 
 					"New Player", 
@@ -113,28 +114,28 @@ public class PlayerHandlingController {
 					);
 			if (p.isPresent()) {
 				//we have added a new player. We can add it to the DAO
-				Player p1 = this.mainApp.getDAO().updatePlayer(p.get());
+				this.mainApp.getDAO().updatePlayer(p.get());
 			}
 
-		} catch (IOException | DAOException e) {
-			// TODO Auto-generated catch block
+		} catch (Exception e) {
 			e.printStackTrace();
+			ExceptionAlert.showAndWait(e);
 		}
 	}
 
 	@FXML
 	private void handleDeletePlayer() {
-		if (this.playersTable.getSelectionModel().getSelectedItem() == null) {
-			//the user has selected nothing
-			return;
-		}
-		Player p =this.playersTable.getSelectionModel().getSelectedItem();
 		try {
+			if (this.playersTable.getSelectionModel().getSelectedItem() == null) {
+				//the user has selected nothing
+				return;
+			}
+			Player p =this.playersTable.getSelectionModel().getSelectedItem();
 			this.mainApp.getDAO().removePlayer(p);
 			this.playerList.remove(p);
 		} catch (DAOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			ExceptionAlert.showAndWait(e);
 		}
 	}
 
@@ -145,8 +146,8 @@ public class PlayerHandlingController {
 			this.birthdayLabel.setText(newValue.getBirthdayAsStandardString());
 			this.phoneLabel.setText(newValue.getPhone().get());
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			ExceptionAlert.showAndWait(e);
 		}
 	}
 
