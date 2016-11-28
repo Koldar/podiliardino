@@ -133,7 +133,7 @@ public class PlayerHandlingController {
 			Collection<Team> teamWithPlayer = this.mainApp.getDAO().getAllTeamsThat(t -> t.getPlayers().contains(p));
 			if (!teamWithPlayer.isEmpty()) {
 				Utils.createDefaultErrorAlert(
-					String.format("Player %s %s is inside the following teams:", p.getName(), p.getSurname()),
+					String.format("Player \"%s %s\" is inside the following teams:", p.getName().get(), p.getSurname().get()),
 					String.join("\n", teamWithPlayer.stream().map(t -> t.getName().get()).collect(Collectors.toList()))
 				);
 				return;

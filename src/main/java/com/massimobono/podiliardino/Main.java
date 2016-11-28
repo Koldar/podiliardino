@@ -71,6 +71,16 @@ public class Main extends Application {
 			e1.printStackTrace();
 			ExceptionAlert.showAndWait(e1);
 		}
+		
+		//fetch data from the DAO
+		try {
+			this.dao.getAllPlayers();
+			this.dao.getAllTeams();
+		} catch (DAOException e) {
+			e.printStackTrace();
+			ExceptionAlert.showAndWait(e);
+		}
+		
 	}
 	
 	@Override
