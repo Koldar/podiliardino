@@ -439,7 +439,9 @@ public class SQLiteDAOImpl implements DAO {
 			    			rs.getLong("id"),
 			    			rs.getString("name"),
 			    			Utils.getDateFrom(rs.getString("date")),
-			    			new ArrayList<>());
+			    			new ArrayList<>(),
+			    			new ArrayList<>()
+			    		);
 						team.getPlayers().addAll(this.getPlayersInTeam(rs.getLong("id")));
 						this.teams.putIfAbsent(team.getId(), team);
 					}

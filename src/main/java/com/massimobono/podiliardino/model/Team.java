@@ -21,18 +21,27 @@ public class Team {
 	 * The date where the members founded the team
 	 */
 	private final ObjectProperty<LocalDate> date;
-	private final ObservableList<Player> players;
 	
-	public Team(long id, String name, LocalDate date, Collection<Player> players){
+	/**
+	 * A list of all the players inside this team
+	 */
+	private final ObservableList<Player> players;
+	/**
+	 * A list of all the tournaments this team has partecipated
+	 */
+	private final ObservableList<Partecipation> partecipations;
+	
+	public Team(long id, String name, LocalDate date, Collection<Player> players, Collection<Partecipation> partecipations){
 		super();
 		this.id = new SimpleLongProperty(id);
 		this.name = new SimpleStringProperty(name);
 		this.date = new SimpleObjectProperty<>(date);
 		this.players = FXCollections.observableArrayList(players);
+		this.partecipations = FXCollections.observableArrayList(partecipations);
 	}
 	
 	public Team() {
-		this(0, "", LocalDate.now(), new ArrayList<>());
+		this(0, "", LocalDate.now(), new ArrayList<>(), new ArrayList<>());
 	}
 
 	/**
@@ -56,6 +65,13 @@ public class Team {
 		return players;
 	}
 	
+	/**
+	 * @return the partecipations
+	 */
+	public ObservableList<Partecipation> getPartecipations() {
+		return partecipations;
+	}
+
 	public long getId() {
 		return this.id.get();
 	}
