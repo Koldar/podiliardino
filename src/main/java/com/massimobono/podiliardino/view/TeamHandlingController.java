@@ -48,10 +48,7 @@ public class TeamHandlingController {
 
 	private Main mainApp;
 
-	private ObservableList<Team> teamList;
-
 	public TeamHandlingController() {
-		this.teamList = FXCollections.observableArrayList();
 	}
 
 	@FXML
@@ -72,8 +69,7 @@ public class TeamHandlingController {
 	public void setup(Main mainApp) throws DAOException {
 		this.mainApp = mainApp;
 		
-		this.teamList.addAll(this.mainApp.getDAO().getAllTeams());
-		this.teamTable.setItems(this.teamList);
+		this.teamTable.setItems(this.mainApp.getDAO().getTeamList());
 	}
 
 	@FXML
@@ -95,8 +91,6 @@ public class TeamHandlingController {
 			if (t.isPresent()) {
 				//we have added a new player. We can add it to the DAO
 				Team t1 = this.mainApp.getDAO().addTeam(t.get());
-				
-				this.teamList.add(t1);
 			}
 
 		} catch (Exception e) {
@@ -144,7 +138,6 @@ public class TeamHandlingController {
 			}
 			Team t =this.teamTable.getSelectionModel().getSelectedItem();
 			this.mainApp.getDAO().removeTeam(t);
-			this.teamList.remove(t);
 		} catch (DAOException e) {
 			e.printStackTrace();
 			ExceptionAlert.showAndWait(e);

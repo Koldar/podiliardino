@@ -61,9 +61,11 @@ public interface DAO extends Closeable{
 	
 	/**
 	 * like {@link #getAllPlayers()} but it returns an {@link ObservableList}
-	 * that can be used by JavaFX to synchronize its UI
+	 * that can be used by JavaFX to synchronize its UI.
 	 * 
-	 * <b>The implementation promises to you that only one instance of {@link ObservableList} is created
+	 * <b>The implementation promises to you that only one instance of {@link ObservableList} is created</b>.
+	 * You can explit this method when you want to keep track of the players available in the database. If an entry is added or removed
+	 * you an automatically be notified
 	 * 
 	 * @return
 	 * @throws DAOException if something bad happens
