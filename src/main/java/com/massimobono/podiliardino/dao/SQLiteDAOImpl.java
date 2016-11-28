@@ -14,6 +14,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -140,10 +141,11 @@ public class SQLiteDAOImpl implements DAO {
 	public Player addPlayer(final Player p) throws DAOException {
 		this.connectAndThenDo((c, s, ps) -> {
 			try {
+				Optional<String> birthday = p.getBirthdayAsStandardString();
 				ps.insertPlayer.setString(1, p.getName().get());
 				ps.insertPlayer.setString(2, p.getSurname().get());
-				ps.insertPlayer.setString(3, p.getBirthdayAsStandardString());
-				ps.insertPlayer.setString(4, p.getPhone().get());
+				ps.insertPlayer.setString(3, birthday.isPresent() ? birthday.get() : Utils.EMPTY_BIRTHDAY);
+				ps.insertPlayer.setString(4, p.getPhone().get().isPresent() ? p.getPhone().get().get() : Utils.EMPTY_PHONE);
 				ps.insertPlayer.addBatch();
 
 				c.setAutoCommit(false);
@@ -170,10 +172,11 @@ public class SQLiteDAOImpl implements DAO {
 	public Player updatePlayer(final Player player) throws DAOException {
 		this.connectAndThenDo((c,s,ps) -> {
 			try {
+				Optional<String> birthday = player.getBirthdayAsStandardString();
 				ps.updatePlayer.setString(1, player.getName().get());
 				ps.updatePlayer.setString(2, player.getSurname().get());
-				ps.updatePlayer.setString(3, player.getBirthdayAsStandardString());
-				ps.updatePlayer.setString(4, player.getPhone().get());
+				ps.updatePlayer.setString(3, birthday.isPresent() ? birthday.get() : Utils.EMPTY_BIRTHDAY);
+				ps.updatePlayer.setString(4, player.getPhone().get().isPresent() ? player.getPhone().get().get() : Utils.EMPTY_PHONE);
 				ps.updatePlayer.setLong(5, player.getId());
 				
 				ps.updatePlayer.addBatch();

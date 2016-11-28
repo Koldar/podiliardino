@@ -7,6 +7,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Optional;
 
 import com.massimobono.podiliardino.util.Utils;
 
@@ -24,8 +25,8 @@ public class Player {
 	private final LongProperty id;
 	private final StringProperty name;
 	private final StringProperty surname;
-	private final ObjectProperty<LocalDate> birthday;
-	private final StringProperty phone;
+	private final ObjectProperty<Optional<LocalDate>> birthday;
+	private final ObjectProperty<Optional<String>> phone;
 	private final ObservableList<Team> teams;
 	
 	public Player(long id, String name, String surname, LocalDate birthday, String phone, Collection<Team> teams) {
@@ -33,8 +34,8 @@ public class Player {
 		this.id = new SimpleLongProperty(id);
 		this.name = new SimpleStringProperty(name);
 		this.surname = new SimpleStringProperty(surname);
-		this.birthday = new SimpleObjectProperty<LocalDate>(birthday);
-		this.phone = new SimpleStringProperty(phone);
+		this.birthday = new SimpleObjectProperty<Optional<LocalDate>>(Optional.of(birthday));
+		this.phone = new SimpleObjectProperty<Optional<String>>(Optional.of(phone));
 		this.teams = FXCollections.observableArrayList(teams);
 	}
 	
@@ -59,7 +60,7 @@ public class Player {
 	/**
 	 * @return the birthday
 	 */
-	public ObjectProperty<LocalDate> getBirthday() {
+	public ObjectProperty<Optional<LocalDate>> getBirthday() {
 		return birthday;
 	}
 	
@@ -69,18 +70,27 @@ public class Player {
 	 * 
 	 * @return the birthday date, according to the {@link #BIRTHDAY_PATTERN} pattern
 	 */
-	public String getBirthdayAsStandardString() {
-		return Utils.getStandardDateFrom(this.birthday.get());
+	public Optional<String> getBirthdayAsStandardString() {
+		return Optional.ofNullable(this.birthday.get().isPresent() ? Utils.getStandardDateFrom(this.birthday.get().get()) : null);
 	}
 	
+	/**
+	 * 
+	 * @param birthday can be null
+	 * @throws DateTimeParseException
+	 */
 	public void setBirthdayFromStandardString(String birthday) throws DateTimeParseException {
-		this.getBirthday().set(Utils.getDateFrom(birthday));
+		if (birthday == null) {
+			this.birthday.set(Optional.empty());
+		} else {
+			this.getBirthday().set(Optional.of(Utils.getDateFrom(birthday)));
+		}
 	}
 
 	/**
 	 * @return the phone
 	 */
-	public StringProperty getPhone() {
+	public ObjectProperty<Optional<String>> getPhone() {
 		return phone;
 	}
 	
@@ -104,8 +114,11 @@ public class Player {
 	/**
 	 * @return the age of this player
 	 */
-	public int getAge() {
-		return Period.between(this.getBirthday().get(), LocalDate.now()).getYears();
+	public Optional<Integer> getAge() {
+		if (this.birthday.get().isPresent()) {
+			return Optional.of(Period.between(this.getBirthday().get().get(), LocalDate.now()).getYears());
+		}
+		return Optional.empty();
 	}
 	
 }

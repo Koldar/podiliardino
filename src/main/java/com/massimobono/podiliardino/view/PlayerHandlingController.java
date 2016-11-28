@@ -147,10 +147,11 @@ public class PlayerHandlingController {
 
 	private void handleUserSelectPlayer(ObservableValue<? extends Player> observableValue, Player oldValue, Player newValue) {
 		try {
+			Optional<String> birthday = newValue.getBirthdayAsStandardString();
 			this.nameLabel.setText(newValue.getName().get());
 			this.surnameLabel.setText(newValue.getSurname().get());
-			this.birthdayLabel.setText(newValue.getBirthdayAsStandardString());
-			this.phoneLabel.setText(newValue.getPhone().get());
+			this.birthdayLabel.setText(birthday.isPresent() ? birthday.get() : Utils.EMPTY_BIRTHDAY);
+			this.phoneLabel.setText(newValue.getPhone().get().isPresent() ? newValue.getPhone().get().get() : Utils.EMPTY_PHONE);
 		} catch (Exception e) {
 			e.printStackTrace();
 			ExceptionAlert.showAndWait(e);

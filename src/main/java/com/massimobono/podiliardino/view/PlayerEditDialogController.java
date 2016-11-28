@@ -7,6 +7,7 @@ import java.time.format.DateTimeParseException;
 import java.time.format.FormatStyle;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.zip.DataFormatException;
 
 import com.massimobono.podiliardino.model.Player;
@@ -70,8 +71,8 @@ public class PlayerEditDialogController {
 		if (this.checkValues()) {
 			this.playerInvolved.getName().set(this.nameTextField.getText());
 			this.playerInvolved.getSurname().set(this.surnameTextField.getText());
-			this.playerInvolved.setBirthdayFromStandardString(this.birthdayTextField.getText());
-			this.playerInvolved.getPhone().set(this.phoneTextField.getText());
+			this.playerInvolved.setBirthdayFromStandardString(this.birthdayTextField.getText().length() == 0 ? null : this.birthdayTextField.getText());
+			this.playerInvolved.getPhone().set(Optional.ofNullable(this.phoneTextField.getText().length() == 0 ? null : this.phoneTextField.getText()));
 			this.clickedOK = true;
 			this.dialog.close();
 		}
@@ -93,14 +94,15 @@ public class PlayerEditDialogController {
 			strs.add("Surname must be non empty and have only alphabetic characters");
 		}
 		
+		
 		try {
 			DateTimeFormatter.ofPattern(Utils.BIRTHDAY_PATTERN).parse(this.birthdayTextField.getText());
 		} catch (DateTimeParseException e) {
-			strs.add("Cannot parse date. It has to be of format "+Utils.BIRTHDAY_PATTERN);
+			this.birthdayTextField.setText(Utils.EMPTY_BIRTHDAY);
 		}
 		
 		if (!this.phoneTextField.getText().matches(PHONE_REGEX)) {
-			strs.add("Phone must have 10 digits");
+			this.phoneTextField.setText(Utils.EMPTY_PHONE);
 		}
 		
 		if (!strs.isEmpty()) {
@@ -123,10 +125,11 @@ public class PlayerEditDialogController {
 	public void setPlayer(Player player) {
 		this.playerInvolved = player;
 		
+		Optional<String>  birthday = player.getBirthdayAsStandardString();
 		this.nameTextField.setText(player.getName().get());
 		this.surnameTextField.setText(player.getSurname().get());
-		this.birthdayTextField.setText(player.getBirthdayAsStandardString());
-		this.phoneTextField.setText(player.getPhone().get());
+		this.birthdayTextField.setText(birthday.isPresent() ? birthday.get() : Utils.EMPTY_BIRTHDAY);
+		this.phoneTextField.setText(player.getPhone().get().isPresent() ? player.getPhone().get().get() : Utils.EMPTY_PHONE);
 	}
 
 	/**
