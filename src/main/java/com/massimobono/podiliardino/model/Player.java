@@ -20,7 +20,7 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-public class Player {
+public class Player implements Indexable{
 	
 	private final LongProperty id;
 	private final StringProperty name;
@@ -107,6 +107,7 @@ public class Player {
 		return this.teams;
 	}
 	
+	@Override
 	public long getId() {
 		return this.id.get();
 	}
@@ -116,6 +117,7 @@ public class Player {
 	 * 
 	 * @param id
 	 */
+	@Override
 	public void setId(long id) {
 		this.id.set(id);
 	}

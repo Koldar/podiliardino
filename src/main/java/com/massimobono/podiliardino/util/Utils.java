@@ -10,7 +10,7 @@ public class Utils {
 
 	public static final String BIRTHDAY_PATTERN = "dd-MM-yyyy";
 	public static final String  EMPTY_PHONE = "";
-	public static final String EMPTY_BIRTHDAY = "";
+	public static final String EMPTY_DATE = "";
 	
 	public static LocalDate getDateFrom(String standardDate) {
 		return DateTimeFormatter.ofPattern(Utils.BIRTHDAY_PATTERN).parse(standardDate, LocalDate::from);

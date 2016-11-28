@@ -15,6 +15,7 @@ import com.massimobono.podiliardino.dao.SQLiteDAOImpl;
 import com.massimobono.podiliardino.util.ExceptionAlert;
 import com.massimobono.podiliardino.view.PlayerHandlingController;
 import com.massimobono.podiliardino.view.TeamHandlingController;
+import com.massimobono.podiliardino.view.TournamentHandlingController;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -60,6 +61,14 @@ public class Main extends Application {
 				}
 			});
 			this.addMainSceneToStage("TeamHandling", "Team Management", (TeamHandlingController c) -> {
+				try {
+					c.setup(this);
+				} catch (Exception e) {
+					e.printStackTrace();
+					ExceptionAlert.showAndWait(e);
+				}
+			});
+			this.addMainSceneToStage("TournamentHandling", "Tournament Management", (TournamentHandlingController c) -> {
 				try {
 					c.setup(this);
 				} catch (Exception e) {

@@ -150,7 +150,7 @@ public class PlayerHandlingController {
 			Optional<String> birthday = newValue.getBirthdayAsStandardString();
 			this.nameLabel.setText(newValue.getName().get());
 			this.surnameLabel.setText(newValue.getSurname().get());
-			this.birthdayLabel.setText(birthday.isPresent() ? birthday.get() : Utils.EMPTY_BIRTHDAY);
+			this.birthdayLabel.setText(birthday.isPresent() ? birthday.get() : Utils.EMPTY_DATE);
 			this.phoneLabel.setText(newValue.getPhone().get().isPresent() ? newValue.getPhone().get().get() : Utils.EMPTY_PHONE);
 		} catch (Exception e) {
 			e.printStackTrace();

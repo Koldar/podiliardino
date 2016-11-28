@@ -6,6 +6,7 @@ import java.util.function.Function;
 
 import com.massimobono.podiliardino.model.Player;
 import com.massimobono.podiliardino.model.Team;
+import com.massimobono.podiliardino.model.Tournament;
 
 import javafx.collections.ObservableList;
 
@@ -72,17 +73,6 @@ public interface DAO extends Closeable{
 	 */
 	public ObservableList<Player> getPlayerList() throws DAOException;
 	
-	/**
-	 * like {@link #getTeamList()} but it returns an {@link ObservableList}
-	 * that can be used by JavaFX to synchronize its UI
-	 * 
-	 * <b>The implementation promises to you that only one instance of {@link ObservableList} is created
-	 * 
-	 * @return
-	 * @throws DAOException if something bad happens
-	 */
-	public ObservableList<Team> getTeamList() throws DAOException;
-	
 	public Collection<Player> getAllPlayersThat(Function<Player,Boolean> filter) throws DAOException;
 	
 	public default Collection<Player> getPlayerby(String name, String surname) throws DAOException{
@@ -136,4 +126,25 @@ public interface DAO extends Closeable{
 	public default Collection<Team> getTeamByName(String name) throws DAOException {
 		return this.getAllTeamsThat(t -> t.getName().get().equalsIgnoreCase(name));
 	}
+	
+	/**
+	 * like {@link #getTeamList()} but it returns an {@link ObservableList}
+	 * that can be used by JavaFX to synchronize its UI
+	 * 
+	 * <b>The implementation promises to you that only one instance of {@link ObservableList} is created
+	 * 
+	 * @return
+	 * @throws DAOException if something bad happens
+	 */
+	public ObservableList<Team> getTeamList() throws DAOException;
+	
+	public Tournament add(Tournament tournament) throws DAOException;
+	
+	public Tournament update(Tournament tournament) throws DAOException;
+	
+	public void remove(Tournament tournament) throws DAOException;
+	
+	public ObservableList<Tournament> getTournamentList() throws DAOException;
+	
+	public Collection<Team> getTournamentsThat(Function<Tournament, Boolean> filter) throws DAOException;
 }

@@ -12,7 +12,7 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-public class Tournament {
+public class Tournament implements Indexable {
 
 	private final LongProperty id;
 	private final StringProperty name;
@@ -46,8 +46,12 @@ public class Tournament {
 	/**
 	 * @return the id
 	 */
-	public LongProperty getId() {
-		return id;
+	public long getId() {
+		return id.get();
+	}
+	
+	public void setId(long id) {
+		this.id.set(id);
 	}
 
 

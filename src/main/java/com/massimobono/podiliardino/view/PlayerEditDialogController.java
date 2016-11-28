@@ -98,7 +98,7 @@ public class PlayerEditDialogController {
 		try {
 			DateTimeFormatter.ofPattern(Utils.BIRTHDAY_PATTERN).parse(this.birthdayTextField.getText());
 		} catch (DateTimeParseException e) {
-			this.birthdayTextField.setText(Utils.EMPTY_BIRTHDAY);
+			this.birthdayTextField.setText(Utils.EMPTY_DATE);
 		}
 		
 		if (!this.phoneTextField.getText().matches(PHONE_REGEX)) {
@@ -128,7 +128,7 @@ public class PlayerEditDialogController {
 		Optional<String>  birthday = player.getBirthdayAsStandardString();
 		this.nameTextField.setText(player.getName().get());
 		this.surnameTextField.setText(player.getSurname().get());
-		this.birthdayTextField.setText(birthday.isPresent() ? birthday.get() : Utils.EMPTY_BIRTHDAY);
+		this.birthdayTextField.setText(birthday.isPresent() ? birthday.get() : Utils.EMPTY_DATE);
 		this.phoneTextField.setText(player.getPhone().get().isPresent() ? player.getPhone().get().get() : Utils.EMPTY_PHONE);
 	}
 

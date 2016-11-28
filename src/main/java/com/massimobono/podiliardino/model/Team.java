@@ -13,7 +13,7 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-public class Team {
+public class Team implements Indexable {
 
 	private final LongProperty id;
 	private final StringProperty name;
@@ -72,10 +72,12 @@ public class Team {
 		return partecipations;
 	}
 
+	@Override
 	public long getId() {
 		return this.id.get();
 	}
 	
+	@Override
 	public void setId(long id) {
 		this.id.set(id);
 	}

@@ -18,8 +18,10 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import com.massimobono.podiliardino.model.Indexable;
 import com.massimobono.podiliardino.model.Player;
 import com.massimobono.podiliardino.model.Team;
+import com.massimobono.podiliardino.model.Tournament;
 import com.massimobono.podiliardino.util.TableFriendlyObservableMap;
 import com.massimobono.podiliardino.util.TerFunction;
 import com.massimobono.podiliardino.util.Utils;
@@ -136,123 +138,7 @@ public class SQLiteDAOImpl implements DAO {
 			this.setup();
 		}
 	}
-
-	@Override
-	public Player addPlayer(final Player p) throws DAOException {
-		this.connectAndThenDo((c, s, ps) -> {
-			try {
-				Optional<String> birthday = p.getBirthdayAsStandardString();
-				ps.insertPlayer.setString(1, p.getName().get());
-				ps.insertPlayer.setString(2, p.getSurname().get());
-				ps.insertPlayer.setString(3, birthday.isPresent() ? birthday.get() : Utils.EMPTY_BIRTHDAY);
-				ps.insertPlayer.setString(4, p.getPhone().get().isPresent() ? p.getPhone().get().get() : Utils.EMPTY_PHONE);
-				ps.insertPlayer.addBatch();
-
-				c.setAutoCommit(false);
-				ps.insertPlayer.executeBatch();
-				c.setAutoCommit(true);
-				
-				ps.lastInsertedRow.setString(1, "player");
-				c.setAutoCommit(false);
-				ResultSet rs = ps.lastInsertedRow.executeQuery();
-				while (rs.next()) {
-					p.setId(rs.getLong("last_inserted_id"));
-				}
-				c.setAutoCommit(true);
-				return null;
-			} catch (SQLException e) {
-				return e;
-			}
-		});
-		this.players.put(p.getId(), p);
-		return p;
-	}
 	
-	@Override
-	public Player updatePlayer(final Player player) throws DAOException {
-		this.connectAndThenDo((c,s,ps) -> {
-			try {
-				Optional<String> birthday = player.getBirthdayAsStandardString();
-				ps.updatePlayer.setString(1, player.getName().get());
-				ps.updatePlayer.setString(2, player.getSurname().get());
-				ps.updatePlayer.setString(3, birthday.isPresent() ? birthday.get() : Utils.EMPTY_BIRTHDAY);
-				ps.updatePlayer.setString(4, player.getPhone().get().isPresent() ? player.getPhone().get().get() : Utils.EMPTY_PHONE);
-				ps.updatePlayer.setLong(5, player.getId());
-				
-				ps.updatePlayer.addBatch();
-				c.setAutoCommit(false);
-				ps.updatePlayer.executeBatch();
-				c.setAutoCommit(true);
-				return null;
-			} catch (SQLException e) {
-				return e;
-			}
-		});
-		return player;
-	}
-
-	@Override
-	public void removePlayer(Player p) throws DAOException {
-		this.connectAndThenDo((c,s,ps) -> {
-			try {
-				ps.deletePlayer.setLong(1, p.getId());
-				ps.deletePlayer.addBatch();
-				
-				c.setAutoCommit(false);
-				ps.deletePlayer.executeBatch();
-				c.setAutoCommit(true);
-				return null;
-			} catch (SQLException e) {
-				return e;
-			}
-		});
-		this.players.remove(p.getId());
-	}
-
-	@Override
-	public Collection<Player> getAllPlayersThat(Function<Player, Boolean> filter) throws DAOException {
-		Collection<Player> retVal = new ArrayList<>();
-		this.connectAndThenDo((c,s,ps) -> {
-			ResultSet rs;
-			try {
-				rs = ps.getAllPlayers.executeQuery();
-				Player p = null;
-				while (rs.next()) {
-					if (this.players.containsKey(rs.getLong("id"))) {
-						p = this.players.get(rs.getLong("id"));
-					} else {
-						p = new Player(
-			    			rs.getLong("id"),
-			    			rs.getString("name"),
-			    			rs.getString("surname"),
-			    			!rs.getString("birthday").equalsIgnoreCase(Utils.EMPTY_BIRTHDAY) ? Utils.getDateFrom(rs.getString("birthday")) : null,
-			    			!rs.getString("phone").equalsIgnoreCase(Utils.EMPTY_PHONE) ? rs.getString("phone") : null,
-			    			new ArrayList<>());
-						this.players.putIfAbsent(p.getId(), p);
-						p.getTeamWithPlayer().addAll(this.getTeamsWith(rs.getLong("id")));
-					}
-					System.out.println(p.getName().get()+ " analyzing "+ filter);
-			    	if (filter.apply(p)) {
-			    		System.out.println(p.getName().get() + " passed!");
-			    		retVal.add(p);
-				    }
-			    }
-				return null;
-			} catch (SQLException | DAOException e) {
-				return e;
-			}
-		});
-		return retVal;
-	}
-	
-	public ObservableList<Player> getPlayerList() throws DAOException {
-		return this.players.observableValueList();
-	}
-	
-	public ObservableList<Team> getTeamList() throws DAOException {
-		return this.teams.observableValueList();
-	}
-
 	@Override
 	public void clearAll() throws DAOException {
 		this.connectAndThenDo(false, (c, s,ps) -> {
@@ -349,6 +235,42 @@ public class SQLiteDAOImpl implements DAO {
 		}
 		return this.preparedStatements.get(connection);
 	}
+	
+	/**
+	 * Represents an abstract way yo add a single row inside a table
+	 * 
+	 * This function aims tyo provide a generic way to add a single row in a single table. Nothing more, nothing less
+	 * 
+	 * @param toAdd an instance to add in the database whose id has not been set yet
+	 * @param insertQuery a function that actually perform the insertion
+	 * @param tableInvolved the table where the insertion happens
+	 * @param afterInsertQueryAction an action to perform if the insertion is completely successful
+	 * @return the same instance provided by <tt>toAdd</tt> but with the id set as it shows up in the db
+	 * @throws DAOException if something bad happens
+	 */
+	private <TOADD extends Indexable> TOADD abstractAdd(final TOADD toAdd, TerFunction<Connection, Statement, PreparedStatements, Exception> insertQuery, String tableInvolved, Runnable afterInsertQueryAction) throws DAOException {
+		this.connectAndThenDo((c, s, ps) -> {
+			try {
+				Exception e = insertQuery.apply(c, s, ps);
+				if (e != null) {
+					throw e;
+				}
+				
+				ps.lastInsertedRow.setString(1, tableInvolved);
+				c.setAutoCommit(false);
+				ResultSet rs = ps.lastInsertedRow.executeQuery();
+				while (rs.next()) {
+					toAdd.setId(rs.getLong("last_inserted_id"));
+				}
+				c.setAutoCommit(true);
+				return null;
+			} catch (Exception e) {
+				return e;
+			}
+		});
+		afterInsertQueryAction.run();
+		return toAdd;
+	}
 
 	@Override
 	public void close() throws IOException {
@@ -357,6 +279,143 @@ public class SQLiteDAOImpl implements DAO {
 		} catch (DAOException e) {
 			throw new IOException(e);
 		}
+	}
+
+	@Override
+	public Player addPlayer(final Player p) throws DAOException {
+		return this.abstractAdd(
+				p, 
+				(c,s,ps) -> {
+					try {
+						Optional<String> birthday = p.getBirthdayAsStandardString();
+						ps.insertPlayer.setString(1, p.getName().get());
+						ps.insertPlayer.setString(2, p.getSurname().get());
+						ps.insertPlayer.setString(3, birthday.isPresent() ? birthday.get() : Utils.EMPTY_DATE);
+						ps.insertPlayer.setString(4, p.getPhone().get().isPresent() ? p.getPhone().get().get() : Utils.EMPTY_PHONE);
+						ps.insertPlayer.addBatch();
+						c.setAutoCommit(false);
+						ps.insertPlayer.executeBatch();
+						c.setAutoCommit(true);
+						return null;
+					} catch (SQLException e) {
+						return e;
+					}
+				},
+				"player", 
+				() -> {this.players.put(p.getId(), p);}
+			);
+//		this.connectAndThenDo((c, s, ps) -> {
+//			try {
+//				Optional<String> birthday = p.getBirthdayAsStandardString();
+//				ps.insertPlayer.setString(1, p.getName().get());
+//				ps.insertPlayer.setString(2, p.getSurname().get());
+//				ps.insertPlayer.setString(3, birthday.isPresent() ? birthday.get() : Utils.EMPTY_DATE);
+//				ps.insertPlayer.setString(4, p.getPhone().get().isPresent() ? p.getPhone().get().get() : Utils.EMPTY_PHONE);
+//				ps.insertPlayer.addBatch();
+//
+//				c.setAutoCommit(false);
+//				ps.insertPlayer.executeBatch();
+//				c.setAutoCommit(true);
+//				
+//				ps.lastInsertedRow.setString(1, "player");
+//				c.setAutoCommit(false);
+//				ResultSet rs = ps.lastInsertedRow.executeQuery();
+//				while (rs.next()) {
+//					p.setId(rs.getLong("last_inserted_id"));
+//				}
+//				c.setAutoCommit(true);
+//				return null;
+//			} catch (SQLException e) {
+//				return e;
+//			}
+//		});
+//		this.players.put(p.getId(), p);
+//		return p;
+	}
+	
+	@Override
+	public Player updatePlayer(final Player player) throws DAOException {
+		this.connectAndThenDo((c,s,ps) -> {
+			try {
+				Optional<String> birthday = player.getBirthdayAsStandardString();
+				ps.updatePlayer.setString(1, player.getName().get());
+				ps.updatePlayer.setString(2, player.getSurname().get());
+				ps.updatePlayer.setString(3, birthday.isPresent() ? birthday.get() : Utils.EMPTY_DATE);
+				ps.updatePlayer.setString(4, player.getPhone().get().isPresent() ? player.getPhone().get().get() : Utils.EMPTY_PHONE);
+				ps.updatePlayer.setLong(5, player.getId());
+				
+				ps.updatePlayer.addBatch();
+				c.setAutoCommit(false);
+				ps.updatePlayer.executeBatch();
+				c.setAutoCommit(true);
+				return null;
+			} catch (SQLException e) {
+				return e;
+			}
+		});
+		return player;
+	}
+
+	@Override
+	public void removePlayer(Player p) throws DAOException {
+		this.connectAndThenDo((c,s,ps) -> {
+			try {
+				ps.deletePlayer.setLong(1, p.getId());
+				ps.deletePlayer.addBatch();
+				
+				c.setAutoCommit(false);
+				ps.deletePlayer.executeBatch();
+				c.setAutoCommit(true);
+				return null;
+			} catch (SQLException e) {
+				return e;
+			}
+		});
+		this.players.remove(p.getId());
+	}
+
+	@Override
+	public Collection<Player> getAllPlayersThat(Function<Player, Boolean> filter) throws DAOException {
+		Collection<Player> retVal = new ArrayList<>();
+		this.connectAndThenDo((c,s,ps) -> {
+			ResultSet rs;
+			try {
+				rs = ps.getAllPlayers.executeQuery();
+				Player p = null;
+				while (rs.next()) {
+					if (this.players.containsKey(rs.getLong("id"))) {
+						p = this.players.get(rs.getLong("id"));
+					} else {
+						p = new Player(
+			    			rs.getLong("id"),
+			    			rs.getString("name"),
+			    			rs.getString("surname"),
+			    			!rs.getString("birthday").equalsIgnoreCase(Utils.EMPTY_DATE) ? Utils.getDateFrom(rs.getString("birthday")) : null,
+			    			!rs.getString("phone").equalsIgnoreCase(Utils.EMPTY_PHONE) ? rs.getString("phone") : null,
+			    			new ArrayList<>());
+						this.players.putIfAbsent(p.getId(), p);
+						p.getTeamWithPlayer().addAll(this.getTeamsWith(rs.getLong("id")));
+					}
+					System.out.println(p.getName().get()+ " analyzing "+ filter);
+			    	if (filter.apply(p)) {
+			    		System.out.println(p.getName().get() + " passed!");
+			    		retVal.add(p);
+				    }
+			    }
+				return null;
+			} catch (SQLException | DAOException e) {
+				return e;
+			}
+		});
+		return retVal;
+	}
+	
+	public ObservableList<Player> getPlayerList() throws DAOException {
+		return this.players.observableValueList();
+	}
+	
+	public ObservableList<Team> getTeamList() throws DAOException {
+		return this.teams.observableValueList();
 	}
 
 	@Override
@@ -518,6 +577,36 @@ public class SQLiteDAOImpl implements DAO {
 			}
 		}); 
 		return retVal;
+	}
+
+	@Override
+	public Tournament add(Tournament tournament) throws DAOException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Tournament update(Tournament tournament) throws DAOException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void remove(Tournament tournament) throws DAOException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public ObservableList<Tournament> getTournamentList() throws DAOException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Collection<Team> getTournamentsThat(Function<Tournament, Boolean> filter) throws DAOException {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }
