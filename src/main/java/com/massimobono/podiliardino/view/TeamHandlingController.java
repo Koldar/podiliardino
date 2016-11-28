@@ -4,6 +4,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.massimobono.podiliardino.Main;
+import com.massimobono.podiliardino.dao.DAOException;
 import com.massimobono.podiliardino.model.Player;
 import com.massimobono.podiliardino.model.Team;
 import com.massimobono.podiliardino.util.ExceptionAlert;
@@ -68,8 +69,11 @@ public class TeamHandlingController {
 
 	}
 
-	public void setup(Main mainApp) {
+	public void setup(Main mainApp) throws DAOException {
 		this.mainApp = mainApp;
+		
+		this.teamList.addAll(this.mainApp.getDAO().getAllTeams());
+		this.teamTable.setItems(this.teamList);
 	}
 
 	@FXML

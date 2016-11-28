@@ -152,6 +152,9 @@ public class TeamEditDialogController {
 		if (this.secondTeamMemberChoiceBox.getSelectionModel().getSelectedItem() == null) {
 			strs.add("The second member of the team is unselected. Please select one member of the team.");
 		}
+		if (this.firstTeamMemberChoiceBox.getSelectionModel().getSelectedItem() == this.secondTeamMemberChoiceBox.getSelectionModel().getSelectedItem()) {
+			strs.add("A team cannot be formed by a single person (even if he's Superman).");
+		}
 		
 		if (!strs.isEmpty()) {
 			Alert alert = new Alert(AlertType.ERROR);
