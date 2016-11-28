@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.zip.DataFormatException;
 
 import com.massimobono.podiliardino.model.Player;
+import com.massimobono.podiliardino.util.Utils;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -93,9 +94,9 @@ public class PlayerEditDialogController {
 		}
 		
 		try {
-			DateTimeFormatter.ofPattern(Player.BIRTHDAY_PATTERN).parse(this.birthdayTextField.getText());
+			DateTimeFormatter.ofPattern(Utils.BIRTHDAY_PATTERN).parse(this.birthdayTextField.getText());
 		} catch (DateTimeParseException e) {
-			strs.add("Cannot parse date. It has to be of format "+Player.BIRTHDAY_PATTERN);
+			strs.add("Cannot parse date. It has to be of format "+Utils.BIRTHDAY_PATTERN);
 		}
 		
 		if (!this.phoneTextField.getText().matches(PHONE_REGEX)) {

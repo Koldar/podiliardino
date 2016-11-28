@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.function.Function;
 
 import com.massimobono.podiliardino.model.Player;
+import com.massimobono.podiliardino.model.Team;
 
 /**
  * 
@@ -81,4 +82,32 @@ public interface DAO extends Closeable{
 		return this.getPlayerby(null, surname);
 	}
 	
+	
+	
+	/**
+	 * Updates the DAO with the changes you've made on a {@link Team} instance you've changed 
+	 * @param team the instance to synchronize
+	 * @return the same {@link Team} instance you've provided but with the ID used to synchornize it in the db
+	 * @throws DAOException if something bad happens
+	 */
+	public Team addTeam(Team team) throws DAOException;
+	
+	public Team update(Team team) throws DAOException;
+	
+	public Collection<Team> getAllTeamsThat(Function<Team, Boolean> filter) throws DAOException;
+	
+	public void removeTeam(Team team) throws DAOException;
+	
+	/**
+	 * 
+	 * @return all the team inside the database
+	 * @throws DAOException if something bad happens
+	 */
+	public default Collection<Team> getAllTeams() throws DAOException {
+		return this.getAllTeamsThat(p -> true);
+	}
+	
+	public default Collection<Team> getTeamByName(String name) throws DAOException {
+		return this.getAllTeamsThat(t -> t.getName().get().equalsIgnoreCase(name));
+	}
 }

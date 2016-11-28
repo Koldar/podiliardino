@@ -1,5 +1,6 @@
 package com.massimobono.podiliardino.dao;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
@@ -10,24 +11,110 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import com.massimobono.podiliardino.model.Player;
+import com.massimobono.podiliardino.model.Team;
+import com.massimobono.podiliardino.util.TerFunction;
+import com.massimobono.podiliardino.util.Utils;
 
 public class SQLiteDAOImpl implements DAO {
 
 	private static final int QUERY_TIMEOUT = 30;
 
 	private File databaseFileName;
-	private Connection sqliteConnection;
+	
+	private class PreparedStatements implements Closeable {
+		
+		private Connection connection;
+		private Map<Connection, PreparedStatements> map;
+		
+		public PreparedStatement insertPlayer;
+		public PreparedStatement getAllPlayers;
+		public PreparedStatement updatePlayer;
+		public PreparedStatement deletePlayer;
+		
+		public PreparedStatement insertTeam;
+		public PreparedStatement getAllTeams;
+		public PreparedStatement updateTeam;
+		public PreparedStatement deleteTeam;
+		public PreparedStatement getPlayersInTeam;
+		public PreparedStatement getTeamWithPlayer;
+		public PreparedStatement addPlayerComposeTeam;
+		public PreparedStatement removePlayerComposeTeam;
+		
+		public PreparedStatement lastInsertedRow;
+		
+		public PreparedStatements(Connection connection, Map<Connection, PreparedStatements> map) throws SQLException {
+			this.map = map;
+			this.connection = connection;
+			
+			this.insertPlayer = connection.prepareStatement("INSERT INTO player(name, surname, birthday, phone) VALUES(?,?,?,?)");
+			this.getAllPlayers = connection.prepareStatement("SELECT id, name, surname, birthday, phone FROM player");
+			this.updatePlayer = connection.prepareStatement("UPDATE OR ROLLBACK player SET name=?, surname=?, birthday=?,phone=? WHERE id=?");
+			this.deletePlayer = connection.prepareStatement("DELETE FROM player WHERE id=?");
+			
+			this.insertTeam = connection.prepareStatement("INSERT INTO team(name, date) VALUES(?,?)");
+			this.getAllTeams = connection.prepareStatement("SELECT id, name, date FROM team");
+			this.updateTeam = connection.prepareStatement("UPDATE OR ROLLBACK team SET name=?, date=? WHERE id=?");
+			this.deleteTeam = connection.prepareStatement("DELETE FROM team WHERE id=?");
+			
+			this.getPlayersInTeam = connection.prepareStatement("SELECT pct.player_id FROM player_compose_team as pct WHERE pct.team_id=?");
+			this.getTeamWithPlayer = connection.prepareStatement("SELECT pct.team_id FROM player_compose_team as pct WHERE pct.player_id=?");
+			
+			this.addPlayerComposeTeam = connection.prepareStatement("INSERT INTO player_compose_team(player_id, team_id) VALUES(?,?)");
+			this.removePlayerComposeTeam = connection.prepareStatement("DELETE FROM player_compose_team WHERE team_id=?");
+			
+			this.lastInsertedRow = connection.prepareStatement("SELECT seq as last_inserted_id FROM sqlite_sequence WHERE name=?;");
+		}
 
-	private PreparedStatement insertPlayer;
-	private PreparedStatement getAllPlayers;
-	private PreparedStatement updatePlayer;
-	private PreparedStatement deletePlayer;
-	private PreparedStatement lastInsertedRow;
-	private boolean preparedStatementCreated;
+		@Override
+		public void close() throws IOException {
+			try {
+				this.insertPlayer.close();
+				this.getAllPlayers.close();
+				this.updatePlayer.close();
+				this.deletePlayer.close();
+				this.deletePlayer.close();
+				this.insertTeam.close();
+				this.getAllTeams.close();
+				this.updateTeam.close();
+				this.deleteTeam.close();
+				this.getPlayersInTeam.close();
+				this.getTeamWithPlayer.close();
+				this.addPlayerComposeTeam.close();
+				this.removePlayerComposeTeam.close();
+				this.lastInsertedRow.close();
+			} catch (SQLException e) {
+				throw new IOException(e);
+			} finally {
+				this.map.remove(this.connection);
+			}
+		}
+	}
+	
+	private Map<Connection, PreparedStatements> preparedStatements;
+	
+	/**
+	 * A map containing all the players computed by the DAO.
+	 * 
+	 * Every tme we add a new player, this map sotres the reference. Every time the DAO
+	 * removes a player, this map destroy a reference. Everytime we get players from the DAO,
+	 * the map stores a new reference if it doesn't have already. Otherwise the DAO does not create a new {@link Player} instance.
+	 */
+	private Map<Long, Player> players;
+	/**
+	 * A map containing all the teams computed by the DAO.
+	 * 
+	 * Every tme we add a new team, this map sotres the reference. Every time the DAO
+	 * removes a team, this map destroy a reference. Everytime we get teams from the DAO,
+	 * the map stores a new reference if it doesn't have already. Otherwise the DAO does not create a new {@link Team} instance.
+	 */
+	private Map<Long, Team> teams;
 
 	/**
 	 * 
@@ -37,10 +124,9 @@ public class SQLiteDAOImpl implements DAO {
 	 */
 	public SQLiteDAOImpl(File databaseFileName, boolean performSetup) throws DAOException {
 		this.databaseFileName = databaseFileName;
-		this.insertPlayer = null;
-		this.getAllPlayers = null;
-		this.deletePlayer = null;
-		this.preparedStatementCreated = false;
+		this.preparedStatements = new HashMap<>();
+		this.players = new HashMap<>();
+		this.teams = new HashMap<>();
 		
 		if (performSetup) {
 			this.setup();
@@ -49,21 +135,21 @@ public class SQLiteDAOImpl implements DAO {
 
 	@Override
 	public Player addPlayer(final Player p) throws DAOException {
-		this.connectAndThenDo((c, s) -> {
+		this.connectAndThenDo((c, s, ps) -> {
 			try {
-				this.insertPlayer.setString(1, p.getName().get());
-				this.insertPlayer.setString(2, p.getSurname().get());
-				this.insertPlayer.setString(3, p.getBirthdayAsStandardString());
-				this.insertPlayer.setString(4, p.getPhone().get());
-				this.insertPlayer.addBatch();
+				ps.insertPlayer.setString(1, p.getName().get());
+				ps.insertPlayer.setString(2, p.getSurname().get());
+				ps.insertPlayer.setString(3, p.getBirthdayAsStandardString());
+				ps.insertPlayer.setString(4, p.getPhone().get());
+				ps.insertPlayer.addBatch();
 
 				c.setAutoCommit(false);
-				this.insertPlayer.executeBatch();
+				ps.insertPlayer.executeBatch();
 				c.setAutoCommit(true);
 				
-				this.lastInsertedRow.setString(1, "player");
+				ps.lastInsertedRow.setString(1, "player");
 				c.setAutoCommit(false);
-				ResultSet rs = this.lastInsertedRow.executeQuery();
+				ResultSet rs = ps.lastInsertedRow.executeQuery();
 				while (rs.next()) {
 					p.setId(rs.getLong("last_inserted_id"));
 				}
@@ -72,23 +158,24 @@ public class SQLiteDAOImpl implements DAO {
 			} catch (SQLException e) {
 				return e;
 			}
-		}); 
+		});
+		this.players.put(p.getId(), p);
 		return p;
 	}
 	
 	@Override
 	public Player updatePlayer(final Player player) throws DAOException {
-		this.connectAndThenDo((c,s) -> {
+		this.connectAndThenDo((c,s,ps) -> {
 			try {
-				this.updatePlayer.setString(1, player.getName().get());
-				this.updatePlayer.setString(2, player.getSurname().get());
-				this.updatePlayer.setString(3, player.getBirthdayAsStandardString());
-				this.updatePlayer.setString(4, player.getPhone().get());
-				this.updatePlayer.setLong(5, player.getId());
+				ps.updatePlayer.setString(1, player.getName().get());
+				ps.updatePlayer.setString(2, player.getSurname().get());
+				ps.updatePlayer.setString(3, player.getBirthdayAsStandardString());
+				ps.updatePlayer.setString(4, player.getPhone().get());
+				ps.updatePlayer.setLong(5, player.getId());
 				
-				this.updatePlayer.addBatch();
+				ps.updatePlayer.addBatch();
 				c.setAutoCommit(false);
-				this.updatePlayer.executeBatch();
+				ps.updatePlayer.executeBatch();
 				c.setAutoCommit(true);
 				return null;
 			} catch (SQLException e) {
@@ -100,53 +187,66 @@ public class SQLiteDAOImpl implements DAO {
 
 	@Override
 	public void removePlayer(Player p) throws DAOException {
-		this.connectAndThenDo((c,s) -> {
+		this.connectAndThenDo((c,s,ps) -> {
 			try {
-				this.deletePlayer.setLong(1, p.getId());
-				this.deletePlayer.addBatch();
+				ps.deletePlayer.setLong(1, p.getId());
+				ps.deletePlayer.addBatch();
 				
 				c.setAutoCommit(false);
-				this.deletePlayer.executeBatch();
+				ps.deletePlayer.executeBatch();
 				c.setAutoCommit(true);
 				return null;
 			} catch (SQLException e) {
 				return e;
 			}
 		});
+		this.players.remove(p.getId());
 	}
 
 	@Override
 	public Collection<Player> getAllPlayersThat(Function<Player, Boolean> filter) throws DAOException {
 		Collection<Player> retVal = new ArrayList<>();
-		this.connectAndThenDo((c,s) -> {
+		this.connectAndThenDo((c,s,ps) -> {
 			ResultSet rs;
 			try {
-				rs = this.getAllPlayers.executeQuery();
+				rs = ps.getAllPlayers.executeQuery();
+				Player p = null;
 				while (rs.next()) {
-			    	Player p = new Player(
+					if (this.players.containsKey(rs.getLong("id"))) {
+						p = this.players.get(rs.getLong("id"));
+					} else {
+						p = new Player(
 			    			rs.getLong("id"),
 			    			rs.getString("name"),
 			    			rs.getString("surname"),
-			    			Player.getBirthdayDateFromStandardString(rs.getString("birthday")),
-			    			rs.getString("phone"));
+			    			Utils.getDateFrom(rs.getString("birthday")),
+			    			rs.getString("phone"),
+			    			new ArrayList<>());
+						this.players.putIfAbsent(p.getId(), p);
+						p.getTeamWithPlayer().addAll(this.getTeamsWith(rs.getLong("id")));
+					}
+					System.out.println(p.getName().get()+ " analyzing "+ filter);
 			    	if (filter.apply(p)) {
-				    	retVal.add(p);
+			    		System.out.println(p.getName().get() + " passed!");
+			    		retVal.add(p);
 				    }
 			    }
 				return null;
-			} catch (SQLException e) {
+			} catch (SQLException | DAOException e) {
 				return e;
 			}
 		});
-		
 		return retVal;
 	}
 
 	@Override
 	public void clearAll() throws DAOException {
-		this.connectAndThenDo(false, (c, s) -> {
+		this.connectAndThenDo(false, (c, s,ps) -> {
 			try {
 				s.executeUpdate("DELETE FROM player;");
+				this.players.clear();
+				s.executeUpdate("DELETE FROM team;");
+				this.teams.clear();
 				return null;
 			} catch (SQLException e) {
 				return e;
@@ -156,11 +256,16 @@ public class SQLiteDAOImpl implements DAO {
 
 	@Override
 	public void setup() throws DAOException {
-		this.connectAndThenDo(false, (connection, statement) -> {
+		this.connectAndThenDo(false, (c, s,ps) -> {
 			try {
-				statement.executeUpdate("PRAGMA foreign_keys = \"1\";");
-				statement.executeUpdate("CREATE TABLE IF NOT EXISTS player (id integer primary key autoincrement, name varchar(100), surname varchar(100), birthday varchar(20), phone varchar(20));");
-				statement.executeUpdate("CREATE INDEX IF NOT EXISTS name ON player (name, surname);");
+				s.executeUpdate("PRAGMA foreign_keys = \"1\";");
+				s.executeUpdate("CREATE TABLE IF NOT EXISTS player (id integer primary key autoincrement, name varchar(100), surname varchar(100), birthday varchar(20), phone varchar(20));");
+				s.executeUpdate("CREATE INDEX IF NOT EXISTS name ON player (name, surname);");
+				
+				s.executeUpdate("CREATE TABLE IF NOT EXISTS team (id integer primary key autoincrement, name varchar(100), date varchar(20));");
+				s.executeUpdate("CREATE INDEX IF NOT EXISTS team_name ON team (name);");
+				
+				s.executeUpdate("CREATE TABLE IF NOT EXISTS player_compose_team (player_id INTEGER REFERENCES player(id) ON UPDATE CASCADE, team_id INTEGER REFERENCES team(id) ON UPDATE CASCADE);");
 				return null;
 			} catch (SQLException e) {
 				return e;
@@ -170,19 +275,13 @@ public class SQLiteDAOImpl implements DAO {
 
 	@Override
 	public void tearDown() throws DAOException {
-		try {
-			if (this.preparedStatementCreated) {
-				this.insertPlayer.close();
-				this.getAllPlayers.close();
-				this.deletePlayer.close();
-				this.lastInsertedRow.close();
-				this.updatePlayer.close();
+		for (Connection c : this.preparedStatements.keySet()) {
+			try {
+				this.preparedStatements.get(c).close();
+			} catch (IOException e) {
+				e.printStackTrace();
+				//TODO complete here
 			}
-			if (sqliteConnection != null) {
-				this.sqliteConnection.close();
-			}
-		} catch (SQLException e) {
-			throw new DAOException(e);
 		}
 	}
 
@@ -196,12 +295,14 @@ public class SQLiteDAOImpl implements DAO {
 	 * @param queries a lambda where you can execute all the statement you want. Remeber to return the exception you find, or "null" if you encounter no exception
 	 * @throws DAOException if something bad happen
 	 */
-	private void connectAndThenDo(boolean tryPreparedStatement, BiFunction<Connection, Statement, Exception> queries) throws DAOException {
+	private void connectAndThenDo(boolean tryPreparedStatement, TerFunction<Connection, Statement, PreparedStatements, Exception> queries) throws DAOException {
 		try {
-			this.createPrepareStatement(tryPreparedStatement);
-			try (Statement statement = this.sqliteConnection.createStatement();) {
+			try (	Connection conn = DriverManager.getConnection(String.format("jdbc:sqlite:%s", databaseFileName.getAbsolutePath()));
+					Statement statement = conn.createStatement();
+					PreparedStatements preparedStatements = this.createPrepareStatement(conn, tryPreparedStatement); 
+				) {
 				statement.setQueryTimeout(QUERY_TIMEOUT);
-				Exception e = queries.apply(this.sqliteConnection, statement);
+				Exception e = queries.apply(conn, statement, preparedStatements);
 				if (e != null) {
 					throw e;
 				}
@@ -217,28 +318,22 @@ public class SQLiteDAOImpl implements DAO {
 	 * @param queries
 	 * @throws DAOException
 	 */
-	private void connectAndThenDo(BiFunction<Connection, Statement, Exception> queries) throws DAOException {
+	private void connectAndThenDo(TerFunction<Connection, Statement, PreparedStatements, Exception> queries) throws DAOException {
 		this.connectAndThenDo(true, queries);
 	}
 
 	/**
 	 * 
 	 * @param setupPreparedStatement if se tto true, we will initialize prerpared stsatement (if they have already initialized, we do nothing)
+	 * @return null if setupPreparedStatement is false, an instance of PreparedStatements otherwise
 	 * @throws SQLException if something bad goes wrong
 	 */
-	private void createPrepareStatement(boolean setupPreparedStatement) throws SQLException {
-		if (this.sqliteConnection == null) {
-			this.sqliteConnection = DriverManager.getConnection(String.format("jdbc:sqlite:%s", databaseFileName.getAbsolutePath()));
+	private PreparedStatements createPrepareStatement(Connection connection, boolean setupPreparedStatement) throws SQLException {
+		if (setupPreparedStatement && !this.preparedStatements.containsKey(connection)) {
+			PreparedStatements retVal = new PreparedStatements(connection, this.preparedStatements);
+			this.preparedStatements.put(connection, retVal);
 		}
-		if (setupPreparedStatement && !this.preparedStatementCreated) {
-			this.insertPlayer = this.sqliteConnection.prepareStatement("INSERT INTO player(name, surname, birthday, phone) VALUES(?,?,?,?)");
-			this.getAllPlayers = this.sqliteConnection.prepareStatement("SELECT id, name, surname, birthday, phone FROM player");
-			this.updatePlayer = this.sqliteConnection.prepareStatement("UPDATE OR ROLLBACK player SET name=?, surname=?, birthday=?,phone=? WHERE id=?");
-			this.deletePlayer = this.sqliteConnection.prepareStatement("DELETE FROM player WHERE id=?");
-			this.lastInsertedRow = this.sqliteConnection.prepareStatement("SELECT seq as last_inserted_id FROM sqlite_sequence WHERE name=?;");
-			
-			this.preparedStatementCreated = true;
-		}
+		return this.preparedStatements.get(connection);
 	}
 
 	@Override
@@ -248,6 +343,165 @@ public class SQLiteDAOImpl implements DAO {
 		} catch (DAOException e) {
 			throw new IOException(e);
 		}
+	}
+
+	@Override
+	public Team addTeam(final Team team) throws DAOException {
+		this.connectAndThenDo((c, s, ps) -> {
+			try {
+				ps.insertTeam.setString(1, team.getName().get());
+				ps.insertTeam.setString(2, Utils.getStandardDateFrom(team.getDate().get()));
+				ps.insertTeam.addBatch();
+				ps.insertTeam.executeBatch();
+				
+				ps.lastInsertedRow.setString(1, "team");
+				ResultSet rs = ps.lastInsertedRow.executeQuery();
+				while (rs.next()) {
+					team.setId(rs.getLong("last_inserted_id"));
+				}
+				
+				ps.addPlayerComposeTeam.setLong(1, team.getPlayers().get(0).getId());
+				ps.addPlayerComposeTeam.setLong(2, team.getId());
+				ps.addPlayerComposeTeam.addBatch();
+				ps.addPlayerComposeTeam.setLong(1, team.getPlayers().get(1).getId());
+				ps.addPlayerComposeTeam.setLong(2, team.getId());
+				ps.addPlayerComposeTeam.addBatch();
+				ps.addPlayerComposeTeam.executeBatch();
+				
+				return null;
+			} catch (SQLException e) {
+				return e;
+			}
+		}); 
+		this.teams.put(team.getId(), team);
+		return team;
+	}
+
+	@Override
+	public Team update(final Team team) throws DAOException {
+		this.connectAndThenDo((c,s,ps) -> {
+			try {
+				ps.updateTeam.setString(1, team.getName().get());
+				ps.updateTeam.setString(2, Utils.getStandardDateFrom(team.getDate().get()));
+				ps.updateTeam.setLong(3, team.getId());
+				ps.updateTeam.addBatch();
+				
+				ps.removePlayerComposeTeam.setLong(1, team.getId());
+				ps.removePlayerComposeTeam.addBatch();
+				
+				ps.addPlayerComposeTeam.setLong(1, team.getPlayers().get(0).getId());
+				ps.addPlayerComposeTeam.setLong(2, team.getId());
+				ps.addPlayerComposeTeam.addBatch();
+				ps.addPlayerComposeTeam.setLong(1, team.getPlayers().get(1).getId());
+				ps.addPlayerComposeTeam.setLong(2, team.getId());
+				ps.addPlayerComposeTeam.addBatch();
+				
+				
+				c.setAutoCommit(false);
+				ps.updateTeam.executeBatch();
+				ps.removePlayerComposeTeam.executeBatch();
+				ps.addPlayerComposeTeam.executeBatch();
+				c.setAutoCommit(true);
+				return null;
+			} catch (SQLException e) {
+				return e;
+			}
+		});
+		return team;
+	}
+
+	@Override
+	public Collection<Team> getAllTeamsThat(Function<Team, Boolean> filter) throws DAOException {
+		Collection<Team> retVal = new ArrayList<>();
+		this.connectAndThenDo((c,s,ps) -> {
+			try {
+				ResultSet rs = ps.getAllTeams.executeQuery();
+				while (rs.next()) {
+					Team team = null;
+					if (this.teams.containsKey(rs.getLong("id"))) {
+						team = this.teams.get(rs.getLong("id"));
+					} else {
+						team = new Team(
+			    			rs.getLong("id"),
+			    			rs.getString("name"),
+			    			Utils.getDateFrom(rs.getString("date")),
+			    			new ArrayList<>());
+						team.getPlayers().addAll(this.getPlayersInTeam(rs.getLong("id")));
+						this.teams.putIfAbsent(team.getId(), team);
+					}
+			    	if (filter.apply(team)) {
+				    	retVal.add(team);
+				    }
+			    }
+				return null;
+			} catch (Exception e) {
+				return e;
+			}
+		});
+		return retVal;
+	}
+
+	@Override
+	public void removeTeam(final Team team) throws DAOException {
+		this.connectAndThenDo((c,s,ps) -> {
+			try {
+				ps.deleteTeam.setLong(1, team.getId());
+				ps.deleteTeam.addBatch();
+				
+				c.setAutoCommit(false);
+				ps.deleteTeam.executeBatch();
+				c.setAutoCommit(true);
+				return null;
+			} catch (SQLException e) {
+				return e;
+			}
+		});
+		this.teams.remove(team.getId());
+	}
+	
+	/**
+	 * 
+	 * @param teamId
+	 * @return the players inside a particular team
+	 * @throws SQLException if something bad happens
+	 * @throws DAOException if something bad happens
+	 */
+	private Collection<Player> getPlayersInTeam(long teamId) throws DAOException {
+		Collection<Player> retVal = new HashSet<>();
+		
+		this.connectAndThenDo((c,s,ps) -> {
+			try {
+				ps.getPlayersInTeam.setLong(1, teamId);
+				ResultSet rs = ps.getPlayersInTeam.executeQuery();
+				while (rs.next()) {
+					final long player_id = rs.getLong("player_id");
+					retVal.addAll(this.getAllPlayersThat(p -> p.getId() == player_id));
+				}
+				return null;
+			} catch (SQLException | DAOException e) {
+				return e;
+			}
+		});
+		return retVal;
+	}
+	
+	private Collection<Team> getTeamsWith(long player_id) throws DAOException {
+		Collection<Team> retVal = new HashSet<>();
+		
+		this.connectAndThenDo((c,s,ps) -> {
+			try {
+				ps.getTeamWithPlayer.setLong(1, player_id);
+				ResultSet rs = ps.getTeamWithPlayer.executeQuery();
+				while (rs.next()) {
+					final long team_id = rs.getLong("team_id");
+					retVal.addAll(this.getAllTeamsThat(t -> t.getId() == team_id));
+				}
+				return null;
+			} catch (SQLException | DAOException e) {
+				return e;
+			}
+		}); 
+		return retVal;
 	}
 
 }

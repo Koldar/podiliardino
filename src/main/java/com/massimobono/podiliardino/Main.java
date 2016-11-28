@@ -41,6 +41,7 @@ public class Main extends Application {
 	
 	public Main() throws DAOException {
 		this.dao = new SQLiteDAOImpl(new File("data.db"), true);
+		//this.dao.clearAll();
 	}
 
 	@Override

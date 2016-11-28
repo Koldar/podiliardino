@@ -2,8 +2,13 @@ package com.massimobono.podiliardino.model;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.Collection;
+
+import com.massimobono.podiliardino.util.Utils;
 
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.ObjectProperty;
@@ -11,28 +16,30 @@ import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
 public class Player {
-	
-	public static final String BIRTHDAY_PATTERN = "dd-MM-yyyy";
 	
 	private final LongProperty id;
 	private final StringProperty name;
 	private final StringProperty surname;
 	private final ObjectProperty<LocalDate> birthday;
 	private final StringProperty phone;
+	private final ObservableList<Team> teams;
 	
-	public Player(long id, String name, String surname, LocalDate birthday, String phone) {
+	public Player(long id, String name, String surname, LocalDate birthday, String phone, Collection<Team> teams) {
 		super();
 		this.id = new SimpleLongProperty(id);
 		this.name = new SimpleStringProperty(name);
 		this.surname = new SimpleStringProperty(surname);
 		this.birthday = new SimpleObjectProperty<LocalDate>(birthday);
 		this.phone = new SimpleStringProperty(phone);
+		this.teams = FXCollections.observableArrayList(teams);
 	}
 	
 	public Player() {
-		this(0, "", "", LocalDate.now(), "");
+		this(0, "", "", LocalDate.now(), "", new ArrayList<>());
 	}
 
 	/**
@@ -63,15 +70,11 @@ public class Player {
 	 * @return the birthday date, according to the {@link #BIRTHDAY_PATTERN} pattern
 	 */
 	public String getBirthdayAsStandardString() {
-		return this.getBirthday().get().format(DateTimeFormatter.ofPattern(BIRTHDAY_PATTERN));
+		return Utils.getStandardDateFrom(this.birthday.get());
 	}
 	
 	public void setBirthdayFromStandardString(String birthday) throws DateTimeParseException {
-		this.getBirthday().set((DateTimeFormatter.ofPattern(Player.BIRTHDAY_PATTERN).parse(birthday, LocalDate::from)));
-	}
-	
-	public static LocalDate getBirthdayDateFromStandardString(String standardDate) {
-		return DateTimeFormatter.ofPattern(Player.BIRTHDAY_PATTERN).parse(standardDate, LocalDate::from);
+		this.getBirthday().set(Utils.getDateFrom(birthday));
 	}
 
 	/**
@@ -79,6 +82,10 @@ public class Player {
 	 */
 	public StringProperty getPhone() {
 		return phone;
+	}
+	
+	public ObservableList<Team> getTeamWithPlayer() {
+		return this.teams;
 	}
 	
 	public long getId() {
@@ -92,6 +99,13 @@ public class Player {
 	 */
 	public void setId(long id) {
 		this.id.set(id);
+	}
+	
+	/**
+	 * @return the age of this player
+	 */
+	public int getAge() {
+		return Period.between(this.getBirthday().get(), LocalDate.now()).getYears();
 	}
 	
 }
