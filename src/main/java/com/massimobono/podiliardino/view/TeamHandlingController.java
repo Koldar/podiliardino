@@ -137,7 +137,18 @@ public class TeamHandlingController {
 
 	@FXML
 	private void handleDeleteTeam() {
-
+		try {
+			if (this.teamTable.getSelectionModel().getSelectedItem() == null) {
+				//the user has selected nothing
+				return;
+			}
+			Team t =this.teamTable.getSelectionModel().getSelectedItem();
+			this.mainApp.getDAO().removeTeam(t);
+			this.teamList.remove(t);
+		} catch (DAOException e) {
+			e.printStackTrace();
+			ExceptionAlert.showAndWait(e);
+		}
 	}
 	
 	private void handleUserSelectPlayer(ObservableValue<? extends Team> observableValue, Team oldValue, Team newValue) {
