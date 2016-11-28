@@ -84,7 +84,7 @@ public class TeamHandlingController {
 					"New Team", 
 					(TeamEditDialogController c, Stage s) -> {
 						try {
-							c.setup(s, this.mainApp.getDAO().getAllPlayers());
+							c.setup(s, new Team(), this.mainApp.getDAO().getAllPlayers());
 						} catch (Exception e){
 							e.printStackTrace();
 							ExceptionAlert.showAndWait(e);
@@ -107,7 +107,32 @@ public class TeamHandlingController {
 
 	@FXML
 	private void handleEditTeam() {
+		try {
+			if (this.teamTable.getSelectionModel().getSelectedItem() == null) {
+				return;
+			}
+			Optional<Team> t = this.mainApp.showCustomDialog(
+					"TeamEditDialog", 
+					"Edit Team", 
+					(TeamEditDialogController c, Stage s) -> {
+						try {
+							c.setup(s, this.teamTable.getSelectionModel().getSelectedItem(), this.mainApp.getDAO().getAllPlayers());
+						} catch (Exception e){
+							e.printStackTrace();
+							ExceptionAlert.showAndWait(e);
+						}
+					},
+					(TeamEditDialogController c) -> {return Optional.ofNullable(c.isClickedOK() ? c.getTeam() : null);}
+					);
+			if (t.isPresent()) {
+				//we have added a new player. We can add it to the DAO
+				Team t1 = this.mainApp.getDAO().update(t.get());
+			}
 
+		} catch (Exception e) {
+			e.printStackTrace();
+			ExceptionAlert.showAndWait(e);
+		}
 	}
 
 	@FXML

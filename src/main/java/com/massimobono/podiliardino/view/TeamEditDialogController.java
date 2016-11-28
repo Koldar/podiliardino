@@ -104,10 +104,10 @@ public class TeamEditDialogController {
         };
 	}
 	
-	public void setup(Stage dialog, Collection<Player> players) {
+	public void setup(Stage dialog, Team teamToHandle, Collection<Player> players) {
 		this.setDialog(dialog);
 		this.setAvailablePlayers(players);
-		this.setTeam(new Team());
+		this.setTeam(teamToHandle);
 	}
 	
 	@FXML
