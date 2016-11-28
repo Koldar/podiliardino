@@ -37,6 +37,10 @@ public class Tournament {
 		this.endDate = new SimpleObjectProperty<>(Optional.ofNullable(endDate));
 		this.partecipations = FXCollections.observableArrayList();
 	}
+	
+	public Tournament() {
+		this(0, "", LocalDate.now(), null);
+	}
 
 
 	/**

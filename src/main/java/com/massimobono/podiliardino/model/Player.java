@@ -29,18 +29,27 @@ public class Player {
 	private final ObjectProperty<Optional<String>> phone;
 	private final ObservableList<Team> teams;
 	
+	/**
+	 * 
+	 * @param id
+	 * @param name
+	 * @param surname
+	 * @param birthday can be null
+	 * @param phone can be null
+	 * @param teams
+	 */
 	public Player(long id, String name, String surname, LocalDate birthday, String phone, Collection<Team> teams) {
 		super();
 		this.id = new SimpleLongProperty(id);
 		this.name = new SimpleStringProperty(name);
 		this.surname = new SimpleStringProperty(surname);
-		this.birthday = new SimpleObjectProperty<Optional<LocalDate>>(Optional.of(birthday));
-		this.phone = new SimpleObjectProperty<Optional<String>>(Optional.of(phone));
+		this.birthday = new SimpleObjectProperty<Optional<LocalDate>>(Optional.ofNullable(birthday));
+		this.phone = new SimpleObjectProperty<Optional<String>>(Optional.ofNullable(phone));
 		this.teams = FXCollections.observableArrayList(teams);
 	}
 	
 	public Player() {
-		this(0, "", "", LocalDate.now(), "", new ArrayList<>());
+		this(0, "", "", LocalDate.now(), null, new ArrayList<>());
 	}
 
 	/**

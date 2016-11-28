@@ -225,8 +225,8 @@ public class SQLiteDAOImpl implements DAO {
 			    			rs.getLong("id"),
 			    			rs.getString("name"),
 			    			rs.getString("surname"),
-			    			Utils.getDateFrom(rs.getString("birthday")),
-			    			rs.getString("phone"),
+			    			!rs.getString("birthday").equalsIgnoreCase(Utils.EMPTY_BIRTHDAY) ? Utils.getDateFrom(rs.getString("birthday")) : null,
+			    			!rs.getString("phone").equalsIgnoreCase(Utils.EMPTY_PHONE) ? rs.getString("phone") : null,
 			    			new ArrayList<>());
 						this.players.putIfAbsent(p.getId(), p);
 						p.getTeamWithPlayer().addAll(this.getTeamsWith(rs.getLong("id")));
