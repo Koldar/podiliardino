@@ -7,6 +7,8 @@ import java.util.function.Function;
 import com.massimobono.podiliardino.model.Player;
 import com.massimobono.podiliardino.model.Team;
 
+import javafx.collections.ObservableList;
+
 /**
  * 
  * {@link DAO} is {@link Closeable}: that means you can safely use the try with resource construct, if you want:
@@ -56,6 +58,28 @@ public interface DAO extends Closeable{
 	public Player updatePlayer(Player player) throws DAOException;
 	
 	public void removePlayer(Player p) throws DAOException;
+	
+	/**
+	 * like {@link #getAllPlayers()} but it returns an {@link ObservableList}
+	 * that can be used by JavaFX to synchronize its UI
+	 * 
+	 * <b>The implementation promises to you that only one instance of {@link ObservableList} is created
+	 * 
+	 * @return
+	 * @throws DAOException if something bad happens
+	 */
+	public ObservableList<Player> getPlayerList() throws DAOException;
+	
+	/**
+	 * like {@link #getTeamList()} but it returns an {@link ObservableList}
+	 * that can be used by JavaFX to synchronize its UI
+	 * 
+	 * <b>The implementation promises to you that only one instance of {@link ObservableList} is created
+	 * 
+	 * @return
+	 * @throws DAOException if something bad happens
+	 */
+	public ObservableList<Team> getTeamList() throws DAOException;
 	
 	public Collection<Player> getAllPlayersThat(Function<Player,Boolean> filter) throws DAOException;
 	

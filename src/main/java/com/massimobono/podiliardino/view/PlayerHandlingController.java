@@ -1,17 +1,23 @@
 package com.massimobono.podiliardino.view;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.massimobono.podiliardino.Main;
 import com.massimobono.podiliardino.dao.DAOException;
 import com.massimobono.podiliardino.model.Player;
+import com.massimobono.podiliardino.model.Team;
 import com.massimobono.podiliardino.util.ExceptionAlert;
+import com.massimobono.podiliardino.util.Utils;
 
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
@@ -47,13 +53,8 @@ public class PlayerHandlingController {
 	 * Main application. Used to get all the data related to the software
 	 */
 	private Main mainApp;
-	/**
-	 * the list of players to show inside the table
-	 */
-	private ObservableList<Player> playerList;
 
 	public PlayerHandlingController() {
-		this.playerList = FXCollections.observableArrayList();
 	}
 
 	@FXML
@@ -68,8 +69,7 @@ public class PlayerHandlingController {
 
 	public void setup(Main mainApp) throws DAOException {
 		this.mainApp = mainApp;
-		this.playerList.addAll(this.mainApp.getDAO().getAllPlayers());
-		this.playersTable.setItems(this.playerList);
+		this.playersTable.setItems(this.mainApp.getDAO().getPlayerList());
 	}
 
 	@FXML
@@ -87,7 +87,6 @@ public class PlayerHandlingController {
 			if (p.isPresent()) {
 				//we have added a new player. We can add it to the DAO
 				Player p1 = this.mainApp.getDAO().addPlayer(p.get());
-				this.playerList.add(p1);
 			}
 
 		} catch (Exception e) {
@@ -131,8 +130,15 @@ public class PlayerHandlingController {
 				return;
 			}
 			Player p =this.playersTable.getSelectionModel().getSelectedItem();
+			Collection<Team> teamWithPlayer = this.mainApp.getDAO().getAllTeamsThat(t -> t.getPlayers().contains(p));
+			if (!teamWithPlayer.isEmpty()) {
+				Utils.createDefaultErrorAlert(
+					String.format("Player %s %s is inside the following teams:", p.getName(), p.getSurname()),
+					String.join("\n", teamWithPlayer.stream().map(t -> t.getName().get()).collect(Collectors.toList()))
+				);
+				return;
+			}
 			this.mainApp.getDAO().removePlayer(p);
-			this.playerList.remove(p);
 		} catch (DAOException e) {
 			e.printStackTrace();
 			ExceptionAlert.showAndWait(e);

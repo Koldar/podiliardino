@@ -19,8 +19,12 @@ import java.util.function.Function;
 
 import com.massimobono.podiliardino.model.Player;
 import com.massimobono.podiliardino.model.Team;
+import com.massimobono.podiliardino.util.TableFriendlyObservableMap;
 import com.massimobono.podiliardino.util.TerFunction;
 import com.massimobono.podiliardino.util.Utils;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
 public class SQLiteDAOImpl implements DAO {
 
@@ -106,7 +110,7 @@ public class SQLiteDAOImpl implements DAO {
 	 * removes a player, this map destroy a reference. Everytime we get players from the DAO,
 	 * the map stores a new reference if it doesn't have already. Otherwise the DAO does not create a new {@link Player} instance.
 	 */
-	private Map<Long, Player> players;
+	private TableFriendlyObservableMap<Long, Player> players;
 	/**
 	 * A map containing all the teams computed by the DAO.
 	 * 
@@ -114,7 +118,7 @@ public class SQLiteDAOImpl implements DAO {
 	 * removes a team, this map destroy a reference. Everytime we get teams from the DAO,
 	 * the map stores a new reference if it doesn't have already. Otherwise the DAO does not create a new {@link Team} instance.
 	 */
-	private Map<Long, Team> teams;
+	private TableFriendlyObservableMap<Long, Team> teams;
 
 	/**
 	 * 
@@ -125,9 +129,8 @@ public class SQLiteDAOImpl implements DAO {
 	public SQLiteDAOImpl(File databaseFileName, boolean performSetup) throws DAOException {
 		this.databaseFileName = databaseFileName;
 		this.preparedStatements = new HashMap<>();
-		this.players = new HashMap<>();
-		this.teams = new HashMap<>();
-		
+		this.players = new TableFriendlyObservableMap<>();
+		this.teams = new TableFriendlyObservableMap<>();
 		if (performSetup) {
 			this.setup();
 		}
@@ -237,6 +240,14 @@ public class SQLiteDAOImpl implements DAO {
 			}
 		});
 		return retVal;
+	}
+	
+	public ObservableList<Player> getPlayerList() throws DAOException {
+		return this.players.observableValueList();
+	}
+	
+	public ObservableList<Team> getTeamList() throws DAOException {
+		return this.teams.observableValueList();
 	}
 
 	@Override
