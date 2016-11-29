@@ -22,6 +22,9 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.massimobono.podiliardino.model.Indexable;
 import com.massimobono.podiliardino.model.Partecipation;
 import com.massimobono.podiliardino.model.Player;
@@ -41,21 +44,18 @@ import javafx.collections.ObservableSet;
 import javafx.util.Pair;
 
 public class SQLiteDAOImpl implements DAO {
+	
+	private static final Logger LOG = LogManager.getLogger(SQLiteDAOImpl.class.getName());
 
 	private static final int QUERY_TIMEOUT = 30;
 
 	private File databaseFileName;
 
 	private class PreparedStatements implements Closeable {
-
-		private Connection connection;
-		private Map<Connection, PreparedStatements> map;		
 		private Map<String, PreparedStatement> preparedStatements;
 
-		public PreparedStatements(Connection connection, Map<Connection, PreparedStatements> map) throws SQLException {
-			this.map = map;
+		public PreparedStatements(Connection connection) throws SQLException {
 			this.preparedStatements = new HashMap<>();
-			this.connection = connection;
 
 			this.preparedStatements.put("insertPlayer",connection.prepareStatement("INSERT INTO player(name, surname, birthday, phone) VALUES(?,?,?,?)"));
 			this.preparedStatements.put("getAllPlayers",connection.prepareStatement("SELECT id, name, surname, birthday, phone FROM player"));
@@ -101,7 +101,7 @@ public class SQLiteDAOImpl implements DAO {
 			return this.preparedStatements.get("updatePartecipation");
 		}
 
-		public PreparedStatement getDeleteOrIgnorePartecipation() {
+		public PreparedStatement getDeletePartecipation() {
 			return this.preparedStatements.get("deletePartecipation");
 		}
 
@@ -189,13 +189,18 @@ public class SQLiteDAOImpl implements DAO {
 				}
 			} catch (SQLException e) {
 				throw new IOException(e);
-			} finally {
-				this.map.remove(this.connection);
 			}
 		}
 	}
 
-	private Map<Connection, PreparedStatements> preparedStatements;
+	/**
+	 * True if the connection is used by another level of the java Stack, False otherwise.
+	 * The field is useful to ensure no stack uses twice {@link #connection} in 2 different places.
+	 * 
+	 */
+	private boolean connectionUsed;
+	private Connection singleConnection;
+	private PreparedStatements preparedStatements;
 
 	/**
 	 * A map containing all the players computed by the DAO.
@@ -231,11 +236,12 @@ public class SQLiteDAOImpl implements DAO {
 	 */
 	public SQLiteDAOImpl(File databaseFileName, boolean performSetup) throws DAOException {
 		this.databaseFileName = databaseFileName;
-		this.preparedStatements = new HashMap<>();
+		this.preparedStatements = null;
 		this.players = new TableFriendlyObservableMap<>();
 		this.teams = new TableFriendlyObservableMap<>();
 		this.tournaments = new TableFriendlyObservableMap<>();
 		this.participations = FXCollections.observableSet(new HashSet<>());
+		this.connectionUsed = false;
 		if (performSetup) {
 			this.setup();
 		}
@@ -284,13 +290,10 @@ public class SQLiteDAOImpl implements DAO {
 
 	@Override
 	public void tearDown() throws DAOException {
-		for (Connection c : this.preparedStatements.keySet()) {
-			try {
-				this.preparedStatements.get(c).close();
-			} catch (IOException e) {
-				e.printStackTrace();
-				//TODO complete here
-			}
+		try {
+			this.preparedStatements.close();
+		} catch (IOException e) {
+			throw new DAOException(e);
 		}
 	}
 
@@ -311,16 +314,25 @@ public class SQLiteDAOImpl implements DAO {
 	 * @throws DAOException if something bad happen
 	 */
 	private void connectAndThenDo(boolean tryPreparedStatement, TerFunction<Connection, Statement, PreparedStatements, Exception> queries) throws DAOException {
+		if (connectionUsed) {
+			throw new DAOException("you're trying to access connectAndThenDo Mehotd in 2 different parts of the stack! This can't happen because SQLite3 doesn't support multiple connections!");
+		}
 		try {
-			try (	Connection conn = DriverManager.getConnection(String.format("jdbc:sqlite:%s", databaseFileName.getAbsolutePath()));
-					Statement statement = conn.createStatement();
-					PreparedStatements preparedStatements = this.createPrepareStatement(conn, tryPreparedStatement); 
-					) {
+			if (this.singleConnection == null) {
+				this.singleConnection = DriverManager.getConnection(String.format("jdbc:sqlite:%s", databaseFileName.getAbsolutePath()));
+			}
+			if (tryPreparedStatement && this.preparedStatements == null) {
+				this.preparedStatements = new PreparedStatements(this.singleConnection);
+			}
+			try (Statement statement = this.singleConnection.createStatement()) {
+				this.connectionUsed = true;
 				statement.setQueryTimeout(QUERY_TIMEOUT);
-				Exception e = queries.apply(conn, statement, preparedStatements);
+				Exception e = queries.apply(this.singleConnection, statement, this.preparedStatements);
 				if (e != null) {
 					throw e;
 				}
+			} finally {
+				connectionUsed = false;
 			}
 		} catch (Exception e) {
 			throw new DAOException(e);
@@ -335,23 +347,6 @@ public class SQLiteDAOImpl implements DAO {
 	 */
 	private void connectAndThenDo(TerFunction<Connection, Statement, PreparedStatements, Exception> queries) throws DAOException {
 		this.connectAndThenDo(true, queries);
-	}
-
-	/**
-	 * 
-	 * @param setupPreparedStatement if se tto true, we will initialize prerpared stsatement (if they have already initialized, we do nothing)
-	 * @return null if setupPreparedStatement is false, an instance of PreparedStatements otherwise
-	 * @throws SQLException if something bad goes wrong
-	 */
-	private PreparedStatements createPrepareStatement(Connection connection, boolean setupPreparedStatement) throws SQLException {
-		if (setupPreparedStatement && !this.preparedStatements.containsKey(connection)) {
-			if (this.preparedStatements.size() > 0) {
-				throw new RuntimeException("multiple connections!");
-			}
-			PreparedStatements retVal = new PreparedStatements(connection, this.preparedStatements);
-			this.preparedStatements.put(connection, retVal);
-		}
-		return this.preparedStatements.get(connection);
 	}
 
 	/**
@@ -1094,10 +1089,12 @@ public class SQLiteDAOImpl implements DAO {
 	private Partecipation add(Partecipation partecipation) throws DAOException {
 		this.connectAndThenDo((c,s,ps) -> {
 			try {
+				LOG.debug("Adding partecipation "+ partecipation + "...");
 				ps.getInsertOrIgnorePartecipation().setLong(1, partecipation.getTeam().get().getId());
 				ps.getInsertOrIgnorePartecipation().setLong(2, partecipation.getTournament().get().getId());
 				ps.getInsertOrIgnorePartecipation().setInt(3, partecipation.getBye().get() ? 1 : 0);
 				ps.getInsertOrIgnorePartecipation().executeUpdate();
+				LOG.debug("DONE");
 				return null;
 			} catch (Exception e) {
 				return e;
@@ -1110,9 +1107,11 @@ public class SQLiteDAOImpl implements DAO {
 	private void remove(Partecipation partecipation) throws DAOException {
 		this.connectAndThenDo((c,s,ps) -> {
 			try {
-				ps.getDeleteOrIgnorePartecipation().setLong(1, partecipation.getTeam().get().getId());
-				ps.getDeleteOrIgnorePartecipation().setLong(2, partecipation.getTournament().get().getId());
-				ps.getDeleteOrIgnorePartecipation().executeUpdate();
+				LOG.debug("removing partecipation " + partecipation + "...");
+				ps.getDeletePartecipation().setLong(1, partecipation.getTeam().get().getId());
+				ps.getDeletePartecipation().setLong(2, partecipation.getTournament().get().getId());
+				ps.getDeletePartecipation().executeUpdate();
+				LOG.debug("DONE");
 				return null;
 			} catch (Exception e) {
 				return e;

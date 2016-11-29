@@ -9,6 +9,9 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.massimobono.podiliardino.dao.DAO;
 import com.massimobono.podiliardino.dao.DAOException;
 import com.massimobono.podiliardino.dao.SQLiteDAOImpl;
@@ -30,6 +33,8 @@ import javafx.scene.layout.Pane;
 
 
 public class Main extends Application {
+	
+	private static Logger LOG = LogManager.getLogger(Main.class.getName());
 	
 	private Stage primaryStage;
 	private BorderPane rootScene;
@@ -83,9 +88,11 @@ public class Main extends Application {
 		
 		//fetch data from the DAO. Otherwie the DAO won't fetch anything at the beginning
 		try {
+			LOG.info("Fetching data from DAO...");
 			this.dao.getAllPlayers();
 			this.dao.getAllTeams();
 			this.dao.getAllTournaments();
+			LOG.info("DONE");
 		} catch (DAOException e) {
 			e.printStackTrace();
 			ExceptionAlert.showAndWait(e);
