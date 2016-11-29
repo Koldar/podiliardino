@@ -131,6 +131,7 @@ public class TournamentHandlingController {
 					);
 			if (t.isPresent()) {
 				this.mainApp.getDAO().update(t.get());
+				this.tournamentTable.getSelectionModel().clearSelection();
 			}
 
 		} catch (Exception e) {
@@ -169,10 +170,12 @@ public class TournamentHandlingController {
 				
 				//we need to populate the participation teams
 				this.availableTeamsList = FXCollections.observableArrayList(this.mainApp.getDAO().getTeamList());
-				this.availableTeamsList.addListener((ListChangeListener.Change<? extends Team> e) -> {
-					//if someone adds or removes some team, we will be notified
-					this.availableTeamsList.addAll(e.getAddedSubList());
-					this.availableTeamsList.removeAll(e.getRemoved());
+				this.mainApp.getDAO().getTeamList().addListener((ListChangeListener.Change<? extends Team> e) -> {
+					while (e.next()) {
+						//if someone adds or removes some team, we will be notified
+						this.availableTeamsList.addAll(e.getAddedSubList());
+						this.availableTeamsList.removeAll(e.getRemoved());
+					}
 				});
 				this.availableTeams.setItems(this.availableTeamsList);
 			}

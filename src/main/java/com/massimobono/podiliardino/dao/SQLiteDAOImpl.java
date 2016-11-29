@@ -66,7 +66,7 @@ public class SQLiteDAOImpl implements DAO {
 			this.preparedStatements.put("getAllTeams",connection.prepareStatement("SELECT id, name, date FROM team"));
 			this.preparedStatements.put("updateTeam",connection.prepareStatement("UPDATE OR ROLLBACK team SET name=?, date=? WHERE id=?"));
 			this.preparedStatements.put("deleteTeam",connection.prepareStatement("DELETE FROM team WHERE id=?"));
-			
+
 			this.preparedStatements.put("getPlayersInTeam",connection.prepareStatement("SELECT pct.player_id FROM player_compose_team as pct WHERE pct.team_id=?"));
 			this.preparedStatements.put("getTeamWithPlayer",connection.prepareStatement("SELECT pct.team_id FROM player_compose_team as pct WHERE pct.player_id=?"));
 
@@ -77,31 +77,31 @@ public class SQLiteDAOImpl implements DAO {
 			this.preparedStatements.put("getAllTournaments",connection.prepareStatement("SELECT id,name,start_date,end_date FROM tournament"));
 			this.preparedStatements.put("updateTournament",connection.prepareStatement("UPDATE OR ROLLBACK tournament SET name=?, start_date=?, end_date=?"));
 			this.preparedStatements.put("deleteTournament",connection.prepareStatement("DELETE FROM tournament WHERE id=?"));
-			
+
 			this.preparedStatements.put("insertOrIgnorePartecipation", connection.prepareStatement("INSERT OR IGNORE INTO partecipation(team_id, tournament_id, bye) VALUES (?,?,?)"));
 			this.preparedStatements.put("getAllPartecipations", connection.prepareStatement("SELECT p.team_id, p.tournament_id, p.bye FROM partecipation AS p"));
 			this.preparedStatements.put("updatePartecipation", connection.prepareStatement("UPDATE OR ROLLBACK partecipation SET bye=? WHERE team_id=? AND tournament_id=?"));
 			this.preparedStatements.put("deletePartecipation", connection.prepareStatement("DELETE FROM partecipation WHERE team_id=? and tournament_id=?"));
-			
+
 			this.preparedStatements.put("getPartecipationsOfTeam",connection.prepareStatement("SELECT p.team_id, p.tournament_id, p.bye FROM partecipation AS p WHERE p.team_id=?"));
 			this.preparedStatements.put("getPartecipationsInTournament",connection.prepareStatement("SELECT p.team_id, p.tournament_id, p.bye FROM partecipation AS p WHERE p.tournament_id=?")); 
 
 			this.preparedStatements.put("lastInsertedRow",connection.prepareStatement("SELECT seq as last_inserted_id FROM sqlite_sequence WHERE name=?;"));
 		}
-		
+
 		public PreparedStatement getInsertOrIgnorePartecipation() {
 			return this.preparedStatements.get("insertOrIgnorePartecipation");
 		}
-		
+
 		public PreparedStatement getGetAllPartecipations() {
 			return this.preparedStatements.get("getAllPartecipations");
 		}
-		
+
 		public PreparedStatement getUpdatePartecipation() {
 			return this.preparedStatements.get("updatePartecipation");
 		}
-		
-		public PreparedStatement getDeletePartecipation() {
+
+		public PreparedStatement getDeleteOrIgnorePartecipation() {
 			return this.preparedStatements.get("deletePartecipation");
 		}
 
@@ -526,7 +526,7 @@ public class SQLiteDAOImpl implements DAO {
 				return e;
 			}
 		});
-		
+
 		for (Pair<Long, TOGET> pair : objectToSetup) {
 			Exception e = setupJustCreatedObjectAction.apply(pair.getValue(), pair.getKey());
 			if (e != null) {
@@ -590,7 +590,7 @@ public class SQLiteDAOImpl implements DAO {
 						ps.getUpdatePlayer().setString(4, player.getPhone().get().isPresent() ? player.getPhone().get().get() : Utils.EMPTY_PHONE);
 						ps.getUpdatePlayer().setLong(5, player.getId());
 						ps.getUpdatePlayer().addBatch();
-						
+
 						c.setAutoCommit(false);
 						ps.getUpdatePlayer().executeBatch();
 						c.setAutoCommit(true);
@@ -681,15 +681,15 @@ public class SQLiteDAOImpl implements DAO {
 						ps.getAddPlayerComposeTeam().setLong(2, team.getId());
 						ps.getAddPlayerComposeTeam().addBatch();
 						ps.getAddPlayerComposeTeam().executeBatch();
-						
+
 						team.getPartecipations().addListener((ListChangeListener.Change<? extends Partecipation> e) -> {
 							while(e.next()) {
 								try {
 									for (Partecipation p :e.getRemoved()) {
-											this.remove(p);
+										this.remove(p);
 									}
 									for (Partecipation p : e.getAddedSubList()) {
-											this.add(p);
+										this.add(p);
 									}
 								} catch (DAOException ex) {
 									ex.printStackTrace();
@@ -697,7 +697,7 @@ public class SQLiteDAOImpl implements DAO {
 								}
 							}
 						});
-						
+
 						return null;
 					} catch (SQLException e) {
 						return e;
@@ -824,11 +824,11 @@ public class SQLiteDAOImpl implements DAO {
 				return e;
 			}
 		});
-		
+
 		for (Long id : ids) {
 			retVal.addAll(this.getAllPlayersThat(p -> p.getId() == id));
 		}
-		
+
 		return retVal;
 	}
 
@@ -848,11 +848,11 @@ public class SQLiteDAOImpl implements DAO {
 				return e;
 			}
 		}); 
-		
+
 		for (Long id : ids) {
 			retVal.addAll(this.getAllTeamsThat(t -> t.getId() == id));
 		}
-		
+
 		return retVal;
 	}
 
@@ -951,7 +951,7 @@ public class SQLiteDAOImpl implements DAO {
 						t.getName().set(rs.getString("name"));
 						t.getStartDate().set(Utils.getDateFrom(rs.getString("start_date")));
 						t.getEndDate().set(Optional.ofNullable(!endDate.equalsIgnoreCase(Utils.EMPTY_DATE) ? Utils.getDateFrom(endDate) : null));
-						
+
 						t.getPartecipations().addListener((ListChangeListener.Change<? extends Partecipation> e) -> {
 							try {
 								while (e.next()) {
@@ -981,7 +981,7 @@ public class SQLiteDAOImpl implements DAO {
 					}
 				});
 	}
-	
+
 	private <TABLE1 extends Indexable, TABLE2 extends Indexable, NNTABLE>void abstractCompute(long primaryID, TerFunction<Connection, Statement, PreparedStatements, PreparedStatement> startQuery, Function<PreparedStatement, Exception> setupQuery, String secondaryIDName, Supplier<Collection<TABLE1>> firstTableSupplier, Supplier<Collection<TABLE2>> secondTableSuppplier, Supplier<NNTABLE> emptyConstructor, BiFunction<NNTABLE, ResultSet, Exception> nntableSetupper, TerConsumer<TABLE1, TABLE2, NNTABLE> TablesUpdater) throws DAOException {
 		this.connectAndThenDo((c,s,ps) -> {
 			try {
@@ -995,7 +995,7 @@ public class SQLiteDAOImpl implements DAO {
 					final long secondaryID = rs.getLong(secondaryIDName);
 					Optional<TABLE1> oTable1 = firstTableSupplier.get().parallelStream().filter(t1 -> t1.getId() == primaryID).findFirst();
 					Optional<TABLE2> oTable2 = secondTableSuppplier.get().parallelStream().filter(t2 -> t2.getId() == secondaryID).findFirst();
-					
+
 					if (oTable1.isPresent() && oTable2.isPresent()) {
 						NNTABLE nntable = emptyConstructor.get();
 						e = nntableSetupper.apply(nntable, rs);
@@ -1011,7 +1011,7 @@ public class SQLiteDAOImpl implements DAO {
 			}
 		});
 	}
-	
+
 	/**
 	 * Computes every {@link Partecipation} of the tournament <tt>tournament_id</tt>
 	 * 
@@ -1035,7 +1035,7 @@ public class SQLiteDAOImpl implements DAO {
 				return e;
 			}
 		});
-		
+
 		for (Pair<Long, Boolean> pair : ids) {
 			Optional<Tournament> tournament = this.getAllTournamentsThat(t -> t.getId() == tournament_id).stream().findFirst();
 			Optional<Team> team = this.getAllTeamsThat(p -> p.getId() == pair.getKey()).stream().findFirst();
@@ -1050,7 +1050,7 @@ public class SQLiteDAOImpl implements DAO {
 			}
 		}
 	}
-	
+
 	/**
 	 * Computes every {@link Partecipation} of the team <tt>team_id</tt>
 	 * 
@@ -1074,7 +1074,7 @@ public class SQLiteDAOImpl implements DAO {
 				return e;
 			}
 		});
-		
+
 		for (Pair<Long, Boolean> pair : ids) {
 			Optional<Team> team = this.getAllTeamsThat(p -> p.getId() == team_id).stream().findFirst();
 			Optional<Tournament> tournament = this.getAllTournamentsThat(t -> t.getId() == pair.getKey()).stream().findFirst();
@@ -1089,40 +1089,35 @@ public class SQLiteDAOImpl implements DAO {
 			}
 		}
 	}
-	
-	
+
+
 	private Partecipation add(Partecipation partecipation) throws DAOException {
-		if (!this.participations.contains(partecipation)) {
-			this.connectAndThenDo((c,s,ps) -> {
-				try {
-					ps.getInsertOrIgnorePartecipation().setLong(1, partecipation.getTeam().get().getId());
-					ps.getInsertOrIgnorePartecipation().setLong(2, partecipation.getTournament().get().getId());
-					ps.getInsertOrIgnorePartecipation().setInt(3, partecipation.getBye().get() ? 1 : 0);
-					ps.getInsertOrIgnorePartecipation().executeUpdate();
-					return null;
-				} catch (Exception e) {
-					return e;
-				}
-			});
-			this.participations.add(partecipation);
-		}
+		this.connectAndThenDo((c,s,ps) -> {
+			try {
+				ps.getInsertOrIgnorePartecipation().setLong(1, partecipation.getTeam().get().getId());
+				ps.getInsertOrIgnorePartecipation().setLong(2, partecipation.getTournament().get().getId());
+				ps.getInsertOrIgnorePartecipation().setInt(3, partecipation.getBye().get() ? 1 : 0);
+				ps.getInsertOrIgnorePartecipation().executeUpdate();
+				return null;
+			} catch (Exception e) {
+				return e;
+			}
+		});
 		return partecipation;
 	}
-	
+
+
 	private void remove(Partecipation partecipation) throws DAOException {
-		if (this.participations.contains(partecipation)){
-			this.connectAndThenDo((c,s,ps) -> {
-				try {
-					ps.getDeletePartecipation().setLong(1, partecipation.getTeam().get().getId());
-					ps.getDeletePartecipation().setLong(2, partecipation.getTournament().get().getId());
-					ps.getDeletePartecipation().executeUpdate();
-					return null;
-				} catch (Exception e) {
-					return e;
-				}
-			});
-			this.participations.remove(partecipation);
-		}
+		this.connectAndThenDo((c,s,ps) -> {
+			try {
+				ps.getDeleteOrIgnorePartecipation().setLong(1, partecipation.getTeam().get().getId());
+				ps.getDeleteOrIgnorePartecipation().setLong(2, partecipation.getTournament().get().getId());
+				ps.getDeleteOrIgnorePartecipation().executeUpdate();
+				return null;
+			} catch (Exception e) {
+				return e;
+			}
+		});
 	}
 
 }

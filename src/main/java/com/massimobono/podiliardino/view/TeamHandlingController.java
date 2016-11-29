@@ -122,6 +122,7 @@ public class TeamHandlingController {
 			if (t.isPresent()) {
 				//we have added a new player. We can add it to the DAO
 				Team t1 = this.mainApp.getDAO().update(t.get());
+				this.teamTable.getSelectionModel().clearSelection();
 			}
 
 		} catch (Exception e) {

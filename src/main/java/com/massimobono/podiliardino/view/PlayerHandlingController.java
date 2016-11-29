@@ -115,6 +115,7 @@ public class PlayerHandlingController {
 			if (p.isPresent()) {
 				//we have added a new player. We can add it to the DAO
 				this.mainApp.getDAO().updatePlayer(p.get());
+				this.playersTable.getSelectionModel().clearSelection();
 			}
 
 		} catch (Exception e) {

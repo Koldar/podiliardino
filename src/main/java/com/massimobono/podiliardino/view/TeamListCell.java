@@ -1,5 +1,7 @@
 package com.massimobono.podiliardino.view;
 
+import java.util.Optional;
+
 import com.massimobono.podiliardino.dao.DAO;
 import com.massimobono.podiliardino.dao.DAOException;
 import com.massimobono.podiliardino.model.Partecipation;
@@ -36,6 +38,12 @@ public class TeamListCell extends ListCell<Team>
             				false,
             				this.tournamentTable.getSelectionModel().getSelectedItem(),
             				team));
+            	} else {
+            		Optional<Partecipation> op = this.tournamentTable.getSelectionModel().getSelectedItem().getPartecipations()
+            		.stream()
+            		.parallel()
+            		.filter(p -> {return p.getTeam().get().getId() == team.getId();}).findFirst();
+            		op.ifPresent( p -> this.tournamentTable.getSelectionModel().getSelectedItem().getPartecipations().remove(p));	
             	}
             });
             data.getNameLabel().setText(team.getName().get());
