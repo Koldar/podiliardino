@@ -280,7 +280,7 @@ public class SQLiteDAOImpl implements DAO {
 
 				s.executeUpdate("CREATE TABLE IF NOT EXISTS tournament (id INTEGER PRIMARY KEY AUTOINCREMENT, name varchar(100), start_date varchar(20), end_date varchar(20));");
 
-				s.executeUpdate("CREATE TABLE IF NOT EXISTS partecipation (team_id INTEGER REFERENCES team(id) ON UPDATE CASCADE UNIQUE, tournament_id INTEGER REFERENCES tournament(id) ON UPDATE CASCADE UNIQUE, bye integer);"); 
+				s.executeUpdate("CREATE TABLE IF NOT EXISTS partecipation (team_id INTEGER REFERENCES team(id) ON UPDATE CASCADE, tournament_id INTEGER REFERENCES tournament(id) ON UPDATE CASCADE, bye INTEGER, UNIQUE(team_id, tournament_id));"); 
 				return null;
 			} catch (SQLException e) {
 				return e;
@@ -1089,7 +1089,7 @@ public class SQLiteDAOImpl implements DAO {
 	private Partecipation add(Partecipation partecipation) throws DAOException {
 		this.connectAndThenDo((c,s,ps) -> {
 			try {
-				LOG.debug("Adding partecipation "+ partecipation + "...");
+				LOG.debug("adding partecipation {} team_id={} tournament_id={}...", partecipation, partecipation.getTeam().get().getId(), partecipation.getTournament().get().getId());
 				ps.getInsertOrIgnorePartecipation().setLong(1, partecipation.getTeam().get().getId());
 				ps.getInsertOrIgnorePartecipation().setLong(2, partecipation.getTournament().get().getId());
 				ps.getInsertOrIgnorePartecipation().setInt(3, partecipation.getBye().get() ? 1 : 0);
@@ -1107,7 +1107,7 @@ public class SQLiteDAOImpl implements DAO {
 	private void remove(Partecipation partecipation) throws DAOException {
 		this.connectAndThenDo((c,s,ps) -> {
 			try {
-				LOG.debug("removing partecipation " + partecipation + "...");
+				LOG.debug("removing partecipation {} team_id={} tournament_id={}...", partecipation, partecipation.getTeam().get().getId(), partecipation.getTournament().get().getId());
 				ps.getDeletePartecipation().setLong(1, partecipation.getTeam().get().getId());
 				ps.getDeletePartecipation().setLong(2, partecipation.getTournament().get().getId());
 				ps.getDeletePartecipation().executeUpdate();
