@@ -38,5 +38,13 @@ public class Partecipation{
 		return team;
 	}
 	
+	public String toString() {
+		return String.format("<%s team_name=%s tournament_name=%s byte=%s>", 
+				this.getClass().getSimpleName(), 
+				this.team.get().getName().get(), 
+				this.tournament.get().getName().get(), 
+				this.bye.get()?"yes":"no");
+	}
+	
 	
 }

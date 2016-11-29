@@ -33,21 +33,25 @@ public class TeamListCell extends ListCell<Team>
             CheckableListCellViewController data = new CheckableListCellViewController();
             //adds the listener
             data.getCheckBox().setOnAction(e -> {
+            	Tournament tournament = this.tournamentTable.getSelectionModel().getSelectedItem(); 
+            	Partecipation partecipation = null;
             	if (data.getCheckBox().isSelected()) {
-            		this.tournamentTable.getSelectionModel().getSelectedItem().getPartecipations().add(new Partecipation(
-            				false,
-            				this.tournamentTable.getSelectionModel().getSelectedItem(),
-            				team));
+            		partecipation = new Partecipation(false, tournament, team);
+            		tournament.getPartecipations().add(partecipation);
+            		team.getPartecipations().add(partecipation);
             	} else {
-            		Optional<Partecipation> op = this.tournamentTable.getSelectionModel().getSelectedItem().getPartecipations()
+            		Optional<Partecipation> op = tournament.getPartecipations()
             		.stream()
             		.parallel()
             		.filter(p -> {return p.getTeam().get().getId() == team.getId();}).findFirst();
-            		op.ifPresent( p -> this.tournamentTable.getSelectionModel().getSelectedItem().getPartecipations().remove(p));	
+            		op.ifPresent( p -> {
+            			this.tournamentTable.getSelectionModel().getSelectedItem().getPartecipations().remove(p);	
+            			team.getPartecipations().remove(p);
+            		});
             	}
             });
             data.getNameLabel().setText(team.getName().get());
-			data.getCheckBox().setSelected(this.tournamentTable.getSelectionModel().getSelectedItem().getPartecipations().contains(team));
+			data.getCheckBox().setSelected(this.tournamentTable.getSelectionModel().getSelectedItem().getPartecipations().parallelStream().filter(p -> p.getTeam().get() == team).findFirst().isPresent());
             setGraphic(data.getPane());
         }
     }
