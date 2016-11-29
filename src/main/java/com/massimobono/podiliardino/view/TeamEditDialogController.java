@@ -141,9 +141,9 @@ public class TeamEditDialogController {
 		}
 		
 		try {
-			DateTimeFormatter.ofPattern(Utils.BIRTHDAY_PATTERN).parse(this.dateTextField.getText());
+			DateTimeFormatter.ofPattern(Utils.STANDARD_DATE_PATTERN).parse(this.dateTextField.getText());
 		} catch (DateTimeParseException e) {
-			strs.add("Cannot parse date. It has to be of format "+Utils.BIRTHDAY_PATTERN);
+			strs.add("Cannot parse date. It has to be of format "+Utils.STANDARD_DATE_PATTERN);
 		}
 		
 		if (this.firstTeamMemberChoiceBox.getSelectionModel().getSelectedItem() == null) {

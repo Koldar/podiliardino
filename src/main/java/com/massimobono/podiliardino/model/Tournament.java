@@ -1,6 +1,8 @@
 package com.massimobono.podiliardino.model;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Optional;
 
 import javafx.beans.property.LongProperty;
@@ -29,17 +31,17 @@ public class Tournament implements Indexable {
 	 * @param startDate
 	 * @param endDate can be null. Must be after startDate
 	 */
-	public Tournament(long id, String name, LocalDate startDate, LocalDate endDate) {
+	public Tournament(long id, String name, LocalDate startDate, LocalDate endDate, Collection<Partecipation> partecipations) {
 		super();
 		this.id = new SimpleLongProperty(id);
 		this.name = new SimpleStringProperty(name);
 		this.startDate = new SimpleObjectProperty<>(startDate);
 		this.endDate = new SimpleObjectProperty<>(Optional.ofNullable(endDate));
-		this.partecipations = FXCollections.observableArrayList();
+		this.partecipations = FXCollections.observableArrayList(partecipations);
 	}
 	
 	public Tournament() {
-		this(0, "", LocalDate.now(), null);
+		this(0, "", LocalDate.now(), null, new ArrayList<>());
 	}
 
 

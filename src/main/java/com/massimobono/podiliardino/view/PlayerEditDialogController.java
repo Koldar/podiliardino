@@ -96,7 +96,7 @@ public class PlayerEditDialogController {
 		
 		
 		try {
-			DateTimeFormatter.ofPattern(Utils.BIRTHDAY_PATTERN).parse(this.birthdayTextField.getText());
+			DateTimeFormatter.ofPattern(Utils.STANDARD_DATE_PATTERN).parse(this.birthdayTextField.getText());
 		} catch (DateTimeParseException e) {
 			this.birthdayTextField.setText(Utils.EMPTY_DATE);
 		}

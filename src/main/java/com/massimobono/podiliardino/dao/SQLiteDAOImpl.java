@@ -16,102 +16,177 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import com.massimobono.podiliardino.model.Indexable;
+import com.massimobono.podiliardino.model.Partecipation;
 import com.massimobono.podiliardino.model.Player;
 import com.massimobono.podiliardino.model.Team;
 import com.massimobono.podiliardino.model.Tournament;
 import com.massimobono.podiliardino.util.TableFriendlyObservableMap;
+import com.massimobono.podiliardino.util.TerConsumer;
 import com.massimobono.podiliardino.util.TerFunction;
 import com.massimobono.podiliardino.util.Utils;
 
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ListChangeListener.Change;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableMap;
 
 public class SQLiteDAOImpl implements DAO {
 
 	private static final int QUERY_TIMEOUT = 30;
 
 	private File databaseFileName;
-	
+
 	private class PreparedStatements implements Closeable {
-		
+
 		private Connection connection;
-		private Map<Connection, PreparedStatements> map;
-		
-		public PreparedStatement insertPlayer;
-		public PreparedStatement getAllPlayers;
-		public PreparedStatement updatePlayer;
-		public PreparedStatement deletePlayer;
-		
-		public PreparedStatement insertTeam;
-		public PreparedStatement getAllTeams;
-		public PreparedStatement updateTeam;
-		public PreparedStatement deleteTeam;
-		public PreparedStatement getPlayersInTeam;
-		public PreparedStatement getTeamWithPlayer;
-		public PreparedStatement addPlayerComposeTeam;
-		public PreparedStatement removePlayerComposeTeam;
-		public PreparedStatement getTeamPartecipations;
-		
-		public PreparedStatement insertTournament;
-		public PreparedStatement getAllTournaments;
-		public PreparedStatement updateTournament;
-		public PreparedStatement deleteTournament;
-		public PreparedStatement getPartecipationsInTournament;
-		
-		
+		private Map<Connection, PreparedStatements> map;		
+		private Map<String, PreparedStatement> preparedStatements;
+
+
 		public PreparedStatement lastInsertedRow;
-		
+
 		public PreparedStatements(Connection connection, Map<Connection, PreparedStatements> map) throws SQLException {
 			this.map = map;
+			this.preparedStatements = new HashMap<>();
 			this.connection = connection;
+
+			this.preparedStatements.put("insertPlayer",connection.prepareStatement("INSERT INTO player(name, surname, birthday, phone) VALUES(?,?,?,?)"));
+			this.preparedStatements.put("getAllPlayers",connection.prepareStatement("SELECT id, name, surname, birthday, phone FROM player"));
+			this.preparedStatements.put("updatePlayer",connection.prepareStatement("UPDATE OR ROLLBACK player SET name=?, surname=?, birthday=?,phone=? WHERE id=?"));
+			this.preparedStatements.put("deletePlayer",connection.prepareStatement("DELETE FROM player WHERE id=?"));
+
+			this.preparedStatements.put("insertTeam",connection.prepareStatement("INSERT INTO team(name, date) VALUES(?,?)"));
+			this.preparedStatements.put("getAllTeams",connection.prepareStatement("SELECT id, name, date FROM team"));
+			this.preparedStatements.put("updateTeam",connection.prepareStatement("UPDATE OR ROLLBACK team SET name=?, date=? WHERE id=?"));
+			this.preparedStatements.put("deleteTeam",connection.prepareStatement("DELETE FROM team WHERE id=?"));
 			
-			this.insertPlayer = connection.prepareStatement("INSERT INTO player(name, surname, birthday, phone) VALUES(?,?,?,?)");
-			this.getAllPlayers = connection.prepareStatement("SELECT id, name, surname, birthday, phone FROM player");
-			this.updatePlayer = connection.prepareStatement("UPDATE OR ROLLBACK player SET name=?, surname=?, birthday=?,phone=? WHERE id=?");
-			this.deletePlayer = connection.prepareStatement("DELETE FROM player WHERE id=?");
+			this.preparedStatements.put("getPlayersInTeam",connection.prepareStatement("SELECT pct.player_id FROM player_compose_team as pct WHERE pct.team_id=?"));
+			this.preparedStatements.put("getTeamWithPlayer",connection.prepareStatement("SELECT pct.team_id FROM player_compose_team as pct WHERE pct.player_id=?"));
+
+			this.preparedStatements.put("addPlayerComposeTeam",connection.prepareStatement("INSERT OR IGNORE INTO player_compose_team(player_id, team_id) VALUES(?,?)"));
+			this.preparedStatements.put("removePlayerComposeTeam",connection.prepareStatement("DELETE FROM player_compose_team WHERE team_id=?"));
+
+			this.preparedStatements.put("insertTournament",connection.prepareStatement("INSERT INTO tournament(name,start_date,end_date) VALUES(?,?,?);"));
+			this.preparedStatements.put("getAllTournaments",connection.prepareStatement("SELECT id,name,start_date,end_date FROM tournament"));
+			this.preparedStatements.put("updateTournament",connection.prepareStatement("UPDATE OR ROLLBACK tournament SET name=?, start_date=?, end_date=?"));
+			this.preparedStatements.put("deleteTournament",connection.prepareStatement("DELETE FROM tournament WHERE id=?"));
 			
-			this.insertTeam = connection.prepareStatement("INSERT INTO team(name, date) VALUES(?,?)");
-			this.getAllTeams = connection.prepareStatement("SELECT id, name, date FROM team");
-			this.updateTeam = connection.prepareStatement("UPDATE OR ROLLBACK team SET name=?, date=? WHERE id=?");
-			this.deleteTeam = connection.prepareStatement("DELETE FROM team WHERE id=?");
+			this.preparedStatements.put("insertOrIgnorePartecipation", connection.prepareStatement("INSERT OR IGNORE INTO partecipation(team_id, tournament_id, bye) VALUES (?,?,?)"));
+			this.preparedStatements.put("getAllPartecipations", connection.prepareStatement("SELECT p.team_id, p.tournament_id, p.bye FROM partecipation AS p"));
+			this.preparedStatements.put("updatePartecipation", connection.prepareStatement("UPDATE OR ROLLBACK partecipation SET bye=? WHERE team_id=? AND tournament_id=?"));
+			this.preparedStatements.put("deletePartecipation", connection.prepareStatement("DELETE FROM partecipation WHERE team_id=? and tournament_id=?"));
 			
-			this.getPlayersInTeam = connection.prepareStatement("SELECT pct.player_id FROM player_compose_team as pct WHERE pct.team_id=?");
-			this.getTeamWithPlayer = connection.prepareStatement("SELECT pct.team_id FROM player_compose_team as pct WHERE pct.player_id=?");
-			this.getTeamPartecipations = connection.prepareStatement("SELECT p.team_id, p.tournament_id, p.bye FROM partecipation AS p WHERE p.team_id=?");
-			
-			this.addPlayerComposeTeam = connection.prepareStatement("INSERT INTO player_compose_team(player_id, team_id) VALUES(?,?)");
-			this.removePlayerComposeTeam = connection.prepareStatement("DELETE FROM player_compose_team WHERE team_id=?");
-			
-			this.insertTournament = connection.prepareStatement("INSERT INTO tournament(name,start_date,end_date) VALUES(?,?,?);");
-			this.getAllTournaments = connection.prepareStatement("SELECT id,name,start_date,end_date FROM tournament");
-			this.updateTournament = connection.prepareStatement("UPDATE OR ROLLBACK tournament SET name=?, start_date=?, end_date=?");
-			this.deleteTournament = connection.prepareStatement("DELETE FROM tournament WHERE id=?");
-			this.getPartecipationsInTournament = connection.prepareStatement("SELECT p.team_id, p.tournament_id, p.bye FROM partecipation AS p WHERE p.tournament_id=?"); 
-			
-			this.lastInsertedRow = connection.prepareStatement("SELECT seq as last_inserted_id FROM sqlite_sequence WHERE name=?;");
+			this.preparedStatements.put("getPartecipationsOfTeam",connection.prepareStatement("SELECT p.team_id, p.tournament_id, p.bye FROM partecipation AS p WHERE p.team_id=?"));
+			this.preparedStatements.put("getPartecipationsInTournament",connection.prepareStatement("SELECT p.team_id, p.tournament_id, p.bye FROM partecipation AS p WHERE p.tournament_id=?")); 
+
+			this.preparedStatements.put("lastInsertedRow",connection.prepareStatement("SELECT seq as last_inserted_id FROM sqlite_sequence WHERE name=?;"));
+		}
+		
+		public PreparedStatement getInsertOrIgnorePartecipation() {
+			return this.preparedStatements.get("insertOrIgnorePartecipation");
+		}
+		
+		public PreparedStatement getGetAllPartecipations() {
+			return this.preparedStatements.get("getAllPartecipations");
+		}
+		
+		public PreparedStatement getUpdatePartecipation() {
+			return this.preparedStatements.get("updatePartecipation");
+		}
+		
+		public PreparedStatement getDeletePartecipation() {
+			return this.preparedStatements.get("deletePartecipation");
+		}
+
+		public PreparedStatement getInsertPlayer() {
+			return this.preparedStatements.get("insertPlayer");
+		}
+
+		public PreparedStatement getGetAllPlayers() {
+			return this.preparedStatements.get("getAllPlayers");
+		}
+
+		public PreparedStatement getUpdatePlayer() {
+			return this.preparedStatements.get("updatePlayer");
+		}
+
+		public PreparedStatement getDeletePlayer() {
+			return this.preparedStatements.get("deletePlayer");
+		}
+
+		public PreparedStatement getInsertTeam() {
+			return this.preparedStatements.get("insertTeam");
+		}
+
+		public PreparedStatement getGetAllTeams() {
+			return this.preparedStatements.get("getAllTeams");
+		}
+
+		public PreparedStatement getUpdateTeam() {
+			return this.preparedStatements.get("updateTeam");
+		}
+
+		public PreparedStatement getDeleteTeam() {
+			return this.preparedStatements.get("deleteTeam");
+		}
+
+		public PreparedStatement getGetPlayersInTeam() {
+			return this.preparedStatements.get("getPlayersInTeam");
+		}
+
+		public PreparedStatement getGetTeamWithPlayer() {
+			return this.preparedStatements.get("getTeamWithPlayer");
+		}
+
+		public PreparedStatement getAddPlayerComposeTeam() {
+			return this.preparedStatements.get("addPlayerComposeTeam");
+		}
+
+		public PreparedStatement getRemovePlayerComposeTeam() {
+			return this.preparedStatements.get("removePlayerComposeTeam");
+		}
+
+		public PreparedStatement getGetPartecipationsOfTeam() {
+			return this.preparedStatements.get("getPartecipationsOfTeam");
+		}
+
+		public PreparedStatement getInsertTournament() {
+			return this.preparedStatements.get("insertTournament");
+		}
+
+		public PreparedStatement getGetAllTournaments() {
+			return this.preparedStatements.get("getAllTournaments");
+		}
+
+		public PreparedStatement getUpdateTournament() {
+			return this.preparedStatements.get("updateTournament");
+		}
+
+		public PreparedStatement getDeleteTournament() {
+			return this.preparedStatements.get("deleteTournament");
+		}
+
+		public PreparedStatement getGetPartecipationsInTournament() {
+			return this.preparedStatements.get("getPartecipationsInTournament");
+		}
+
+		public PreparedStatement getLastInsertedRow() {
+			return this.preparedStatements.get("lastInsertedRow");
 		}
 
 		@Override
 		public void close() throws IOException {
 			try {
-				this.insertPlayer.close();
-				this.getAllPlayers.close();
-				this.updatePlayer.close();
-				this.deletePlayer.close();
-				this.deletePlayer.close();
-				this.insertTeam.close();
-				this.getAllTeams.close();
-				this.updateTeam.close();
-				this.deleteTeam.close();
-				this.getPlayersInTeam.close();
-				this.getTeamWithPlayer.close();
-				this.addPlayerComposeTeam.close();
-				this.removePlayerComposeTeam.close();
-				this.lastInsertedRow.close();
+				for (PreparedStatement p : this.preparedStatements.values()) {
+					p.close();
+				}
 			} catch (SQLException e) {
 				throw new IOException(e);
 			} finally {
@@ -119,9 +194,9 @@ public class SQLiteDAOImpl implements DAO {
 			}
 		}
 	}
-	
+
 	private Map<Connection, PreparedStatements> preparedStatements;
-	
+
 	/**
 	 * A map containing all the players computed by the DAO.
 	 * 
@@ -163,7 +238,7 @@ public class SQLiteDAOImpl implements DAO {
 			this.setup();
 		}
 	}
-	
+
 	@Override
 	public void clearAll() throws DAOException {
 		this.connectAndThenDo(false, (c, s,ps) -> {
@@ -189,15 +264,15 @@ public class SQLiteDAOImpl implements DAO {
 				s.executeUpdate("PRAGMA foreign_keys = \"1\";");
 				s.executeUpdate("CREATE TABLE IF NOT EXISTS player (id integer primary key autoincrement, name varchar(100), surname varchar(100), birthday varchar(20), phone varchar(20));");
 				s.executeUpdate("CREATE INDEX IF NOT EXISTS name ON player (name, surname);");
-				
+
 				s.executeUpdate("CREATE TABLE IF NOT EXISTS team (id integer primary key autoincrement, name varchar(100), date varchar(20));");
 				s.executeUpdate("CREATE INDEX IF NOT EXISTS team_name ON team (name);");
-				
-				s.executeUpdate("CREATE TABLE IF NOT EXISTS player_compose_team (player_id INTEGER REFERENCES player(id) ON UPDATE CASCADE, team_id INTEGER REFERENCES team(id) ON UPDATE CASCADE);");
+
+				s.executeUpdate("CREATE TABLE IF NOT EXISTS player_compose_team (player_id INTEGER REFERENCES player(id) ON UPDATE CASCADE, team_id INTEGER REFERENCES team(id) ON UPDATE CASCADE, UNIQUE(player_id, team_id));");
 
 				s.executeUpdate("CREATE TABLE IF NOT EXISTS tournament (id INTEGER PRIMARY KEY AUTOINCREMENT, name varchar(100), start_date varchar(20), end_date varchar(20));");
-				
-				s.executeUpdate("CREATE TABLE IF NOT EXISTS partecipation (team_id INTEGER REFERENCES team(id) ON UPDATE CASCADE, tournament_id INTEGER REFERENCES tournament(id) ON UPDATE CASCADE, bye integer);"); 
+
+				s.executeUpdate("CREATE TABLE IF NOT EXISTS partecipation (team_id INTEGER REFERENCES team(id) ON UPDATE CASCADE, tournament_id INTEGER REFERENCES tournament(id) ON UPDATE CASCADE, bye integer, UNIQUE(team_id, tournament_id));"); 
 				return null;
 			} catch (SQLException e) {
 				return e;
@@ -224,7 +299,13 @@ public class SQLiteDAOImpl implements DAO {
 	 * 
 	 * @param tryPreparedStatement set this to false if you need to setup the database (you still have tables to create): otherwise the SQl engine will complain about
 	 * 	no tables involved in the prepared statements. Otheriwse set this to true
-	 * @param queries a lambda where you can execute all the statement you want. Remeber to return the exception you find, or "null" if you encounter no exception
+	 * @param queries a lambda where you can execute all the statement you want. Remeber to return the exception you find, or "null" if you encounter no exception.The function signature is the following:
+	 * 	<ul>
+	 * 		<li>the first parameter is the connection the software is using to query the database</li>
+	 * 		<li>the second parameter is a {@link Statement} instance you can use to perform generics queries</li>
+	 * 		<li>the third parameter is a {@link PreparedStatements} instance containing all the {@link PreparedStatement} available for you to use to quickly query the system</li>
+	 * 		<li>the output is the first exception you encounter inside the lamda or <tt>null<//tt> if you encounter none of them</li>
+	 * 	</ul>  
 	 * @throws DAOException if something bad happen
 	 */
 	private void connectAndThenDo(boolean tryPreparedStatement, TerFunction<Connection, Statement, PreparedStatements, Exception> queries) throws DAOException {
@@ -232,7 +313,7 @@ public class SQLiteDAOImpl implements DAO {
 			try (	Connection conn = DriverManager.getConnection(String.format("jdbc:sqlite:%s", databaseFileName.getAbsolutePath()));
 					Statement statement = conn.createStatement();
 					PreparedStatements preparedStatements = this.createPrepareStatement(conn, tryPreparedStatement); 
-				) {
+					) {
 				statement.setQueryTimeout(QUERY_TIMEOUT);
 				Exception e = queries.apply(conn, statement, preparedStatements);
 				if (e != null) {
@@ -243,7 +324,7 @@ public class SQLiteDAOImpl implements DAO {
 			throw new DAOException(e);
 		}
 	}
-	
+
 	/**
 	 * Like {@link #connectAndThenDo(boolean, BiFunction)}, but we will try to setup prepared statement by default
 	 * 
@@ -267,7 +348,7 @@ public class SQLiteDAOImpl implements DAO {
 		}
 		return this.preparedStatements.get(connection);
 	}
-	
+
 	/**
 	 * Represents an abstract way yo add a single row inside a table
 	 * 
@@ -275,8 +356,20 @@ public class SQLiteDAOImpl implements DAO {
 	 * 
 	 * @param toAdd an instance to add in the database whose id has not been set yet
 	 * @param tableInvolved the table where the insertion happens
-	 * @param insertQuery a function that actually perform the insertion of <tt>toAdd</tt>
-	 * @param afterInsertQuery a function you can use to perform addtional insertion in other tables. You can use this to add dependency rows inside the DB
+	 * @param insertQuery a function that actually perform the insertion of <tt>toAdd</tt>.The function signature is the following:
+	 * 	<ul>
+	 * 		<li>the first parameter is the connection the software is using to query the database</li>
+	 * 		<li>the second parameter is a {@link Statement} instance you can use to perform generics queries</li>
+	 * 		<li>the third parameter is a {@link PreparedStatements} instance containing all the {@link PreparedStatement} available for you to use to quickly query the system</li>
+	 * 		<li>the output is the first exception you encounter inside the lamda or <tt>null<//tt> if you encounter none of them</li>
+	 * 	</ul>  
+	 * @param afterInsertQuery a function you can use to perform addtional insertion in other tables. You can use this to add dependency rows inside the DB.The function signature is the following:
+	 * 	<ul>
+	 * 		<li>the first parameter is the connection the software is using to query the database</li>
+	 * 		<li>the second parameter is a {@link Statement} instance you can use to perform generics queries</li>
+	 * 		<li>the third parameter is a {@link PreparedStatements} instance containing all the {@link PreparedStatement} available for you to use to quickly query the system</li>
+	 * 		<li>the output is the first exception you encounter inside the lamda or <tt>null<//tt> if you encounter none of them</li>
+	 * 	</ul>  
 	 * @param afterSuccessfulDBInsertion an action to perform if all the insertions are completely successful
 	 * @return the same instance provided by <tt>toAdd</tt> but with the id set as it shows up in the db
 	 * @throws DAOException if something bad happens
@@ -288,7 +381,7 @@ public class SQLiteDAOImpl implements DAO {
 				if (e != null) {
 					throw e;
 				}
-				
+
 				ps.lastInsertedRow.setString(1, tableInvolved);
 				ResultSet rs = ps.lastInsertedRow.executeQuery();
 				while (rs.next()) {
@@ -306,37 +399,131 @@ public class SQLiteDAOImpl implements DAO {
 		afterSuccessfulDBInsertion.run();
 		return toAdd;
 	}
-	
-	private <TOEDIT> abstractUpdate(TOEDIT toEdit) {
+
+	/**
+	 * Represents an abstract procedure used to update a set of tables involving the particular element <tt>toEdit</tt>
+	 * 
+	 * This function let you synchronize the instance already updated by the code into the database.
+	 * 
+	 * @param toEdit the instance already updated by the code
+	 * @param updateQueries the list of queries to do in order to synchronize the db. The function signature is the following:
+	 * 	<ul>
+	 * 		<li>the first parameter is the connection the software is using to query the database</li>
+	 * 		<li>the second parameter is a {@link Statement} instance you can use to perform generics queries</li>
+	 * 		<li>the third parameter is a {@link PreparedStatements} instance containing all the {@link PreparedStatement} available for you to use to quickly query the system</li>
+	 * 		<li>the output is the first exception you encounter inside the lamda or <tt>null<//tt> if you encounter none of them</li>
+	 * 	</ul>  
+	 * @return the same instance passed as <tt>toEdit</tt>
+	 * @throws DAOException if something goes wrong
+	 */
+	private <TOEDIT> TOEDIT abstractUpdate(final TOEDIT toEdit, TerFunction<Connection, Statement, PreparedStatements, Exception> updateQueries) throws DAOException {
 		this.connectAndThenDo((c,s,ps) -> {
 			try {
-				ps.updateTeam.setString(1, team.getName().get());
-				ps.updateTeam.setString(2, Utils.getStandardDateFrom(team.getDate().get()));
-				ps.updateTeam.setLong(3, team.getId());
-				ps.updateTeam.addBatch();
-				
-				ps.removePlayerComposeTeam.setLong(1, team.getId());
-				ps.removePlayerComposeTeam.addBatch();
-				
-				ps.addPlayerComposeTeam.setLong(1, team.getPlayers().get(0).getId());
-				ps.addPlayerComposeTeam.setLong(2, team.getId());
-				ps.addPlayerComposeTeam.addBatch();
-				ps.addPlayerComposeTeam.setLong(1, team.getPlayers().get(1).getId());
-				ps.addPlayerComposeTeam.setLong(2, team.getId());
-				ps.addPlayerComposeTeam.addBatch();
-				
-				
-				c.setAutoCommit(false);
-				ps.updateTeam.executeBatch();
-				ps.removePlayerComposeTeam.executeBatch();
-				ps.addPlayerComposeTeam.executeBatch();
-				c.setAutoCommit(true);
+				Exception e = updateQueries.apply(c, s, ps);
+				if (e != null) {
+					throw e;
+				}
 				return null;
-			} catch (SQLException e) {
+			} catch (Exception e) {
 				return e;
 			}
 		});
-		return team;
+		return toEdit;
+	}
+
+	/**
+	 * Function used to abstract the deletion of a row inside the database of a concept <tt>toRemove</tt>.
+	 * 
+	 * You can use this function whenever you need to remove something from the database
+	 * @param toRemove the instance to remove from the database
+	 * @param deleteQueries the queries the program needs to perform in order to succesfully delete the concept. 
+	 * 	The function signature is the following:
+	 * 	<ul>
+	 * 		<li>the first parameter is the connection the software is using to query the database</li>
+	 * 		<li>the second parameter is a {@link Statement} instance you can use to perform generics queries</li>
+	 * 		<li>the third parameter is a {@link PreparedStatements} instance containing all the {@link PreparedStatement} available for you to use to quickly query the system</li>
+	 * 		<li>the output is the first exception you encounter inside the lamda or <tt>null<//tt> if you encounter none of them</li>
+	 * 	</ul>  
+	 * @param actionWhenDeleteSucceed a series of instruction to perform if the deletion succeeds
+	 * @throws DAOException if something bad happens. <tt>actionWhenDeleteSucceed</tt> won't be called at all in this scenario
+	 */
+	private <TOREMOVE> void abstractRemove(final TOREMOVE toRemove, TerFunction<Connection, Statement, PreparedStatements, Exception> deleteQueries, Runnable actionWhenDeleteSucceed) throws DAOException {
+		this.connectAndThenDo((c,s,ps) -> {
+			try {
+				Exception e = deleteQueries.apply(c, s, ps);
+				if (e != null) {
+					throw e;
+				}
+				return null;
+			} catch (Exception e) {
+				return e;
+			}
+		});
+		actionWhenDeleteSucceed.run();
+	}
+
+	/**
+	 * A method that generalize the operation of getting object from db according to a particular assertion
+	 * 
+	 * The algorithm is the following:
+	 * <ol>
+	 * 	</li>we scan the database according to <tt>selectQuery</tt>: that represents the basis of our search</li>
+	 * 	<li>if an "id" of a row computed by <tt>selectQuery</tt> is already inside <tt>mapContainingAlreadyVisitedObjectSupplier</tt>, we fetch the one inside that map;</li>
+	 * 	<li>otherwise we create a new <tt>TOGET</tt> instance using <tt>setupToGetWithResultSet</tt> and then we add it inside <tt>mapContainingAlreadyVisitedObjectSupplier</tt>;
+	 * 		After that we can setup it correctly by using additional action inside <tt>setupJustCreatedObjectAction</tt>. We do that <b>after</b> having stored it inside the db because here you might
+	 * 		want to setup the relationships between different concepts: in order to avoid infinite loops the whole DAO relies on the fact that already explored concepts are already inside the
+	 * 		<tt>mapContainingAlreadyVisitedObjectSupplier</tt>; if you were to setup before storing the newly created object inside the <tt>mapContainingAlreadyVisitedObjectSupplier</tt> a cyclic relationship
+	 * 		(i.e. a user buys several products and several products are buyed by several user) would generate an infinite loop;
+	 * 	<li>Regardless of the presence of the item inside <tt>mapContainingAlreadyVisitedObjectSupplier</tt> we check if the concept <tt>TOGET</tt>
+	 * 		satisfies the <tt>filter</tt>. If so we add it inside the return value</li>
+	 * </ol>
+	 * 
+	 * @param filter the function used to check whether or not a concept of type <tt>TOGET</tt> from the database should be included in the output
+	 * @param selectQuery a prepared statement used to actually fetch data from the database. this query should be a "select" query, returns a <b>single concept</b> from the database and have a "id" column in the returned value
+	 * @param mapContainingAlreadyVisitedObjectSupplier a map containing all the instances of type <tt>TOGET</tt> fetched from the database up until now. A instance won't be refetched if already present
+	 * 	in this structure
+	 * @param emptyConstructor the empty constructor to optionally use if we need to create a new model concept;
+	 * @param setupToGetWithResultSet a function setupping the just created <tt>TOGET</tt> instance with the data received from the database using <tt>selectQuery</tt> query. This function will be called
+	 * 	only if <tt>mapContainingAlreadyVisitedObjectSupplier</tt> does not contain already an element <tt>TOGET</tt>; the function is structured as follows:
+	 * <ul>
+	 * 	<li>the function has to return the first exception encoutered in the lambda (null if everything goes fine)</li>
+	 * 	<li>the function has to change the instance provided by the input parameter: that parameter has been genereated automatically</li>
+	 * </ul>
+	 * @param setupJustCreatedObjectAction additional operation to perform after <tt>setupToGetWithResultSet</tt> construction function has been called and its outpu has been stored inside <tt>mapContainingAlreadyVisitedObjectSupplier</tt> in order to setup the newly created instance 
+	 * @return a collection of <tt>TOGET</tt> instances satisfying the criterion expressed in <tt>filter</tt>
+	 * @throws DAOException if something bad happens
+	 */
+	private <TOGET extends Indexable> Collection<TOGET> abstractGetObjectThat(Function<TOGET, Boolean> filter, TerFunction<Connection, Statement, PreparedStatements, PreparedStatement> selectQuery, Supplier<ObservableMap<Long, TOGET>> mapContainingAlreadyVisitedObjectSupplier, Supplier<TOGET> emptyConstructor, BiFunction<TOGET, ResultSet, Exception> setupToGetWithResultSet, BiFunction<TOGET, ResultSet, Exception> setupJustCreatedObjectAction) throws DAOException {
+		Collection<TOGET> retVal = new ArrayList<>();
+		this.connectAndThenDo((c,s,ps) -> {
+			try {
+				ResultSet rs = selectQuery.apply(c, s, ps).executeQuery();
+				while (rs.next()) {
+					TOGET obj = null;
+					if (mapContainingAlreadyVisitedObjectSupplier.get().containsKey(rs.getLong("id"))) {
+						obj = mapContainingAlreadyVisitedObjectSupplier.get().get(rs.getLong("id"));
+					} else {
+						obj = emptyConstructor.get();
+						Exception e = setupToGetWithResultSet.apply(obj, rs);
+						if (e != null) {
+							throw e;
+						}
+						mapContainingAlreadyVisitedObjectSupplier.get().putIfAbsent(obj.getId(), obj);
+						e = setupJustCreatedObjectAction.apply(obj, rs);
+						if (e != null) {
+							throw e;
+						}
+					}
+					if (filter.apply(obj)) {
+						retVal.add(obj);
+					}
+				}
+				return null;
+			} catch (Exception e) {
+				return e;
+			}
+		});
+		return retVal;
 	}
 
 	@Override
@@ -356,13 +543,13 @@ public class SQLiteDAOImpl implements DAO {
 				(c,s,ps) -> {
 					try {
 						Optional<String> birthday = p.getBirthdayAsStandardString();
-						ps.insertPlayer.setString(1, p.getName().get());
-						ps.insertPlayer.setString(2, p.getSurname().get());
-						ps.insertPlayer.setString(3, birthday.isPresent() ? birthday.get() : Utils.EMPTY_DATE);
-						ps.insertPlayer.setString(4, p.getPhone().get().isPresent() ? p.getPhone().get().get() : Utils.EMPTY_PHONE);
-						ps.insertPlayer.addBatch();
+						ps.getInsertPlayer().setString(1, p.getName().get());
+						ps.getInsertPlayer().setString(2, p.getSurname().get());
+						ps.getInsertPlayer().setString(3, birthday.isPresent() ? birthday.get() : Utils.EMPTY_DATE);
+						ps.getInsertPlayer().setString(4, p.getPhone().get().isPresent() ? p.getPhone().get().get() : Utils.EMPTY_PHONE);
+						ps.getInsertPlayer().addBatch();
 						c.setAutoCommit(false);
-						ps.insertPlayer.executeBatch();
+						ps.getInsertPlayer().executeBatch();
 						c.setAutoCommit(true);
 						return null;
 					} catch (SQLException e) {
@@ -371,90 +558,84 @@ public class SQLiteDAOImpl implements DAO {
 				},
 				(c,s,ps) -> null,
 				() -> {this.players.put(p.getId(), p);}
-			);
-	}
-	
-	@Override
-	public Player updatePlayer(final Player player) throws DAOException {
-		this.connectAndThenDo((c,s,ps) -> {
-			try {
-				Optional<String> birthday = player.getBirthdayAsStandardString();
-				ps.updatePlayer.setString(1, player.getName().get());
-				ps.updatePlayer.setString(2, player.getSurname().get());
-				ps.updatePlayer.setString(3, birthday.isPresent() ? birthday.get() : Utils.EMPTY_DATE);
-				ps.updatePlayer.setString(4, player.getPhone().get().isPresent() ? player.getPhone().get().get() : Utils.EMPTY_PHONE);
-				ps.updatePlayer.setLong(5, player.getId());
-				
-				ps.updatePlayer.addBatch();
-				c.setAutoCommit(false);
-				ps.updatePlayer.executeBatch();
-				c.setAutoCommit(true);
-				return null;
-			} catch (SQLException e) {
-				return e;
-			}
-		});
-		return player;
+				);
 	}
 
 	@Override
-	public void removePlayer(Player p) throws DAOException {
-		this.connectAndThenDo((c,s,ps) -> {
-			try {
-				ps.deletePlayer.setLong(1, p.getId());
-				ps.deletePlayer.addBatch();
-				
-				c.setAutoCommit(false);
-				ps.deletePlayer.executeBatch();
-				c.setAutoCommit(true);
-				return null;
-			} catch (SQLException e) {
-				return e;
-			}
-		});
-		this.players.remove(p.getId());
+	public Player updatePlayer(final Player player) throws DAOException {
+		return this.abstractUpdate(
+				player,
+				(c,s,ps) -> {
+					try {
+						Optional<String> birthday = player.getBirthdayAsStandardString();
+						ps.getUpdatePlayer().setString(1, player.getName().get());
+						ps.getUpdatePlayer().setString(2, player.getSurname().get());
+						ps.getUpdatePlayer().setString(3, birthday.isPresent() ? birthday.get() : Utils.EMPTY_DATE);
+						ps.getUpdatePlayer().setString(4, player.getPhone().get().isPresent() ? player.getPhone().get().get() : Utils.EMPTY_PHONE);
+						ps.getUpdatePlayer().setLong(5, player.getId());
+
+						ps.getUpdatePlayer().addBatch();
+						c.setAutoCommit(false);
+						ps.getUpdatePlayer().executeBatch();
+						c.setAutoCommit(true);
+						return null;
+					} catch (SQLException e) {
+						return e;
+					}
+				});
+	}
+
+	@Override
+	public void removePlayer(final Player p) throws DAOException {
+		this.abstractRemove(
+				p,
+				(c,s,ps) -> {
+					try {
+						ps.getDeletePlayer().setLong(1, p.getId());
+						ps.getDeletePlayer().addBatch();
+						ps.getDeletePlayer().executeBatch();
+						return null;
+					} catch (SQLException e) {
+						return e;
+					}
+				},
+				() -> {this.players.remove(p.getId());}
+				);
 	}
 
 	@Override
 	public Collection<Player> getAllPlayersThat(Function<Player, Boolean> filter) throws DAOException {
-		Collection<Player> retVal = new ArrayList<>();
-		this.connectAndThenDo((c,s,ps) -> {
-			ResultSet rs;
-			try {
-				rs = ps.getAllPlayers.executeQuery();
-				Player p = null;
-				while (rs.next()) {
-					if (this.players.containsKey(rs.getLong("id"))) {
-						p = this.players.get(rs.getLong("id"));
-					} else {
-						p = new Player(
-			    			rs.getLong("id"),
-			    			rs.getString("name"),
-			    			rs.getString("surname"),
-			    			!rs.getString("birthday").equalsIgnoreCase(Utils.EMPTY_DATE) ? Utils.getDateFrom(rs.getString("birthday")) : null,
-			    			!rs.getString("phone").equalsIgnoreCase(Utils.EMPTY_PHONE) ? rs.getString("phone") : null,
-			    			new ArrayList<>());
-						this.players.putIfAbsent(p.getId(), p);
-						p.getTeamWithPlayer().addAll(this.getTeamsWith(rs.getLong("id")));
+		return this.abstractGetObjectThat(
+				filter, 
+				(c,s,ps) -> ps.getGetAllPlayers(),
+				() -> players,
+				Player::new,
+				(p, rs) -> {
+					try {
+						p.setId(rs.getLong("id"));
+						p.getName().set(rs.getString("name"));
+						p.getSurname().set(rs.getString("surname"));
+						p.getBirthday().set(Optional.ofNullable(!rs.getString("birthday").equalsIgnoreCase(Utils.EMPTY_DATE) ? Utils.getDateFrom(rs.getString("birthday")) : null));
+						p.getPhone().set(Optional.ofNullable(!rs.getString("phone").equalsIgnoreCase(Utils.EMPTY_PHONE) ? rs.getString("phone") : null));
+						return null;
+					} catch (SQLException e) {
+						return e;
 					}
-					System.out.println(p.getName().get()+ " analyzing "+ filter);
-			    	if (filter.apply(p)) {
-			    		System.out.println(p.getName().get() + " passed!");
-			    		retVal.add(p);
-				    }
-			    }
-				return null;
-			} catch (SQLException | DAOException e) {
-				return e;
-			}
-		});
-		return retVal;
+				}, 
+				(p, rs) -> {
+					try {
+						p.getTeamWithPlayer().addAll(this.getTeamsWith(rs.getLong("id")));
+						return null;
+					} catch (Exception e) {
+						return e;
+					}
+				});
 	}
-	
+
 	public ObservableList<Player> getPlayerList() throws DAOException {
 		return this.players.observableValueList();
 	}
-	
+
 	public ObservableList<Team> getTeamList() throws DAOException {
 		return this.teams.observableValueList();
 	}
@@ -466,10 +647,10 @@ public class SQLiteDAOImpl implements DAO {
 				"team",
 				(c,s,ps) -> {
 					try {
-						ps.insertTeam.setString(1, team.getName().get());
-						ps.insertTeam.setString(2, Utils.getStandardDateFrom(team.getDate().get()));
-						ps.insertTeam.addBatch();
-						ps.insertTeam.executeBatch();
+						ps.getInsertTeam().setString(1, team.getName().get());
+						ps.getInsertTeam().setString(2, Utils.getStandardDateFrom(team.getDate().get()));
+						ps.getInsertTeam().addBatch();
+						ps.getInsertTeam().executeBatch();
 						return null;
 					} catch (SQLException e) {
 						return e;
@@ -477,106 +658,121 @@ public class SQLiteDAOImpl implements DAO {
 				},
 				(c,s,ps) -> {
 					try {
-						ps.addPlayerComposeTeam.setLong(1, team.getPlayers().get(0).getId());
-						ps.addPlayerComposeTeam.setLong(2, team.getId());
-						ps.addPlayerComposeTeam.addBatch();
-						ps.addPlayerComposeTeam.setLong(1, team.getPlayers().get(1).getId());
-						ps.addPlayerComposeTeam.setLong(2, team.getId());
-						ps.addPlayerComposeTeam.addBatch();
-						ps.addPlayerComposeTeam.executeBatch();
+						ps.getAddPlayerComposeTeam().setLong(1, team.getPlayers().get(0).getId());
+						ps.getAddPlayerComposeTeam().setLong(2, team.getId());
+						ps.getAddPlayerComposeTeam().addBatch();
+						ps.getAddPlayerComposeTeam().setLong(1, team.getPlayers().get(1).getId());
+						ps.getAddPlayerComposeTeam().setLong(2, team.getId());
+						ps.getAddPlayerComposeTeam().addBatch();
+						ps.getAddPlayerComposeTeam().executeBatch();
+						
+						team.getPartecipations().addListener((ListChangeListener.Change<? extends Partecipation> e) -> {
+							for (Partecipation p :e.getRemoved()) {
+								try {
+									this.remove(p);
+								} catch (DAOException e1) {
+									// TODO Auto-generated catch block
+									e1.printStackTrace();
+								}
+							}
+							for (Partecipation p : e.getAddedSubList()) {
+								try {
+									this.add(p);
+								} catch (DAOException e1) {
+									// TODO Auto-generated catch block
+									e1.printStackTrace();
+								}
+							}
+						});
+						
 						return null;
 					} catch (SQLException e) {
 						return e;
 					}
 				},
 				() -> {this.teams.put(team.getId(), team);}
-			);
+				);
 	}
 
 	@Override
 	public Team update(final Team team) throws DAOException {
-		this.connectAndThenDo((c,s,ps) -> {
-			try {
-				ps.updateTeam.setString(1, team.getName().get());
-				ps.updateTeam.setString(2, Utils.getStandardDateFrom(team.getDate().get()));
-				ps.updateTeam.setLong(3, team.getId());
-				ps.updateTeam.addBatch();
-				
-				ps.removePlayerComposeTeam.setLong(1, team.getId());
-				ps.removePlayerComposeTeam.addBatch();
-				
-				ps.addPlayerComposeTeam.setLong(1, team.getPlayers().get(0).getId());
-				ps.addPlayerComposeTeam.setLong(2, team.getId());
-				ps.addPlayerComposeTeam.addBatch();
-				ps.addPlayerComposeTeam.setLong(1, team.getPlayers().get(1).getId());
-				ps.addPlayerComposeTeam.setLong(2, team.getId());
-				ps.addPlayerComposeTeam.addBatch();
-				
-				
-				c.setAutoCommit(false);
-				ps.updateTeam.executeBatch();
-				ps.removePlayerComposeTeam.executeBatch();
-				ps.addPlayerComposeTeam.executeBatch();
-				c.setAutoCommit(true);
-				return null;
-			} catch (SQLException e) {
-				return e;
-			}
-		});
-		return team;
+		return this.abstractUpdate(
+				team,
+				(c,s,ps) -> {
+					try {
+						ps.getUpdateTeam().setString(1, team.getName().get());
+						ps.getUpdateTeam().setString(2, Utils.getStandardDateFrom(team.getDate().get()));
+						ps.getUpdateTeam().setLong(3, team.getId());
+						ps.getUpdateTeam().addBatch();
+
+						ps.getRemovePlayerComposeTeam().setLong(1, team.getId());
+						ps.getRemovePlayerComposeTeam().addBatch();
+
+						ps.getAddPlayerComposeTeam().setLong(1, team.getPlayers().get(0).getId());
+						ps.getAddPlayerComposeTeam().setLong(2, team.getId());
+						ps.getAddPlayerComposeTeam().addBatch();
+						ps.getAddPlayerComposeTeam().setLong(1, team.getPlayers().get(1).getId());
+						ps.getAddPlayerComposeTeam().setLong(2, team.getId());
+						ps.getAddPlayerComposeTeam().addBatch();
+
+						c.setAutoCommit(false);
+						ps.getUpdateTeam().executeBatch();
+						ps.getRemovePlayerComposeTeam().executeBatch();
+						ps.getAddPlayerComposeTeam().executeBatch();
+						c.setAutoCommit(true);
+						return null;
+					} catch (SQLException e) {
+						return e;
+					}
+				});
 	}
 
 	@Override
 	public Collection<Team> getAllTeamsThat(Function<Team, Boolean> filter) throws DAOException {
-		Collection<Team> retVal = new ArrayList<>();
-		this.connectAndThenDo((c,s,ps) -> {
-			try {
-				ResultSet rs = ps.getAllTeams.executeQuery();
-				while (rs.next()) {
-					Team team = null;
-					if (this.teams.containsKey(rs.getLong("id"))) {
-						team = this.teams.get(rs.getLong("id"));
-					} else {
-						team = new Team(
-			    			rs.getLong("id"),
-			    			rs.getString("name"),
-			    			Utils.getDateFrom(rs.getString("date")),
-			    			new ArrayList<>(),
-			    			new ArrayList<>()
-			    		);
-						team.getPlayers().addAll(this.getPlayersInTeam(rs.getLong("id")));
-						this.teams.putIfAbsent(team.getId(), team);
+		return this.abstractGetObjectThat(
+				filter, 
+				(c,s,ps) -> ps.getGetAllTeams(),
+				() -> this.teams, 
+				Team::new,
+				(t, rs) -> {
+					try {
+						t.setId(rs.getLong("id"));
+						t.getName().set(rs.getString("name"));
+						t.getDate().set(Utils.getDateFrom(rs.getString("date")));
+						return null;
+					} catch (SQLException e) {
+						return e;
 					}
-			    	if (filter.apply(team)) {
-				    	retVal.add(team);
-				    }
-			    }
-				return null;
-			} catch (Exception e) {
-				return e;
-			}
-		});
-		return retVal;
+				},
+				(t, rs) -> {
+					try {
+						this.computePartecipationsOfTeam(t.getId());
+						t.getPlayers().addAll(this.getPlayersInTeam(rs.getLong("id")));
+						return null;
+					} catch (SQLException | DAOException e) {
+						return e;
+					}
+				});
 	}
 
 	@Override
 	public void removeTeam(final Team team) throws DAOException {
-		this.connectAndThenDo((c,s,ps) -> {
-			try {
-				ps.deleteTeam.setLong(1, team.getId());
-				ps.deleteTeam.addBatch();
-				
-				c.setAutoCommit(false);
-				ps.deleteTeam.executeBatch();
-				c.setAutoCommit(true);
-				return null;
-			} catch (SQLException e) {
-				return e;
-			}
-		});
-		this.teams.remove(team.getId());
+		this.abstractRemove(
+				team, 
+				(c,s,ps) -> {
+					try {
+						ps.getDeleteTeam().setLong(1, team.getId());
+						ps.getDeleteTeam().addBatch();
+						ps.getDeleteTeam().executeBatch();
+						return null;
+					} catch (SQLException e) {
+						return e;
+					}
+				},
+				() -> {this.teams.remove(team.getId());}
+				);
 	}
-	
+
 	/**
 	 * 
 	 * @param teamId
@@ -586,11 +782,11 @@ public class SQLiteDAOImpl implements DAO {
 	 */
 	private Collection<Player> getPlayersInTeam(long teamId) throws DAOException {
 		Collection<Player> retVal = new HashSet<>();
-		
+
 		this.connectAndThenDo((c,s,ps) -> {
 			try {
-				ps.getPlayersInTeam.setLong(1, teamId);
-				ResultSet rs = ps.getPlayersInTeam.executeQuery();
+				ps.getGetPlayersInTeam().setLong(1, teamId);
+				ResultSet rs = ps.getGetPlayersInTeam().executeQuery();
 				while (rs.next()) {
 					final long player_id = rs.getLong("player_id");
 					retVal.addAll(this.getAllPlayersThat(p -> p.getId() == player_id));
@@ -602,14 +798,14 @@ public class SQLiteDAOImpl implements DAO {
 		});
 		return retVal;
 	}
-	
+
 	private Collection<Team> getTeamsWith(long player_id) throws DAOException {
 		Collection<Team> retVal = new HashSet<>();
-		
+
 		this.connectAndThenDo((c,s,ps) -> {
 			try {
-				ps.getTeamWithPlayer.setLong(1, player_id);
-				ResultSet rs = ps.getTeamWithPlayer.executeQuery();
+				ps.getGetTeamWithPlayer().setLong(1, player_id);
+				ResultSet rs = ps.getGetTeamWithPlayer().executeQuery();
 				while (rs.next()) {
 					final long team_id = rs.getLong("team_id");
 					retVal.addAll(this.getAllTeamsThat(t -> t.getId() == team_id));
@@ -630,31 +826,75 @@ public class SQLiteDAOImpl implements DAO {
 				(c,s,ps) -> {
 					try {
 						Optional<LocalDate> endDate = tournament.getEndDate().get();
-						ps.insertTournament.setString(1, tournament.getName().get());
-						ps.insertTournament.setString(2, Utils.getStandardDateFrom(tournament.getStartDate().get()));
-						ps.insertTournament.setString(3, endDate.isPresent() ? Utils.getStandardDateFrom(endDate.get()) : Utils.EMPTY_DATE);
-						ps.insertTournament.addBatch();
-						ps.insertTournament.executeBatch();
+						ps.getInsertTournament().setString(1, tournament.getName().get());
+						ps.getInsertTournament().setString(2, Utils.getStandardDateFrom(tournament.getStartDate().get()));
+						ps.getInsertTournament().setString(3, endDate.isPresent() ? Utils.getStandardDateFrom(endDate.get()) : Utils.EMPTY_DATE);
+						ps.getInsertTournament().addBatch();
+						ps.getInsertTournament().executeBatch();
 						return null;
 					} catch (SQLException e) {
 						return e;
 					}
 				},
 				(c,s,ps) -> null,
-				() -> {this.tournaments.put(tournament.getId(), tournament);}
-			);
+				() -> {
+					tournament.getPartecipations().addListener((ListChangeListener.Change<? extends Partecipation> e) -> {
+						for (Partecipation p :e.getRemoved()) {
+							try {
+								this.remove(p);
+							} catch (DAOException e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							}
+						}
+						for (Partecipation p : e.getAddedSubList()) {
+							try {
+								this.add(p);
+							} catch (DAOException e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							}
+						}
+					});
+					this.tournaments.put(tournament.getId(), tournament);
+				}
+				);
 	}
 
 	@Override
-	public Tournament update(Tournament tournament) throws DAOException {
-		// TODO Auto-generated method stub
-		return null;
+	public Tournament update(final Tournament tournament) throws DAOException {
+		return this.abstractUpdate(
+				tournament,
+				(c,s,ps) -> {
+					try {
+						Optional<LocalDate> endDate = tournament.getEndDate().get();
+						ps.getUpdateTournament().setString(1, tournament.getName().get());
+						ps.getUpdateTournament().setString(2, Utils.getStandardDateFrom(tournament.getStartDate().get()));
+						ps.getUpdateTournament().setString(3, endDate.isPresent() ? Utils.getStandardDateFrom(endDate.get()) : Utils.EMPTY_DATE);
+						ps.getUpdateTournament().addBatch();
+						ps.getUpdateTournament().executeBatch();
+						return null;
+					} catch (SQLException e) {
+						return e;
+					}
+				}
+				);
 	}
 
 	@Override
-	public void remove(Tournament tournament) throws DAOException {
-		// TODO Auto-generated method stub
-		
+	public void remove(final Tournament tournament) throws DAOException {
+		this.abstractRemove(
+				tournament, 
+				(c,s,ps) -> {
+					try {
+						ps.getDeleteTournament().setLong(1, tournament.getId());
+						ps.getDeleteTournament().executeUpdate();
+						return null;
+					}catch (SQLException e) {
+						return e;
+					}
+				},
+				() -> {this.tournaments.remove(tournament.getId());});
 	}
 
 	@Override
@@ -663,9 +903,158 @@ public class SQLiteDAOImpl implements DAO {
 	}
 
 	@Override
-	public Collection<Team> getTournamentsThat(Function<Tournament, Boolean> filter) throws DAOException {
-		// TODO Auto-generated method stub
-		return null;
+	public Collection<Tournament> getTournamentsThat(Function<Tournament, Boolean> filter) throws DAOException {
+		return this.abstractGetObjectThat(
+				filter, 
+				(c,s,ps) -> ps.getGetAllTournaments(),
+				() -> this.tournaments,
+				Tournament::new,
+				(t,rs) -> {
+					try {
+						String endDate = rs.getString("end_date");
+						t.setId(rs.getLong("id"));
+						t.getName().set(rs.getString("name"));
+						t.getStartDate().set(Utils.getDateFrom(rs.getString("start_date")));
+						t.getEndDate().set(Optional.ofNullable(!endDate.equalsIgnoreCase(Utils.EMPTY_DATE) ? Utils.getDateFrom(endDate) : null));
+						return null;
+					} catch (Exception e) {
+						return e;
+					}
+				}, 
+				(t,rs) -> {
+					try {
+						this.computePartecipationsInTournament(t.getId());
+						return null;
+					} catch (Exception e ){
+						return e;
+					}
+				});
+	}
+	
+	private <TABLE1 extends Indexable, TABLE2 extends Indexable, NNTABLE>void abstractCompute(long primaryID, TerFunction<Connection, Statement, PreparedStatements, PreparedStatement> startQuery, Function<PreparedStatement, Exception> setupQuery, String secondaryIDName, Supplier<Collection<TABLE1>> firstTableSupplier, Supplier<Collection<TABLE2>> secondTableSuppplier, Supplier<NNTABLE> emptyConstructor, BiFunction<NNTABLE, ResultSet, Exception> nntableSetupper, TerConsumer<TABLE1, TABLE2, NNTABLE> TablesUpdater) throws DAOException {
+		this.connectAndThenDo((c,s,ps) -> {
+			try {
+				PreparedStatement query = startQuery.apply(c, s, ps);
+				Exception e = setupQuery.apply(query);
+				if (e != null) {
+					throw e;
+				}
+				ResultSet rs = query.executeQuery();
+				while (rs.next()) {
+					final long secondaryID = rs.getLong(secondaryIDName);
+					Optional<TABLE1> oTable1 = firstTableSupplier.get().parallelStream().filter(t1 -> t1.getId() == primaryID).findFirst();
+					Optional<TABLE2> oTable2 = secondTableSuppplier.get().parallelStream().filter(t2 -> t2.getId() == secondaryID).findFirst();
+					
+					if (oTable1.isPresent() && oTable2.isPresent()) {
+						NNTABLE nntable = emptyConstructor.get();
+						e = nntableSetupper.apply(nntable, rs);
+						if (e != null) {
+							throw e;
+						}
+						TablesUpdater.consume(oTable1.get(), oTable2.get(), nntable);
+					}
+				}
+				return null;
+			} catch (Exception e) {
+				return e;
+			}
+		});
+	}
+	
+	/**
+	 * Computes every {@link Partecipation} of the tournament <tt>tournament_id</tt>
+	 * 
+	 * It automatically adds the partecipations inside the database and atuomatically creates the
+	 * link between the {@link Team} model class and {@link Tournament} model class
+	 * 
+	 * @param tournament_id the id of the tournament involved
+	 * @throws DAOException if something bad happens
+	 */
+	private void computePartecipationsInTournament(long tournament_id) throws DAOException {
+		this.connectAndThenDo((c,s,ps) -> {
+			try {
+				ps.getGetPartecipationsInTournament().setLong(1, tournament_id);
+				ResultSet rs = ps.getGetPartecipationsInTournament().executeQuery();
+				while (rs.next()) {
+					final long team_id = rs.getLong("team_id");
+					Optional<Tournament> tournament = this.getTournamentsThat(t -> t.getId() == tournament_id).stream().findFirst();
+					Optional<Team> team = this.getAllTeamsThat(p -> p.getId() == team_id).stream().findFirst();
+					if (tournament.isPresent() && team.isPresent()) {
+						Partecipation p = new Partecipation(rs.getInt("bye") > 0, tournament.get(), team.get());
+						if (!tournament.get().getPartecipations().contains(p)) {
+							tournament.get().getPartecipations().add(p);
+						}
+						if (!team.get().getPartecipations().contains(p)) {
+							team.get().getPartecipations().add(p);
+						}
+						
+					}
+				}
+				return null;
+			} catch (Exception e) {
+				return e;
+			}
+		});
+	}
+	
+	/**
+	 * Computes every {@link Partecipation} of the team <tt>team_id</tt>
+	 * 
+	 * It automatically adds the partecipations inside the database and atuomatically creates the
+	 * link between the {@link Team} model class and {@link Tournament} model class
+	 * 
+	 * @param team_id the id of the team involved
+	 * @throws DAOException if something bad happens
+	 */
+	private void computePartecipationsOfTeam(long team_id) throws DAOException {
+		this.connectAndThenDo((c,s,ps) -> {
+			try {
+				ps.getGetPartecipationsOfTeam().setLong(1, team_id);
+				ResultSet rs = ps.getGetPartecipationsOfTeam().executeQuery();
+				while (rs.next()) {
+					final long tournament_id = rs.getLong("tournament_id");
+					Optional<Team> team = this.getAllTeamsThat(p -> p.getId() == team_id).stream().findFirst();
+					Optional<Tournament> tournament = this.getTournamentsThat(t -> t.getId() == tournament_id).stream().findFirst();
+					if (tournament.isPresent() && team.isPresent()) {
+						Partecipation p = new Partecipation(rs.getInt("bye") > 0, tournament.get(), team.get());
+						tournament.get().getPartecipations().add(p);
+						team.get().getPartecipations().add(p);
+					}
+				}
+				return null;
+			} catch (Exception e) {
+				return e;
+			}
+		});
+	}
+	
+	
+	private Partecipation add(Partecipation partecipation) throws DAOException {
+		this.connectAndThenDo((c,s,ps) -> {
+			try {
+				ps.getInsertOrIgnorePartecipation().setLong(1, partecipation.getTeam().get().getId());
+				ps.getInsertOrIgnorePartecipation().setLong(2, partecipation.getTournament().get().getId());
+				ps.getInsertOrIgnorePartecipation().setInt(3, partecipation.getBye().get() ? 1 : 0);
+				ps.getInsertOrIgnorePartecipation().executeUpdate();
+				return null;
+			} catch (Exception e) {
+				return e;
+			}
+		});
+		return partecipation;
+	}
+	
+	private void remove(Partecipation partecipation) throws DAOException {
+		this.connectAndThenDo((c,s,ps) -> {
+			try {
+				ps.getDeletePartecipation().setLong(1, partecipation.getTeam().get().getId());
+				ps.getDeletePartecipation().setLong(2, partecipation.getTournament().get().getId());
+				ps.getDeletePartecipation().executeUpdate();
+				return null;
+			} catch (Exception e) {
+				return e;
+			}
+		});
 	}
 
 }

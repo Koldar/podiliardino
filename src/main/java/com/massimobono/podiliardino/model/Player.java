@@ -74,10 +74,10 @@ public class Player implements Indexable{
 	}
 	
 	/**
-	 * The {@value #BIRTHDAY_PATTERN} represents the so-called "standardized date".
+	 * The {@value #STANDARD_DATE_PATTERN} represents the so-called "standardized date".
 	 * This values is stored in the database as well
 	 * 
-	 * @return the birthday date, according to the {@link #BIRTHDAY_PATTERN} pattern
+	 * @return the birthday date, according to the {@link #STANDARD_DATE_PATTERN} pattern
 	 */
 	public Optional<String> getBirthdayAsStandardString() {
 		return Optional.ofNullable(this.birthday.get().isPresent() ? Utils.getStandardDateFrom(this.birthday.get().get()) : null);

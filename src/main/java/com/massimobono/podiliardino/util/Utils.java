@@ -8,16 +8,21 @@ import javafx.scene.control.Alert.AlertType;
 
 public class Utils {
 
-	public static final String BIRTHDAY_PATTERN = "dd-MM-yyyy";
+	public static final String STANDARD_DATE_PATTERN = "dd-MM-yyyy";
 	public static final String  EMPTY_PHONE = "";
 	public static final String EMPTY_DATE = "";
 	
+	/**
+	 * 
+	 * @param standardDate
+	 * @return the converted {@link LocalDate}, according to {@link #STANDARD_DATE_PATTERN} pattern
+	 */
 	public static LocalDate getDateFrom(String standardDate) {
-		return DateTimeFormatter.ofPattern(Utils.BIRTHDAY_PATTERN).parse(standardDate, LocalDate::from);
+		return DateTimeFormatter.ofPattern(Utils.STANDARD_DATE_PATTERN).parse(standardDate, LocalDate::from);
 	}
 	
 	public static String getStandardDateFrom(LocalDate date) {
-		return date.format(DateTimeFormatter.ofPattern(Utils.BIRTHDAY_PATTERN));
+		return date.format(DateTimeFormatter.ofPattern(Utils.STANDARD_DATE_PATTERN));
 	}
 	
 	public static Alert createDefaultErrorAlert(String header, String body) {

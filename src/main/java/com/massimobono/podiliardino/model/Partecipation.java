@@ -5,7 +5,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
-public class Partecipation {
+public class Partecipation{
 
 	private final BooleanProperty bye;
 	private final ObjectProperty<Tournament> tournament;

@@ -4,6 +4,7 @@ import java.io.Closeable;
 import java.util.Collection;
 import java.util.function.Function;
 
+import com.massimobono.podiliardino.model.Partecipation;
 import com.massimobono.podiliardino.model.Player;
 import com.massimobono.podiliardino.model.Team;
 import com.massimobono.podiliardino.model.Tournament;
@@ -146,5 +147,5 @@ public interface DAO extends Closeable{
 	
 	public ObservableList<Tournament> getTournamentList() throws DAOException;
 	
-	public Collection<Team> getTournamentsThat(Function<Tournament, Boolean> filter) throws DAOException;
+	public Collection<Tournament> getTournamentsThat(Function<Tournament, Boolean> filter) throws DAOException;
 }
