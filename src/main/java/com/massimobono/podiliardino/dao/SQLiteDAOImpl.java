@@ -274,7 +274,7 @@ public class SQLiteDAOImpl implements DAO {
 
 				s.executeUpdate("CREATE TABLE IF NOT EXISTS tournament (id INTEGER PRIMARY KEY AUTOINCREMENT, name varchar(100), start_date varchar(20), end_date varchar(20));");
 
-				s.executeUpdate("CREATE TABLE IF NOT EXISTS partecipation (team_id INTEGER REFERENCES team(id) ON UPDATE CASCADE, tournament_id INTEGER REFERENCES tournament(id) ON UPDATE CASCADE, bye integer, UNIQUE(team_id, tournament_id));"); 
+				s.executeUpdate("CREATE TABLE IF NOT EXISTS partecipation (team_id INTEGER REFERENCES team(id) ON UPDATE CASCADE UNIQUE, tournament_id INTEGER REFERENCES tournament(id) ON UPDATE CASCADE UNIQUE, bye integer);"); 
 				return null;
 			} catch (SQLException e) {
 				return e;
