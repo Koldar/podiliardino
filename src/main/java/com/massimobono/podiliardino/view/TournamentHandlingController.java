@@ -71,7 +71,7 @@ public class TournamentHandlingController {
 	             new Callback<ListView<Team>, javafx.scene.control.ListCell<Team>>() {
 	                 @Override
 	                 public ListCell<Team> call(ListView<Team> listView) {
-	                     return new TeamListCell();
+	                     return new TeamListCell(TournamentHandlingController.this.tournamentTable, TournamentHandlingController.this.mainApp.getDAO());
 	                 }
 	             });
 	}

@@ -20,6 +20,7 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import com.massimobono.podiliardino.model.Indexable;
 import com.massimobono.podiliardino.model.Partecipation;
@@ -36,6 +37,8 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ListChangeListener.Change;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
+import javafx.collections.ObservableSet;
+import javafx.util.Pair;
 
 public class SQLiteDAOImpl implements DAO {
 
@@ -219,6 +222,7 @@ public class SQLiteDAOImpl implements DAO {
 	 */
 	private TableFriendlyObservableMap<Long, Tournament> tournaments;
 
+	private ObservableSet<Partecipation> participations;
 	/**
 	 * 
 	 * @param databaseFileName the file sqlite will use to store data.
@@ -231,6 +235,7 @@ public class SQLiteDAOImpl implements DAO {
 		this.players = new TableFriendlyObservableMap<>();
 		this.teams = new TableFriendlyObservableMap<>();
 		this.tournaments = new TableFriendlyObservableMap<>();
+		this.participations = FXCollections.observableSet(new HashSet<>());
 		if (performSetup) {
 			this.setup();
 		}
@@ -340,6 +345,9 @@ public class SQLiteDAOImpl implements DAO {
 	 */
 	private PreparedStatements createPrepareStatement(Connection connection, boolean setupPreparedStatement) throws SQLException {
 		if (setupPreparedStatement && !this.preparedStatements.containsKey(connection)) {
+			if (this.preparedStatements.size() > 0) {
+				throw new RuntimeException("multiple connections!");
+			}
 			PreparedStatements retVal = new PreparedStatements(connection, this.preparedStatements);
 			this.preparedStatements.put(connection, retVal);
 		}
@@ -486,12 +494,15 @@ public class SQLiteDAOImpl implements DAO {
 	 * 	<li>the function has to return the first exception encoutered in the lambda (null if everything goes fine)</li>
 	 * 	<li>the function has to change the instance provided by the input parameter: that parameter has been genereated automatically</li>
 	 * </ul>
-	 * @param setupJustCreatedObjectAction additional operation to perform after <tt>setupToGetWithResultSet</tt> construction function has been called and its outpu has been stored inside <tt>mapContainingAlreadyVisitedObjectSupplier</tt> in order to setup the newly created instance 
+	 * @param setupJustCreatedObjectAction additional operation to perform after <tt>setupToGetWithResultSet</tt> construction function has been called and its outpu has been stored inside <tt>mapContainingAlreadyVisitedObjectSupplier</tt> in order to setup the newly created instance.
+	 * The long represents the id of the row obtained from the database 
 	 * @return a collection of <tt>TOGET</tt> instances satisfying the criterion expressed in <tt>filter</tt>
 	 * @throws DAOException if something bad happens
 	 */
-	private <TOGET extends Indexable> Collection<TOGET> abstractGetObjectThat(Function<TOGET, Boolean> filter, TerFunction<Connection, Statement, PreparedStatements, PreparedStatement> selectQuery, Supplier<ObservableMap<Long, TOGET>> mapContainingAlreadyVisitedObjectSupplier, Supplier<TOGET> emptyConstructor, BiFunction<TOGET, ResultSet, Exception> setupToGetWithResultSet, BiFunction<TOGET, ResultSet, Exception> setupJustCreatedObjectAction) throws DAOException {
-		Collection<TOGET> retVal = new ArrayList<>();
+	private <TOGET extends Indexable> Collection<TOGET> abstractGetObjectThat(Function<TOGET, Boolean> filter, TerFunction<Connection, Statement, PreparedStatements, PreparedStatement> selectQuery, Supplier<ObservableMap<Long, TOGET>> mapContainingAlreadyVisitedObjectSupplier, Supplier<TOGET> emptyConstructor, BiFunction<TOGET, ResultSet, Exception> setupToGetWithResultSet, BiFunction<TOGET, Long, Exception> setupJustCreatedObjectAction) throws DAOException {
+		Collection<Pair<Long, TOGET>> objectToSetup = new ArrayList<>();
+		Collection<TOGET> objectAlreadySetup = new ArrayList<>();
+		Collection<TOGET> retVal = new ArrayList<>(); 
 		this.connectAndThenDo((c,s,ps) -> {
 			try {
 				ResultSet rs = selectQuery.apply(c, s, ps).executeQuery();
@@ -499,6 +510,7 @@ public class SQLiteDAOImpl implements DAO {
 					TOGET obj = null;
 					if (mapContainingAlreadyVisitedObjectSupplier.get().containsKey(rs.getLong("id"))) {
 						obj = mapContainingAlreadyVisitedObjectSupplier.get().get(rs.getLong("id"));
+						objectAlreadySetup.add(obj);
 					} else {
 						obj = emptyConstructor.get();
 						Exception e = setupToGetWithResultSet.apply(obj, rs);
@@ -506,13 +518,7 @@ public class SQLiteDAOImpl implements DAO {
 							throw e;
 						}
 						mapContainingAlreadyVisitedObjectSupplier.get().putIfAbsent(obj.getId(), obj);
-						e = setupJustCreatedObjectAction.apply(obj, rs);
-						if (e != null) {
-							throw e;
-						}
-					}
-					if (filter.apply(obj)) {
-						retVal.add(obj);
+						objectToSetup.add(new Pair<>(rs.getLong("id"), obj));
 					}
 				}
 				return null;
@@ -520,6 +526,19 @@ public class SQLiteDAOImpl implements DAO {
 				return e;
 			}
 		});
+		
+		for (Pair<Long, TOGET> pair : objectToSetup) {
+			Exception e = setupJustCreatedObjectAction.apply(pair.getValue(), pair.getKey());
+			if (e != null) {
+				throw new DAOException(e);
+			}
+		}
+		objectAlreadySetup.addAll(objectToSetup.stream().map(p -> p.getValue()).collect(Collectors.toList()));
+		for (TOGET obj : objectAlreadySetup) {
+			if (filter.apply(obj)) {
+				retVal.add(obj);
+			}
+		}
 		return retVal;
 	}
 
@@ -570,8 +589,8 @@ public class SQLiteDAOImpl implements DAO {
 						ps.getUpdatePlayer().setString(3, birthday.isPresent() ? birthday.get() : Utils.EMPTY_DATE);
 						ps.getUpdatePlayer().setString(4, player.getPhone().get().isPresent() ? player.getPhone().get().get() : Utils.EMPTY_PHONE);
 						ps.getUpdatePlayer().setLong(5, player.getId());
-
 						ps.getUpdatePlayer().addBatch();
+						
 						c.setAutoCommit(false);
 						ps.getUpdatePlayer().executeBatch();
 						c.setAutoCommit(true);
@@ -619,9 +638,9 @@ public class SQLiteDAOImpl implements DAO {
 						return e;
 					}
 				}, 
-				(p, rs) -> {
+				(p, id) -> {
 					try {
-						p.getTeamWithPlayer().addAll(this.getTeamsWith(rs.getLong("id")));
+						p.getTeamWithPlayer().addAll(this.getTeamsWith(id));
 						return null;
 					} catch (Exception e) {
 						return e;
@@ -664,20 +683,17 @@ public class SQLiteDAOImpl implements DAO {
 						ps.getAddPlayerComposeTeam().executeBatch();
 						
 						team.getPartecipations().addListener((ListChangeListener.Change<? extends Partecipation> e) -> {
-							for (Partecipation p :e.getRemoved()) {
+							while(e.next()) {
 								try {
-									this.remove(p);
-								} catch (DAOException e1) {
-									// TODO Auto-generated catch block
-									e1.printStackTrace();
-								}
-							}
-							for (Partecipation p : e.getAddedSubList()) {
-								try {
-									this.add(p);
-								} catch (DAOException e1) {
-									// TODO Auto-generated catch block
-									e1.printStackTrace();
+									for (Partecipation p :e.getRemoved()) {
+											this.remove(p);
+									}
+									for (Partecipation p : e.getAddedSubList()) {
+											this.add(p);
+									}
+								} catch (DAOException ex) {
+									ex.printStackTrace();
+									//TODO complete
 								}
 							}
 						});
@@ -736,17 +752,32 @@ public class SQLiteDAOImpl implements DAO {
 						t.setId(rs.getLong("id"));
 						t.getName().set(rs.getString("name"));
 						t.getDate().set(Utils.getDateFrom(rs.getString("date")));
+						t.getPartecipations().addListener((ListChangeListener.Change<? extends Partecipation> e) -> {
+							while (e.next()) {
+								try {
+									for (Partecipation p : e.getAddedSubList()) {
+										this.add(p);
+									}
+									for (Partecipation p : e.getRemoved()) {
+										this.remove(p);
+									}
+								} catch (Exception ex) {
+									ex.printStackTrace();
+									//TODO complete
+								}
+							}
+						});
 						return null;
 					} catch (SQLException e) {
 						return e;
 					}
 				},
-				(t, rs) -> {
+				(t, id) -> {
 					try {
 						this.computePartecipationsOfTeam(t.getId());
-						t.getPlayers().addAll(this.getPlayersInTeam(rs.getLong("id")));
+						t.getPlayers().addAll(this.getPlayersInTeam(id));
 						return null;
-					} catch (SQLException | DAOException e) {
+					} catch (DAOException e) {
 						return e;
 					}
 				});
@@ -779,39 +810,49 @@ public class SQLiteDAOImpl implements DAO {
 	 */
 	private Collection<Player> getPlayersInTeam(long teamId) throws DAOException {
 		Collection<Player> retVal = new HashSet<>();
+		Collection<Long> ids = new ArrayList<>();
 
 		this.connectAndThenDo((c,s,ps) -> {
 			try {
 				ps.getGetPlayersInTeam().setLong(1, teamId);
 				ResultSet rs = ps.getGetPlayersInTeam().executeQuery();
 				while (rs.next()) {
-					final long player_id = rs.getLong("player_id");
-					retVal.addAll(this.getAllPlayersThat(p -> p.getId() == player_id));
+					ids.add(rs.getLong("player_id"));
 				}
 				return null;
-			} catch (SQLException | DAOException e) {
+			} catch (SQLException e) {
 				return e;
 			}
 		});
+		
+		for (Long id : ids) {
+			retVal.addAll(this.getAllPlayersThat(p -> p.getId() == id));
+		}
+		
 		return retVal;
 	}
 
 	private Collection<Team> getTeamsWith(long player_id) throws DAOException {
 		Collection<Team> retVal = new HashSet<>();
+		Collection<Long> ids = new ArrayList<>();
 
 		this.connectAndThenDo((c,s,ps) -> {
 			try {
 				ps.getGetTeamWithPlayer().setLong(1, player_id);
 				ResultSet rs = ps.getGetTeamWithPlayer().executeQuery();
 				while (rs.next()) {
-					final long team_id = rs.getLong("team_id");
-					retVal.addAll(this.getAllTeamsThat(t -> t.getId() == team_id));
+					ids.add(rs.getLong("team_id"));
 				}
 				return null;
-			} catch (SQLException | DAOException e) {
+			} catch (SQLException e) {
 				return e;
 			}
 		}); 
+		
+		for (Long id : ids) {
+			retVal.addAll(this.getAllTeamsThat(t -> t.getId() == id));
+		}
+		
 		return retVal;
 	}
 
@@ -836,20 +877,17 @@ public class SQLiteDAOImpl implements DAO {
 				(c,s,ps) -> null,
 				() -> {
 					tournament.getPartecipations().addListener((ListChangeListener.Change<? extends Partecipation> e) -> {
-						for (Partecipation p :e.getRemoved()) {
+						while (e.next()) {
 							try {
-								this.remove(p);
-							} catch (DAOException e1) {
-								// TODO Auto-generated catch block
-								e1.printStackTrace();
-							}
-						}
-						for (Partecipation p : e.getAddedSubList()) {
-							try {
-								this.add(p);
-							} catch (DAOException e1) {
-								// TODO Auto-generated catch block
-								e1.printStackTrace();
+								for (Partecipation p :e.getRemoved()) {
+									this.remove(p);
+								}
+								for (Partecipation p : e.getAddedSubList()) {
+									this.add(p);
+								}
+							}catch (DAOException ex) {
+								ex.printStackTrace();
+								//TODO complete
 							}
 						}
 					});
@@ -900,7 +938,7 @@ public class SQLiteDAOImpl implements DAO {
 	}
 
 	@Override
-	public Collection<Tournament> getTournamentsThat(Function<Tournament, Boolean> filter) throws DAOException {
+	public Collection<Tournament> getAllTournamentsThat(Function<Tournament, Boolean> filter) throws DAOException {
 		return this.abstractGetObjectThat(
 				filter, 
 				(c,s,ps) -> ps.getGetAllTournaments(),
@@ -913,6 +951,22 @@ public class SQLiteDAOImpl implements DAO {
 						t.getName().set(rs.getString("name"));
 						t.getStartDate().set(Utils.getDateFrom(rs.getString("start_date")));
 						t.getEndDate().set(Optional.ofNullable(!endDate.equalsIgnoreCase(Utils.EMPTY_DATE) ? Utils.getDateFrom(endDate) : null));
+						
+						t.getPartecipations().addListener((ListChangeListener.Change<? extends Partecipation> e) -> {
+							try {
+								while (e.next()) {
+									for (Partecipation p : e.getAddedSubList()) {
+										this.add(p);
+									}
+									for (Partecipation p : e.getRemoved()) {
+										this.remove(p);
+									}
+								}
+							} catch (Exception ex) {
+								ex.printStackTrace();
+								//TODO complete
+							}
+						});
 						return null;
 					} catch (Exception e) {
 						return e;
@@ -968,30 +1022,33 @@ public class SQLiteDAOImpl implements DAO {
 	 * @throws DAOException if something bad happens
 	 */
 	private void computePartecipationsInTournament(long tournament_id) throws DAOException {
+		Collection<Pair<Long, Boolean>> ids = new ArrayList<>();
 		this.connectAndThenDo((c,s,ps) -> {
 			try {
 				ps.getGetPartecipationsInTournament().setLong(1, tournament_id);
 				ResultSet rs = ps.getGetPartecipationsInTournament().executeQuery();
 				while (rs.next()) {
-					final long team_id = rs.getLong("team_id");
-					Optional<Tournament> tournament = this.getTournamentsThat(t -> t.getId() == tournament_id).stream().findFirst();
-					Optional<Team> team = this.getAllTeamsThat(p -> p.getId() == team_id).stream().findFirst();
-					if (tournament.isPresent() && team.isPresent()) {
-						Partecipation p = new Partecipation(rs.getInt("bye") > 0, tournament.get(), team.get());
-						if (!tournament.get().getPartecipations().contains(p)) {
-							tournament.get().getPartecipations().add(p);
-						}
-						if (!team.get().getPartecipations().contains(p)) {
-							team.get().getPartecipations().add(p);
-						}
-						
-					}
+					ids.add(new Pair<Long,Boolean>(rs.getLong("team_id"), rs.getInt("bye") > 0));
 				}
 				return null;
 			} catch (Exception e) {
 				return e;
 			}
 		});
+		
+		for (Pair<Long, Boolean> pair : ids) {
+			Optional<Tournament> tournament = this.getAllTournamentsThat(t -> t.getId() == tournament_id).stream().findFirst();
+			Optional<Team> team = this.getAllTeamsThat(p -> p.getId() == pair.getKey()).stream().findFirst();
+			if (tournament.isPresent() && team.isPresent()) {
+				Partecipation p = new Partecipation(pair.getValue(), tournament.get(), team.get());
+				if (!p.getTournament().get().getPartecipations().contains(p)) {
+					p.getTournament().get().getPartecipations().add(p);
+				}
+				if (!p.getTeam().get().getPartecipations().contains(p)) {
+					p.getTeam().get().getPartecipations().add(p);
+				}
+			}
+		}
 	}
 	
 	/**
@@ -1004,54 +1061,68 @@ public class SQLiteDAOImpl implements DAO {
 	 * @throws DAOException if something bad happens
 	 */
 	private void computePartecipationsOfTeam(long team_id) throws DAOException {
+		Collection<Pair<Long, Boolean>> ids = new ArrayList<>();
 		this.connectAndThenDo((c,s,ps) -> {
 			try {
 				ps.getGetPartecipationsOfTeam().setLong(1, team_id);
 				ResultSet rs = ps.getGetPartecipationsOfTeam().executeQuery();
 				while (rs.next()) {
-					final long tournament_id = rs.getLong("tournament_id");
-					Optional<Team> team = this.getAllTeamsThat(p -> p.getId() == team_id).stream().findFirst();
-					Optional<Tournament> tournament = this.getTournamentsThat(t -> t.getId() == tournament_id).stream().findFirst();
-					if (tournament.isPresent() && team.isPresent()) {
-						Partecipation p = new Partecipation(rs.getInt("bye") > 0, tournament.get(), team.get());
-						tournament.get().getPartecipations().add(p);
-						team.get().getPartecipations().add(p);
-					}
+					ids.add(new Pair<Long, Boolean>(rs.getLong("tournament_id"), rs.getInt("bye") > 0));
 				}
 				return null;
 			} catch (Exception e) {
 				return e;
 			}
 		});
+		
+		for (Pair<Long, Boolean> pair : ids) {
+			Optional<Team> team = this.getAllTeamsThat(p -> p.getId() == team_id).stream().findFirst();
+			Optional<Tournament> tournament = this.getAllTournamentsThat(t -> t.getId() == pair.getKey()).stream().findFirst();
+			if (tournament.isPresent() && team.isPresent()) {
+				Partecipation p = new Partecipation(pair.getValue(), tournament.get(), team.get());
+				if (!p.getTournament().get().getPartecipations().contains(p)) {
+					p.getTournament().get().getPartecipations().add(p);
+				}
+				if (!p.getTeam().get().getPartecipations().contains(p)) {
+					p.getTeam().get().getPartecipations().add(p);
+				}
+			}
+		}
 	}
 	
 	
 	private Partecipation add(Partecipation partecipation) throws DAOException {
-		this.connectAndThenDo((c,s,ps) -> {
-			try {
-				ps.getInsertOrIgnorePartecipation().setLong(1, partecipation.getTeam().get().getId());
-				ps.getInsertOrIgnorePartecipation().setLong(2, partecipation.getTournament().get().getId());
-				ps.getInsertOrIgnorePartecipation().setInt(3, partecipation.getBye().get() ? 1 : 0);
-				ps.getInsertOrIgnorePartecipation().executeUpdate();
-				return null;
-			} catch (Exception e) {
-				return e;
-			}
-		});
+		if (!this.participations.contains(partecipation)) {
+			this.connectAndThenDo((c,s,ps) -> {
+				try {
+					ps.getInsertOrIgnorePartecipation().setLong(1, partecipation.getTeam().get().getId());
+					ps.getInsertOrIgnorePartecipation().setLong(2, partecipation.getTournament().get().getId());
+					ps.getInsertOrIgnorePartecipation().setInt(3, partecipation.getBye().get() ? 1 : 0);
+					ps.getInsertOrIgnorePartecipation().executeUpdate();
+					return null;
+				} catch (Exception e) {
+					return e;
+				}
+			});
+			this.participations.add(partecipation);
+		}
 		return partecipation;
 	}
 	
 	private void remove(Partecipation partecipation) throws DAOException {
-		this.connectAndThenDo((c,s,ps) -> {
-			try {
-				ps.getDeletePartecipation().setLong(1, partecipation.getTeam().get().getId());
-				ps.getDeletePartecipation().setLong(2, partecipation.getTournament().get().getId());
-				ps.getDeletePartecipation().executeUpdate();
-				return null;
-			} catch (Exception e) {
-				return e;
-			}
-		});
+		if (this.participations.contains(partecipation)){
+			this.connectAndThenDo((c,s,ps) -> {
+				try {
+					ps.getDeletePartecipation().setLong(1, partecipation.getTeam().get().getId());
+					ps.getDeletePartecipation().setLong(2, partecipation.getTournament().get().getId());
+					ps.getDeletePartecipation().executeUpdate();
+					return null;
+				} catch (Exception e) {
+					return e;
+				}
+			});
+			this.participations.remove(partecipation);
+		}
 	}
 
 }

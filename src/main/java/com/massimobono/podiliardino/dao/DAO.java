@@ -147,9 +147,9 @@ public interface DAO extends Closeable{
 	
 	public ObservableList<Tournament> getTournamentList() throws DAOException;
 	
-	public Collection<Tournament> getTournamentsThat(Function<Tournament, Boolean> filter) throws DAOException;
+	public Collection<Tournament> getAllTournamentsThat(Function<Tournament, Boolean> filter) throws DAOException;
 	
 	public default Collection<Tournament> getAllTournaments() throws DAOException {
-		return this.getTournamentsThat(t -> true);
+		return this.getAllTournamentsThat(t -> true);
 	}
 }
