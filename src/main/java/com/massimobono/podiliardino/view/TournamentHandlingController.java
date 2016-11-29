@@ -18,6 +18,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.stage.Stage;
 
 public class TournamentHandlingController {
 
@@ -60,7 +61,29 @@ public class TournamentHandlingController {
 
 	@FXML
 	private void handleAddTournament() {
+		try {
+			Optional<Tournament> t = this.mainApp.showCustomDialog(
+					"TournamentEditDialog", 
+					"New Tournmanet", 
+					(TournamentEditDialogController c, Stage s) -> {
+						try {
+							c.setup(s, new Tournament());
+						} catch (Exception e){
+							e.printStackTrace();
+							ExceptionAlert.showAndWait(e);
+						}
+					},
+					(TournamentEditDialogController c) -> {return Optional.ofNullable(c.isClickedOK() ? c.getTournament() : null);}
+					);
+			if (t.isPresent()) {
+				//we have added a new player. We can add it to the DAO
+				this.mainApp.getDAO().add(t.get());
+			}
 
+		} catch (Exception e) {
+			e.printStackTrace();
+			ExceptionAlert.showAndWait(e);
+		}
 	}
 
 	@FXML
