@@ -49,9 +49,6 @@ public class SQLiteDAOImpl implements DAO {
 		private Map<Connection, PreparedStatements> map;		
 		private Map<String, PreparedStatement> preparedStatements;
 
-
-		public PreparedStatement lastInsertedRow;
-
 		public PreparedStatements(Connection connection, Map<Connection, PreparedStatements> map) throws SQLException {
 			this.map = map;
 			this.preparedStatements = new HashMap<>();
@@ -382,8 +379,8 @@ public class SQLiteDAOImpl implements DAO {
 					throw e;
 				}
 
-				ps.lastInsertedRow.setString(1, tableInvolved);
-				ResultSet rs = ps.lastInsertedRow.executeQuery();
+				ps.getLastInsertedRow().setString(1, tableInvolved);
+				ResultSet rs = ps.getLastInsertedRow().executeQuery();
 				while (rs.next()) {
 					toAdd.setId(rs.getLong("last_inserted_id"));
 				}
@@ -964,8 +961,8 @@ public class SQLiteDAOImpl implements DAO {
 	/**
 	 * Computes every {@link Partecipation} of the tournament <tt>tournament_id</tt>
 	 * 
-	 * It automatically adds the partecipations inside the database and atuomatically creates the
-	 * link between the {@link Team} model class and {@link Tournament} model class
+	 * It automatically adds the partecipations inside the model, creating a new {@link Partecipation} instance
+	 * linking the {@link Team} model class and {@link Tournament} model class
 	 * 
 	 * @param tournament_id the id of the tournament involved
 	 * @throws DAOException if something bad happens
@@ -1000,8 +997,8 @@ public class SQLiteDAOImpl implements DAO {
 	/**
 	 * Computes every {@link Partecipation} of the team <tt>team_id</tt>
 	 * 
-	 * It automatically adds the partecipations inside the database and atuomatically creates the
-	 * link between the {@link Team} model class and {@link Tournament} model class
+	 * It automatically adds the partecipations inside the model, creating a new {@link Partecipation} instance
+	 * linking the {@link Team} model class and {@link Tournament} model class
 	 * 
 	 * @param team_id the id of the team involved
 	 * @throws DAOException if something bad happens
