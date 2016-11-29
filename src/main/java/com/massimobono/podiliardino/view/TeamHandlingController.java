@@ -90,7 +90,8 @@ public class TeamHandlingController {
 					);
 			if (t.isPresent()) {
 				//we have added a new player. We can add it to the DAO
-				Team t1 = this.mainApp.getDAO().addTeam(t.get());
+				this.mainApp.getDAO().addTeam(t.get());
+				this.teamTable.getSelectionModel().clearSelection();
 			}
 
 		} catch (Exception e) {
@@ -146,10 +147,18 @@ public class TeamHandlingController {
 	
 	private void handleUserSelectPlayer(ObservableValue<? extends Team> observableValue, Team oldValue, Team newValue) {
 		try {
-			this.teamNameLabel.setText(newValue.getName().get());
-			this.teamDateLabel.setText(Utils.getStandardDateFrom(newValue.getDate().get()));
-			this.firstTeamMemberLabel.setText(newValue.getPlayers().size() > 0 ? newValue.getPlayers().get(0).getName().get() : "");
-			this.secondTeamMemberLabel.setText(newValue.getPlayers().size() > 1 ? newValue.getPlayers().get(1).getName().get() : "");
+			if (newValue == null) {
+				//we delete the last item of the list
+				this.teamNameLabel.setText("");
+				this.teamDateLabel.setText("");
+				this.firstTeamMemberLabel.setText("");
+				this.secondTeamMemberLabel.setText("");
+			} else {
+				this.teamNameLabel.setText(newValue.getName().get());
+				this.teamDateLabel.setText(Utils.getStandardDateFrom(newValue.getDate().get()));
+				this.firstTeamMemberLabel.setText(newValue.getPlayers().size() > 0 ? newValue.getPlayers().get(0).getName().get() : "");
+				this.secondTeamMemberLabel.setText(newValue.getPlayers().size() > 1 ? newValue.getPlayers().get(1).getName().get() : "");
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			ExceptionAlert.showAndWait(e);

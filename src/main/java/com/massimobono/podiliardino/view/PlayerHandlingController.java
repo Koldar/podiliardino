@@ -87,6 +87,7 @@ public class PlayerHandlingController {
 			if (p.isPresent()) {
 				//we have added a new player. We can add it to the DAO
 				Player p1 = this.mainApp.getDAO().addPlayer(p.get());
+				this.playersTable.getSelectionModel().clearSelection();
 			}
 
 		} catch (Exception e) {
@@ -147,11 +148,19 @@ public class PlayerHandlingController {
 
 	private void handleUserSelectPlayer(ObservableValue<? extends Player> observableValue, Player oldValue, Player newValue) {
 		try {
-			Optional<String> birthday = newValue.getBirthdayAsStandardString();
-			this.nameLabel.setText(newValue.getName().get());
-			this.surnameLabel.setText(newValue.getSurname().get());
-			this.birthdayLabel.setText(birthday.isPresent() ? birthday.get() : Utils.EMPTY_DATE);
-			this.phoneLabel.setText(newValue.getPhone().get().isPresent() ? newValue.getPhone().get().get() : Utils.EMPTY_PHONE);
+			if (newValue == null) {
+				//when we delete the last item of the list
+				this.nameLabel.setText("");
+				this.surnameLabel.setText("");
+				this.birthdayLabel.setText("");
+				this.phoneLabel.setText("");
+			}else {
+				Optional<String> birthday = newValue.getBirthdayAsStandardString();
+				this.nameLabel.setText(newValue.getName().get());
+				this.surnameLabel.setText(newValue.getSurname().get());
+				this.birthdayLabel.setText(birthday.isPresent() ? birthday.get() : Utils.EMPTY_DATE);
+				this.phoneLabel.setText(newValue.getPhone().get().isPresent() ? newValue.getPhone().get().get() : Utils.EMPTY_PHONE);
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			ExceptionAlert.showAndWait(e);

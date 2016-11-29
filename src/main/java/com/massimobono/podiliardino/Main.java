@@ -81,10 +81,11 @@ public class Main extends Application {
 			ExceptionAlert.showAndWait(e1);
 		}
 		
-		//fetch data from the DAO
+		//fetch data from the DAO. Otherwie the DAO won't fetch anything at the beginning
 		try {
 			this.dao.getAllPlayers();
 			this.dao.getAllTeams();
+			this.dao.getAllTournaments();
 		} catch (DAOException e) {
 			e.printStackTrace();
 			ExceptionAlert.showAndWait(e);
