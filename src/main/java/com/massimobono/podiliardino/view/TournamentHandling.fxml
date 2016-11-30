@@ -67,6 +67,7 @@
                             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                              <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                           </rowConstraints>
                            <children>
                               <Label text="Name" />
@@ -75,6 +76,8 @@
                               <Label fx:id="tournamentNameLabel" GridPane.columnIndex="1" />
                               <Label fx:id="tournamentStartDateLabel" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                               <Label fx:id="tournamentEndDateLabel" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                              <Label text="Minimum days required" GridPane.rowIndex="3" />
+                              <Label fx:id="minimumDaysRequiredLabel" GridPane.columnIndex="1" GridPane.rowIndex="3" />
                            </children>
                         </GridPane>
                      </children>

@@ -58,6 +58,8 @@ public class TournamentHandlingController {
 	@FXML
 	private Label tournamentEndDateLabel;
 	@FXML
+	private Label minimumDaysRequiredLabel;
+	@FXML
 	private Button addTournament;
 	@FXML
 	private Button editTournament;
@@ -104,7 +106,6 @@ public class TournamentHandlingController {
 				new Callback<ListView<Team>, javafx.scene.control.ListCell<Team>>() {
 					@Override
 					public ListCell<Team> call(ListView<Team> listView) {
-						//	                     return new TeamListCell(tournamentTable, mainApp.getDAO(), availableTeamsList);
 						return new ListCell<Team>() {
 							@Override
 							public void updateItem(Team team, boolean empty) {
@@ -234,11 +235,13 @@ public class TournamentHandlingController {
 				this.tournamentNameLabel.setText("");
 				this.tournamentStartDateLabel.setText("");
 				this.tournamentEndDateLabel.setText("");
+				this.minimumDaysRequiredLabel.setText("");
 			}else {
 				Optional<LocalDate> endDate = newValue.getEndDate().get();
 				this.tournamentNameLabel.setText(newValue.getName().get());
 				this.tournamentStartDateLabel.setText(Utils.getStandardDateFrom(newValue.getStartDate().get()));
 				this.tournamentEndDateLabel.setText(endDate.isPresent() ? Utils.getStandardDateFrom(endDate.get()) : Utils.EMPTY_DATE);
+				this.minimumDaysRequiredLabel.setText(Integer.toString(this.computeMinimumDaysRequired(newValue.getPartecipations())));
 				
 				this.teamsToDisplay.clear();
 				this.teamsToDisplay.addAll(this.availableTeams);
@@ -249,12 +252,13 @@ public class TournamentHandlingController {
 				this.tournamentParticipationsListener = new ListChangeListener<Partecipation>() {
 					@Override
 					public void onChanged(ListChangeListener.Change<? extends Partecipation> c) {
-						partecipationUpdate(c);
+						minimumDaysRequiredLabel.setText(Integer.toString(computeMinimumDaysRequired(TournamentHandlingController.this.tournamentPartcipations)));
+						updateTeamsToDisplayFromPartecipationChange(c);
 					}
 				};
 				this.tournamentPartcipations = this.tournamentTable.getSelectionModel().getSelectedItem().getPartecipations();
 				this.tournamentPartcipations.addListener(this.tournamentParticipationsListener);
-				this.partecipationUpdate(this.tournamentPartcipations, new ArrayList<>());
+				this.updateTeamsToDisplayFromPartecipationChange(this.tournamentPartcipations, new ArrayList<>());
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -262,7 +266,7 @@ public class TournamentHandlingController {
 		}
 	}
 	
-	private void partecipationUpdate(Collection<? extends Partecipation> added, Collection<? extends Partecipation> removed) {
+	private void updateTeamsToDisplayFromPartecipationChange(Collection<? extends Partecipation> added, Collection<? extends Partecipation> removed) {
 		final Tournament tournament = tournamentTable.getSelectionModel().getSelectedItem();
 		
 		LOG.debug("User has added {}", String.join(", ", added.stream().map(p -> p.getTeam().get().toString()).collect(Collectors.toList())));
@@ -297,23 +301,22 @@ public class TournamentHandlingController {
 		LOG.debug("teams display after adding: {}", Arrays.toString(this.teamsToDisplay.toArray()));
 	}
 	
-	private void partecipationUpdate(ListChangeListener.Change<? extends Partecipation> e) {
+	private void updateTeamsToDisplayFromPartecipationChange(ListChangeListener.Change<? extends Partecipation> e) {
 		while (e.next()) {
-			this.partecipationUpdate(e.getAddedSubList(), e.getRemoved());
+			this.updateTeamsToDisplayFromPartecipationChange(e.getAddedSubList(), e.getRemoved());
 		}
 	}
 
 	/**
-	 * Computes the list of {@link Team} that can partecipate in the tournament
 	 * 
-	 * Rules are:
-	 * <ol>
-	 * 	<li>If a team chooses to partecipate in the tournament, then all the other teams that share even one of the member of the joinining team
-	 * 		are excluded</li>
-	 * </ol>
 	 * 
-	 * @param tournament the {@link Tournament} involved
-	 * @return an {@link ObservableList} of {@link Team} that may partecipate. This list can mutate depending on the partecipating teams
-	 * @throws DAOException if something bad happens
+	 * @param partecipations the partecipations of a tournament 
+	 * @return the minimum number of days required in order to create teams ranking
 	 */
+	private int computeMinimumDaysRequired(Collection<Partecipation> partecipations) {
+		if (partecipations.size() < 2) {
+			return 0;
+		}
+		return (int) Math.ceil(Math.log(partecipations.size())/Math.log(2));
+	}
 }
