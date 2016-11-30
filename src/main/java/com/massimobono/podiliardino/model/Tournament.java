@@ -3,7 +3,10 @@ package com.massimobono.podiliardino.model;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.ObjectProperty;
@@ -44,7 +47,26 @@ public class Tournament implements Indexable {
 		this(0, "", LocalDate.now(), null, new ArrayList<>());
 	}
 
-
+	/**
+	 * 
+	 * @return a list of teams partecipating in the current tournament
+	 */
+	public Collection<Team> getPartecipatingTeams() {
+		return this.getPartecipations().parallelStream().map(p -> p.getTeam().get()).collect(Collectors.toSet());
+	}
+	
+	/**
+	 * 
+	 * @return all the players partecipating in the current tournament
+	 */
+	public Collection<Player> getPartecipatingPlayers() {
+		Set<Player> retVal = new HashSet<>();
+		for (Team t : this.getPartecipatingTeams()) {
+			retVal.addAll(t.getPlayers());
+		}
+		return retVal;
+	}
+	
 	/**
 	 * @return the id
 	 */

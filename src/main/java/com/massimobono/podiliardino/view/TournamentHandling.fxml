@@ -39,7 +39,7 @@
                   <Label text="Mark all the teams you want to join the tournament" BorderPane.alignment="CENTER" />
                </top>
                <center>
-                  <ListView fx:id="availableTeams" prefHeight="598.0" prefWidth="235.0" BorderPane.alignment="CENTER" />
+                  <ListView fx:id="availableTeamsList" prefHeight="598.0" prefWidth="235.0" BorderPane.alignment="CENTER" />
                </center>
             </BorderPane>
             <BorderPane prefHeight="200.0" prefWidth="200.0">

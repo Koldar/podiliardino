@@ -1,11 +1,20 @@
 package com.massimobono.podiliardino.view;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.massimobono.podiliardino.Main;
 import com.massimobono.podiliardino.dao.DAO;
 import com.massimobono.podiliardino.dao.DAOException;
+import com.massimobono.podiliardino.model.Partecipation;
 import com.massimobono.podiliardino.model.Team;
 import com.massimobono.podiliardino.model.Tournament;
 import com.massimobono.podiliardino.util.ExceptionAlert;
@@ -16,18 +25,23 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
+import javafx.collections.ListChangeListener.Change;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 
 public class TournamentHandlingController {
+
+	private static final Logger LOG = LogManager.getLogger(TournamentHandlingController.class.getName());
 
 	@FXML
 	private TableView<Tournament> tournamentTable;
@@ -36,7 +50,7 @@ public class TournamentHandlingController {
 	@FXML
 	private TableColumn<Tournament, String> tournamentInfoColumn;
 	@FXML
-	private ListView<Team> availableTeams;
+	private ListView<Team> availableTeamsList;
 	@FXML
 	private Label tournamentNameLabel;
 	@FXML
@@ -51,12 +65,20 @@ public class TournamentHandlingController {
 	private Button removeTournament;
 
 	private Main mainApp;
-	
 	/**
-	 * A list of {@link Team} that can partecipate in the selected tournament.
-	 * This list has to be different that the one in the {@link DAO}. However, to ensure synchronization, listeners are made
+	 * Contains only the team that you need to display on screen
 	 */
-	private ObservableList<Team> availableTeamsList;
+	private ObservableList<Team> teamsToDisplay;
+	/**
+	 * A reference of {@link DAO#getTeamList()}. Used to simplicity
+	 */
+	private ObservableList<Team> availableTeams;
+	private ObservableList<Partecipation> tournamentPartcipations;
+
+	public TournamentHandlingController() {
+		this.tournamentPartcipations = FXCollections.observableArrayList();
+		this.teamsToDisplay = FXCollections.observableArrayList();
+	}
 
 	@FXML
 	private void initialize() {
@@ -67,18 +89,59 @@ public class TournamentHandlingController {
 		// Listen for selection changes and show the person details when changed.
 		this.tournamentTable.getSelectionModel().selectedItemProperty().addListener(this::handleUserSelectTournament);
 		
-		this.availableTeams.setCellFactory(
-	             new Callback<ListView<Team>, javafx.scene.control.ListCell<Team>>() {
-	                 @Override
-	                 public ListCell<Team> call(ListView<Team> listView) {
-	                     return new TeamListCell(TournamentHandlingController.this.tournamentTable, TournamentHandlingController.this.mainApp.getDAO());
-	                 }
-	             });
+		this.availableTeamsList.setItems(this.teamsToDisplay);
+
+		this.availableTeamsList.setCellFactory(
+				new Callback<ListView<Team>, javafx.scene.control.ListCell<Team>>() {
+					@Override
+					public ListCell<Team> call(ListView<Team> listView) {
+						//	                     return new TeamListCell(tournamentTable, mainApp.getDAO(), availableTeamsList);
+						return new ListCell<Team>() {
+							@Override
+							public void updateItem(Team team, boolean empty) {
+								super.updateItem(team,empty);
+
+								if(empty || team == null) {
+									setText(null);
+									setGraphic(null);
+								} else  {
+									CheckableListCellViewController data = new CheckableListCellViewController();
+									final Tournament tournament = tournamentTable.getSelectionModel().getSelectedItem();
+									//adds the listener
+									data.getCheckBox().setOnAction(e -> {
+										Partecipation partecipation = null;
+										if (data.getCheckBox().isSelected()) {
+											partecipation = new Partecipation(false, tournament, team);
+											tournament.getPartecipations().add(partecipation);
+											team.getPartecipations().add(partecipation);
+										} else {
+											Optional<Partecipation> op = tournament.getPartecipations()
+													.parallelStream()
+													.filter(p -> {return p.getTeam().get().getId() == team.getId();}).findFirst();
+											op.ifPresent( p -> {
+												tournament.getPartecipations().remove(p);	
+												team.getPartecipations().remove(p);
+											});
+
+										}
+									});
+									data.getNameLabel().setText(team.getName().get());
+									data.getCheckBox().setSelected(tournament.getPartecipations()
+											.parallelStream()
+											.filter(p -> p.getTeam().get() == team)
+											.findFirst().isPresent());
+									setGraphic(data.getPane());
+								}
+							}
+						};
+					}
+				});
 	}
 
 	public void setup(Main mainApp) throws DAOException {
 		this.mainApp = mainApp;
-		
+
+		this.availableTeams = this.mainApp.getDAO().getTeamList();
 		this.tournamentTable.setItems(this.mainApp.getDAO().getTournamentList());
 	}
 
@@ -87,7 +150,7 @@ public class TournamentHandlingController {
 		try {
 			Optional<Tournament> t = this.mainApp.showCustomDialog(
 					"TournamentEditDialog", 
-					"New Tournmanet", 
+					"New Tournament", 
 					(TournamentEditDialogController c, Stage s) -> {
 						try {
 							c.setup(s, new Tournament());
@@ -168,16 +231,13 @@ public class TournamentHandlingController {
 				this.tournamentStartDateLabel.setText(Utils.getStandardDateFrom(newValue.getStartDate().get()));
 				this.tournamentEndDateLabel.setText(endDate.isPresent() ? Utils.getStandardDateFrom(endDate.get()) : Utils.EMPTY_DATE);
 				
-				//we need to populate the participation teams
-				this.availableTeamsList = FXCollections.observableArrayList(this.mainApp.getDAO().getTeamList());
-				this.mainApp.getDAO().getTeamList().addListener((ListChangeListener.Change<? extends Team> e) -> {
-					while (e.next()) {
-						//if someone adds or removes some team, we will be notified
-						this.availableTeamsList.addAll(e.getAddedSubList());
-						this.availableTeamsList.removeAll(e.getRemoved());
-					}
-				});
-				this.availableTeams.setItems(this.availableTeamsList);
+				this.teamsToDisplay.clear();
+				this.teamsToDisplay.addAll(this.availableTeams);
+				//we remove the previous listener
+				this.tournamentPartcipations.removeListener(this::partecipationUpdate);
+				this.tournamentPartcipations = this.tournamentTable.getSelectionModel().getSelectedItem().getPartecipations();
+				this.tournamentPartcipations.addListener(this::partecipationUpdate);
+				this.partecipationUpdate(this.tournamentPartcipations, new ArrayList<>());
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -185,6 +245,47 @@ public class TournamentHandlingController {
 		}
 	}
 	
+	private void partecipationUpdate(Collection<? extends Partecipation> added, Collection<? extends Partecipation> removed) {
+		final Tournament tournament = tournamentTable.getSelectionModel().getSelectedItem();
+		
+		LOG.debug("User has added {}", String.join(", ", added.stream().map(p -> p.getTeam().get().toString()).collect(Collectors.toList())));
+		LOG.debug("User has removed {}", String.join(", ", removed.stream().map(p -> p.getTeam().get().toString()).collect(Collectors.toList())));
+		//new partecipations: remove from the display all the team conflicting with the new added 
+		Collection<Team> toRemove = new HashSet<>();
+		for (Partecipation newP : added) {
+			toRemove.addAll(this.availableTeams
+			.stream()
+			.filter(t -> !t.equals(newP.getTeam().get()))
+			.filter(t -> !t.isPartecipatingIn(tournament))
+			.filter(t -> t.containsAnyPlayerOfTeam(newP.getTeam().get()))
+			.collect(Collectors.toSet()));
+		}
+		
+		//removed partecipation: add all the teams not in display that were conflicting with the team removed
+		Collection<Team> toAdd = new HashSet<>();
+		for (Partecipation removedP : removed) {
+			toAdd.addAll(this.availableTeams
+					.parallelStream()
+					.filter(t -> !t.isPartecipatingIn(tournament))
+					.filter(t -> t.containsAnyPlayerOfTeam(removedP.getTeam().get()))
+					.collect(Collectors.toSet()));
+		}
+		
+		LOG.debug("teams to add: {}", toAdd);
+		LOG.debug("teams to remove: {}", toRemove);
+		LOG.debug("teams display before removing: {}", Arrays.toString(this.teamsToDisplay.toArray()));
+		this.teamsToDisplay.removeAll(toRemove);
+		LOG.debug("teams display after removing before adding: {}", Arrays.toString(this.teamsToDisplay.toArray()));
+		this.teamsToDisplay.addAll(toAdd.stream().filter(t -> !this.teamsToDisplay.contains(t)).collect(Collectors.toList()));
+		LOG.debug("teams display after adding: {}", Arrays.toString(this.teamsToDisplay.toArray()));
+	}
+	
+	private void partecipationUpdate(ListChangeListener.Change<? extends Partecipation> e) {
+		while (e.next()) {
+			this.partecipationUpdate(e.getAddedSubList(), e.getRemoved());
+		}
+	}
+
 	/**
 	 * Computes the list of {@link Team} that can partecipate in the tournament
 	 * 

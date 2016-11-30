@@ -8,6 +8,7 @@ import com.massimobono.podiliardino.model.Partecipation;
 import com.massimobono.podiliardino.model.Team;
 import com.massimobono.podiliardino.model.Tournament;
 
+import javafx.collections.ObservableList;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.TableView;
 
@@ -15,11 +16,15 @@ public class TeamListCell extends ListCell<Team>
 {
 	private TableView<Tournament> tournamentTable;
 	private DAO dao;
+	private ObservableList<Team> availableTeams;
 	
-	public TeamListCell(TableView<Tournament> tournamentTable, DAO dao) {
+	public TeamListCell(TableView<Tournament> tournamentTable, DAO dao, ObservableList<Team> availableTeams) {
 		this.tournamentTable = tournamentTable;
 		this.dao = dao;
+		this.availableTeams = availableTeams;
 	}
+	
+	
 	
     @Override
     public void updateItem(Team team, boolean empty)
@@ -39,6 +44,7 @@ public class TeamListCell extends ListCell<Team>
             		partecipation = new Partecipation(false, tournament, team);
             		tournament.getPartecipations().add(partecipation);
             		team.getPartecipations().add(partecipation);
+            		this.availableTeams.removeIf(t -> t.getPlayers().contains(team.getPlayers().get(0)) || t.getPlayers().contains(team.getPlayers().get(1)));
             	} else {
             		Optional<Partecipation> op = tournament.getPartecipations()
             		.stream()
@@ -48,6 +54,7 @@ public class TeamListCell extends ListCell<Team>
             			this.tournamentTable.getSelectionModel().getSelectedItem().getPartecipations().remove(p);	
             			team.getPartecipations().remove(p);
             		});
+            		
             	}
             });
             data.getNameLabel().setText(team.getName().get());
