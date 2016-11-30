@@ -73,11 +73,20 @@ public class TournamentHandlingController {
 	 * A reference of {@link DAO#getTeamList()}. Used to simplicity
 	 */
 	private ObservableList<Team> availableTeams;
+	/**
+	 * An observable list that is listened by a listener object {@link #tournamentParticipationsListener} 
+	 */
 	private ObservableList<Partecipation> tournamentPartcipations;
+	/**
+	 * The listener that will notify the {@link #availableTeams} if a new participation has been created
+	 * or if a partecipation has been dismissed
+	 */
+	private ListChangeListener<Partecipation> tournamentParticipationsListener;
 
 	public TournamentHandlingController() {
 		this.tournamentPartcipations = FXCollections.observableArrayList();
 		this.teamsToDisplay = FXCollections.observableArrayList();
+		tournamentParticipationsListener = null;
 	}
 
 	@FXML
@@ -233,10 +242,18 @@ public class TournamentHandlingController {
 				
 				this.teamsToDisplay.clear();
 				this.teamsToDisplay.addAll(this.availableTeams);
-				//we remove the previous listener
-				this.tournamentPartcipations.removeListener(this::partecipationUpdate);
+				//we remove the previous listener (if existent). We do thins to avoid polluting the listener field of the tournamentPartecipation
+				if (this.tournamentParticipationsListener != null) {
+					this.tournamentPartcipations.removeListener(this.tournamentParticipationsListener);
+				}
+				this.tournamentParticipationsListener = new ListChangeListener<Partecipation>() {
+					@Override
+					public void onChanged(ListChangeListener.Change<? extends Partecipation> c) {
+						partecipationUpdate(c);
+					}
+				};
 				this.tournamentPartcipations = this.tournamentTable.getSelectionModel().getSelectedItem().getPartecipations();
-				this.tournamentPartcipations.addListener(this::partecipationUpdate);
+				this.tournamentPartcipations.addListener(this.tournamentParticipationsListener);
 				this.partecipationUpdate(this.tournamentPartcipations, new ArrayList<>());
 			}
 		} catch (Exception e) {
