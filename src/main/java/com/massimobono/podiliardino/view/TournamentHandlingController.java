@@ -221,6 +221,10 @@ public class TournamentHandlingController {
 				return;
 			}
 			Tournament t =this.tournamentTable.getSelectionModel().getSelectedItem();
+			for (Partecipation p : t.getPartecipations()) {
+				p.getTeam().get().getPartecipations().remove(p);
+			}
+			t.getPartecipations().clear();
 			this.mainApp.getDAO().remove(t);
 		} catch (DAOException e) {
 			e.printStackTrace();

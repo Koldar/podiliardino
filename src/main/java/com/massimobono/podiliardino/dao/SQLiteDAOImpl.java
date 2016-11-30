@@ -444,10 +444,16 @@ public class SQLiteDAOImpl implements DAO {
 	 * 		<li>the third parameter is a {@link PreparedStatements} instance containing all the {@link PreparedStatement} available for you to use to quickly query the system</li>
 	 * 		<li>the output is the first exception you encounter inside the lamda or <tt>null<//tt> if you encounter none of them</li>
 	 * 	</ul>  
-	 * @param actionWhenDeleteSucceed a series of instruction to perform if the deletion succeeds
+	 * @param actionBeforeDeleting a series of instruction to perform before the deletion process actually starts. Returns an exception if the process fails, null otherwise
+	 * @param actionWhenDeleteSucceed a series of instruction to perform if the deletion succeeds. Returns an exception if the process fails, null otherwise
 	 * @throws DAOException if something bad happens. <tt>actionWhenDeleteSucceed</tt> won't be called at all in this scenario
 	 */
-	private <TOREMOVE> void abstractRemove(final TOREMOVE toRemove, TerFunction<Connection, Statement, PreparedStatements, Exception> deleteQueries, Runnable actionWhenDeleteSucceed) throws DAOException {
+	private <TOREMOVE> void abstractRemove(final TOREMOVE toRemove, TerFunction<Connection, Statement, PreparedStatements, Exception> deleteQueries, Supplier<Exception> actionBeforeDeleting, Supplier<Exception> actionWhenDeleteSucceed) throws DAOException {
+		
+		Exception e1 = actionBeforeDeleting.get();
+		if (e1 != null) {
+			throw new DAOException(e1);
+		}
 		this.connectAndThenDo((c,s,ps) -> {
 			try {
 				Exception e = deleteQueries.apply(c, s, ps);
@@ -459,7 +465,10 @@ public class SQLiteDAOImpl implements DAO {
 				return e;
 			}
 		});
-		actionWhenDeleteSucceed.run();
+		e1 = actionWhenDeleteSucceed.get();
+		if (e1 != null) {
+			throw new DAOException(e1);
+		}
 	}
 
 	/**
@@ -610,7 +619,8 @@ public class SQLiteDAOImpl implements DAO {
 						return e;
 					}
 				},
-				() -> {this.players.remove(p.getId());}
+				() -> null,
+				() -> {this.players.remove(p.getId()); return null;}
 				);
 	}
 
@@ -792,7 +802,8 @@ public class SQLiteDAOImpl implements DAO {
 						return e;
 					}
 				},
-				() -> {this.teams.remove(team.getId());}
+				() -> null,
+				() -> {this.teams.remove(team.getId()); return null;}
 				);
 	}
 
@@ -924,7 +935,8 @@ public class SQLiteDAOImpl implements DAO {
 						return e;
 					}
 				},
-				() -> {this.tournaments.remove(tournament.getId());});
+				() -> null,
+				() -> {this.tournaments.remove(tournament.getId()); return null;});
 	}
 
 	@Override

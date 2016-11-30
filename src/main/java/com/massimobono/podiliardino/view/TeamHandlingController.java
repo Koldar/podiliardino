@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import com.massimobono.podiliardino.Main;
 import com.massimobono.podiliardino.dao.DAOException;
+import com.massimobono.podiliardino.model.Partecipation;
 import com.massimobono.podiliardino.model.Player;
 import com.massimobono.podiliardino.model.Team;
 import com.massimobono.podiliardino.util.ExceptionAlert;
@@ -139,6 +140,10 @@ public class TeamHandlingController {
 				return;
 			}
 			Team t =this.teamTable.getSelectionModel().getSelectedItem();
+			for (Partecipation p : t.getPartecipations()) {
+				p.getTournament().get().getPartecipations().remove(p);
+			}
+			t.getPartecipations().clear();
 			this.mainApp.getDAO().removeTeam(t);
 		} catch (DAOException e) {
 			e.printStackTrace();
