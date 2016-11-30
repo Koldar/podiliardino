@@ -8,8 +8,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -18,6 +23,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 public class Tournament implements Indexable {
+	
+	private static final Logger LOG = LogManager.getLogger(Tournament.class);
 
 	private final LongProperty id;
 	private final StringProperty name;
@@ -25,6 +32,8 @@ public class Tournament implements Indexable {
 	private final ObjectProperty<Optional<LocalDate>> endDate;
 	
 	private final ObservableList<Partecipation> partecipations;
+	
+	private final IntegerProperty numberOfPartecipants;
 	
 	
 	/**
@@ -41,10 +50,17 @@ public class Tournament implements Indexable {
 		this.startDate = new SimpleObjectProperty<>(startDate);
 		this.endDate = new SimpleObjectProperty<>(Optional.ofNullable(endDate));
 		this.partecipations = FXCollections.observableArrayList(partecipations);
+		this.numberOfPartecipants = new SimpleIntegerProperty(0);
 	}
 	
 	public Tournament() {
 		this(0, "", LocalDate.now(), null, new ArrayList<>());
+	}
+	
+	public IntegerProperty getNumberOfPartecipants() {
+		this.numberOfPartecipants.set(this.getPartecipations().parallelStream().mapToInt(p -> p.getTeam().get().getPlayers().size()).sum());
+		LOG.debug("computed numberOfPartecipants: {}. Partecipations: {}", this.numberOfPartecipants.get(), this.partecipations);
+		return this.numberOfPartecipants;
 	}
 
 	/**
@@ -109,6 +125,33 @@ public class Tournament implements Indexable {
 	public ObservableList<Partecipation> getPartecipations() {
 		return partecipations;
 	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((id == null) ? 0 : id.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Tournament other = (Tournament) obj;
+		if (id == null) {
+			if (other.id != null)
+				return false;
+		} else if (!id.equals(other.id))
+			return false;
+		return true;
+	}
+	
+	
 	
 	
 }

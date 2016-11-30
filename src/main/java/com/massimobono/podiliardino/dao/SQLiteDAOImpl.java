@@ -874,7 +874,7 @@ public class SQLiteDAOImpl implements DAO {
 					tournament.getPartecipations().addListener((ListChangeListener.Change<? extends Partecipation> e) -> {
 						while (e.next()) {
 							try {
-								for (Partecipation p :e.getRemoved()) {
+								for (Partecipation p : e.getRemoved()) {
 									this.remove(p);
 								}
 								for (Partecipation p : e.getAddedSubList()) {

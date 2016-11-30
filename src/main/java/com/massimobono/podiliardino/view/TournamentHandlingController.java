@@ -48,7 +48,7 @@ public class TournamentHandlingController {
 	@FXML
 	private TableColumn<Tournament, String> tournamentNameColumn;
 	@FXML
-	private TableColumn<Tournament, String> tournamentInfoColumn;
+	private TableColumn<Tournament, Integer> tournamentInfoColumn;
 	@FXML
 	private ListView<Team> availableTeamsList;
 	@FXML
@@ -95,7 +95,7 @@ public class TournamentHandlingController {
 	private void initialize() {
 		// Initialize the person table with the two columns.
 		this.tournamentNameColumn.setCellValueFactory(cellData -> cellData.getValue().getName());
-		this.tournamentInfoColumn.setCellValueFactory(cellData -> new SimpleStringProperty(Integer.toString(cellData.getValue().getPartecipations().size())));
+		this.tournamentInfoColumn.setCellValueFactory(cellData -> cellData.getValue().getNumberOfPartecipants().asObject());
 
 		// Listen for selection changes and show the person details when changed.
 		this.tournamentTable.getSelectionModel().selectedItemProperty().addListener(this::handleUserSelectTournament);
