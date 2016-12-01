@@ -196,6 +196,10 @@ public class DayHandlingController {
 				this.matchesToDoLabel.setText("");
 				this.matchesDoneLabel.setText("");
 			} else {
+				this.dayNumberLabel.setText(Integer.toString(newValue.getNumber().get()));
+				this.dayDateLabel.setText(Utils.getStandardDateFrom(newValue.getDate().get()));
+				this.matchesToDoLabel.setText(Integer.toString(newValue.getNumberOfMatchesToDo()));
+				this.matchesDoneLabel.setText(Integer.toString(newValue.getNumberOfMatchesDone()));
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

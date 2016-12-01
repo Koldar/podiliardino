@@ -45,6 +45,24 @@ public class Day implements Indexable {
 	}
 	
 	/**
+	 * We get all the matches in the day and then we retain only those with status {@link MatchStatus#TODO}
+	 * 
+	 * @return the number of mathces that we have left in order to conclude the day
+	 */
+	public int getNumberOfMatchesToDo() {
+		return this.getMatches().parallelStream().filter(m -> m.getStatus().get() == MatchStatus.TODO).mapToInt(m -> 1).sum();
+	}
+	
+	/**
+	 * We get all the matches in the day and then we retain only those with status {@link MatchStatus#DONE}
+	 * 
+	 * @return the number of matches already terminated
+	 */
+	public int getNumberOfMatchesDone() {
+		return this.getMatches().parallelStream().filter(m -> m.getStatus().get() == MatchStatus.DONE).mapToInt(m -> 1).sum();
+	}
+	
+	/**
 	 * @return the matches
 	 */
 	public ObservableList<Match> getMatches() {
