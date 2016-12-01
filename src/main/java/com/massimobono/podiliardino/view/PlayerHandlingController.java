@@ -6,7 +6,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.massimobono.podiliardino.Main;
-import com.massimobono.podiliardino.dao.DAOException;
+import com.massimobono.podiliardino.extensibles.dao.DAOException;
 import com.massimobono.podiliardino.model.Player;
 import com.massimobono.podiliardino.model.Team;
 import com.massimobono.podiliardino.util.ExceptionAlert;

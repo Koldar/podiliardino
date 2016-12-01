@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import com.massimobono.podiliardino.dao.DAO;
+import com.massimobono.podiliardino.extensibles.dao.DAO;
 
 import javafx.beans.InvalidationListener;
 import javafx.collections.FXCollections;

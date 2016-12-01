@@ -1,4 +1,4 @@
-package com.massimobono.podiliardino.dao;
+package com.massimobono.podiliardino.extensibles.dao;
 
 public class DAOException extends Exception {
 

@@ -1,4 +1,4 @@
-package com.massimobono.podiliardino.dao;
+package com.massimobono.podiliardino.extensibles.dao;
 
 import java.io.Closeable;
 import java.io.File;

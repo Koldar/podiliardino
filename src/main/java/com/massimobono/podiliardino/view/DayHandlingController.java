@@ -9,14 +9,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.massimobono.podiliardino.Main;
-import com.massimobono.podiliardino.dao.DAOException;
+import com.massimobono.podiliardino.extensibles.dao.DAOException;
+import com.massimobono.podiliardino.extensibles.ranking.RankingComputer;
+import com.massimobono.podiliardino.extensibles.ranking.SwissRankingManager;
 import com.massimobono.podiliardino.model.Day;
 import com.massimobono.podiliardino.model.Match;
 import com.massimobono.podiliardino.model.Player;
 import com.massimobono.podiliardino.model.Team;
 import com.massimobono.podiliardino.model.Tournament;
-import com.massimobono.podiliardino.ranking.RankingManager;
-import com.massimobono.podiliardino.ranking.SwissRankingManager;
 import com.massimobono.podiliardino.util.ExceptionAlert;
 import com.massimobono.podiliardino.util.Utils;
 
@@ -236,7 +236,7 @@ public class DayHandlingController {
 			return;
 		}
 		
-		RankingManager rm = new SwissRankingManager();
+		RankingComputer rm = new SwissRankingManager();
 		//we call the ranking immediately: 
 		List<Team> ranks = rm.getDayRanking(day);
 		

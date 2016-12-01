@@ -1,4 +1,4 @@
-package com.massimobono.podiliardino.ranking;
+package com.massimobono.podiliardino.extensibles.ranking;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -12,6 +12,10 @@ import java.util.Random;
 import com.massimobono.podiliardino.model.Day;
 import com.massimobono.podiliardino.model.Team;
 import com.massimobono.podiliardino.model.Tournament;
+import com.massimobono.podiliardino.util.ObservableDistinctList;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
 /**
  * Rank every team based upon the swiss tournament type rules
@@ -28,18 +32,17 @@ import com.massimobono.podiliardino.model.Tournament;
  * @author massi
  *
  */
-public class SwissRankingManager implements RankingManager {
+public class SwissRankingManager implements RankingComputer<Team> {
 
-	/**
-	 * the ranking you 
-	 */
 	private PriorityQueue<Team> ranking;
 	private Random random;
+	private ObservableDistinctList<Team> observableRanking;
 	
 	private Day currentDay;
 	
 	public SwissRankingManager() {
 		this.random = new Random(System.nanoTime());
+		this.observableRanking = new ObservableDistinctList<>(FXCollections.observableArrayList());
 		this.ranking = new PriorityQueue<>(new Comparator<Team>() {
 
 			@Override
@@ -91,6 +94,17 @@ public class SwissRankingManager implements RankingManager {
 		this.ranking.addAll(d.getTournament().get().getPartecipatingTeams());
 		retVal.addAll(this.ranking);
 		return retVal;
+	}
+
+	@Override
+	public ObservableList<Team> getDayObservableRanking(Day d) {
+		this.currentDay = d;
+		
+		//we use a priority queue to automatically sort the teams
+		this.ranking.addAll(d.getTournament().get().getPartecipatingTeams());
+		this.observableRanking.clear();
+		this.observableRanking.addAll(this.ranking);
+		return this.observableRanking;
 	}
 
 }

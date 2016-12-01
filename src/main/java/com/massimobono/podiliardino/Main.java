@@ -12,9 +12,9 @@ import java.util.function.Function;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.massimobono.podiliardino.dao.DAO;
-import com.massimobono.podiliardino.dao.DAOException;
-import com.massimobono.podiliardino.dao.SQLiteDAOImpl;
+import com.massimobono.podiliardino.extensibles.dao.DAO;
+import com.massimobono.podiliardino.extensibles.dao.DAOException;
+import com.massimobono.podiliardino.extensibles.dao.SQLiteDAOImpl;
 import com.massimobono.podiliardino.util.ExceptionAlert;
 import com.massimobono.podiliardino.view.DayHandlingController;
 import com.massimobono.podiliardino.view.PlayerHandlingController;

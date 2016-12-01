@@ -1,4 +1,4 @@
-package com.massimobono.podiliardino.ranking;
+package com.massimobono.podiliardino.extensibles.ranking;
 
 import java.util.List;
 import java.util.PriorityQueue;
@@ -13,7 +13,7 @@ import javafx.collections.ObservableList;
  * @author massi
  *
  */
-public interface RankingManager {
+public interface RankingComputer<E> {
 
 	public void setup();
 	
@@ -26,7 +26,15 @@ public interface RankingManager {
 	 * @param d the day when we want to compute the ranking
 	 * @return the ranking
 	 */
-	public List<Team> getDayRanking(Day d);
+	public List<E> getDayRanking(Day d);
 	
-	public ObservableList<Team> getDayObservableRanking(Day d);
+	/**
+	 * like {@link #getDayRanking(Day)}, but it will return an instance you can observe
+	 * 
+	 * <b>the implementation needs to return always the same instance in order to send events to listeners correctly</b>
+	 * 
+	 * @param d
+	 * @return
+	 */
+	public ObservableList<E> getDayObservableRanking(Day d);
 }

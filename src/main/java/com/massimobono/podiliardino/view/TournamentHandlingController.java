@@ -12,8 +12,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.massimobono.podiliardino.Main;
-import com.massimobono.podiliardino.dao.DAO;
-import com.massimobono.podiliardino.dao.DAOException;
+import com.massimobono.podiliardino.extensibles.dao.DAO;
+import com.massimobono.podiliardino.extensibles.dao.DAOException;
 import com.massimobono.podiliardino.model.Partecipation;
 import com.massimobono.podiliardino.model.Team;
 import com.massimobono.podiliardino.model.Tournament;
