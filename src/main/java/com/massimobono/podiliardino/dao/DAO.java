@@ -2,6 +2,7 @@ package com.massimobono.podiliardino.dao;
 
 import java.io.Closeable;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.function.Function;
 
 import com.massimobono.podiliardino.model.Day;
@@ -98,29 +99,13 @@ public interface DAO extends Closeable{
 	
 	public Collection<Player> getAllPlayersThat(Function<Player,Boolean> filter) throws DAOException;
 	
-	public default Collection<Player> getPlayerby(String name, String surname) throws DAOException{
-		return this.getAllPlayersThat(p -> {
-			return ((name == null)||(p.getName().get().equalsIgnoreCase(name))) && ((surname==null)&&(p.getSurname().get().equalsIgnoreCase(surname)));
-		});
-	}
-	
-	/**
-	 * 
-	 * @return all the players inside the database
-	 * @throws DAOException if something bad happens
-	 */
 	public default Collection<Player> getAllPlayers() throws DAOException {
 		return this.getAllPlayersThat(p -> true);
 	}
 	
-	public default Collection<Player> getPlayerByName(String name) throws DAOException {
-		return this.getPlayerby(name, null);
+	public default Optional<Player> getPlayerThat(Function<Player, Boolean> filter) throws DAOException {
+		return this.getAllPlayersThat(filter).stream().findFirst();
 	}
-	
-	public default Collection<Player> getPlayerBySurname(String surname) throws DAOException {
-		return this.getPlayerby(null, surname);
-	}
-	
 	
 	
 	/**
@@ -161,6 +146,19 @@ public interface DAO extends Closeable{
 	 */
 	public ObservableList<Team> getTeamList() throws DAOException;
 	
+	/**
+	 * like {@link #getAllTeamsThat(Function)} but returns only the first entry
+	 * 
+	 * @param filter
+	 * @return
+	 * @throws DAOException
+	 */
+	public default Optional<Team> getTeamThat(Function<Team, Boolean> filter) throws DAOException {
+		return this.getAllTeamsThat(filter).stream().findFirst();
+	}
+	
+	// TOURNAMENTS
+	
 	public Tournament add(Tournament tournament) throws DAOException;
 	
 	public Tournament update(Tournament tournament) throws DAOException;
@@ -175,6 +173,19 @@ public interface DAO extends Closeable{
 		return this.getAllTournamentsThat(t -> true);
 	}
 	
+	/**
+	 * like {@link #getAllTournamentsThat(Function)} but return only the first entry
+	 * 
+	 * @param filter
+	 * @return
+	 * @throws DAOException
+	 */
+	public default Optional<Tournament> getTournamentThat(Function<Tournament, Boolean> filter) throws DAOException {
+		return this.getAllTournamentsThat(filter).stream().findFirst();
+	}
+	
+	// DAYS
+	
 	public Day add(Day day) throws DAOException;
 	
 	public Day update(Day day) throws DAOException;
@@ -184,4 +195,16 @@ public interface DAO extends Closeable{
 	public void remove(Day day) throws DAOException;
 	
 	public ObservableList<Day> getDaysList() throws DAOException;
+	
+	/**
+	 * like {@link #getAllDaysThat(Function)} but return only the first entry
+	 * 
+	 * @param filter
+	 * @return
+	 * @throws DAOException
+	 */
+	public default Optional<Day> getDayThat(Function<Day, Boolean> filter) throws DAOException {
+		return this.getAllDaysThat(filter).stream().findFirst();
+	}
+	
 }

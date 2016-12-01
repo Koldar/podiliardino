@@ -11,6 +11,8 @@ import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.massimobono.podiliardino.util.ObservableDistinctList;
+
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.ObjectProperty;
@@ -33,8 +35,8 @@ public class Tournament implements Indexable {
 	private final ObjectProperty<Optional<LocalDate>> endDate;
 	
 	//relationships with other concepts
-	private final ObservableList<Partecipation> partecipations;
-	private final ObservableList<Day> days;
+	private final ObservableDistinctList<Partecipation> partecipations;
+	private final ObservableDistinctList<Day> days;
 	
 	
 	//derived attributes
@@ -54,8 +56,8 @@ public class Tournament implements Indexable {
 		this.name = new SimpleStringProperty(name);
 		this.startDate = new SimpleObjectProperty<>(startDate);
 		this.endDate = new SimpleObjectProperty<>(Optional.ofNullable(endDate));
-		this.partecipations = FXCollections.observableArrayList(partecipations);
-		this.days = FXCollections.observableArrayList(days);
+		this.partecipations = new ObservableDistinctList<>(FXCollections.observableArrayList(partecipations));
+		this.days = new ObservableDistinctList<>(FXCollections.observableArrayList(days));
 		this.numberOfPartecipants = new SimpleIntegerProperty(0);
 	}
 	

@@ -28,6 +28,8 @@ import org.apache.logging.log4j.Logger;
 
 import com.massimobono.podiliardino.model.Day;
 import com.massimobono.podiliardino.model.Indexable;
+import com.massimobono.podiliardino.model.Match;
+import com.massimobono.podiliardino.model.MatchStatus;
 import com.massimobono.podiliardino.model.Partecipation;
 import com.massimobono.podiliardino.model.Player;
 import com.massimobono.podiliardino.model.Team;
@@ -37,6 +39,8 @@ import com.massimobono.podiliardino.util.TerConsumer;
 import com.massimobono.podiliardino.util.TerFunction;
 import com.massimobono.podiliardino.util.Utils;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ListChangeListener.Change;
@@ -94,13 +98,44 @@ public class SQLiteDAOImpl implements DAO {
 			this.preparedStatements.put("deleteDay", connection.prepareStatement("DELETE FROM day WHERE id=?"));
 
 			this.preparedStatements.put("insertDivision", connection.prepareStatement("UPDATE day SET tournament_id=? WHERE id=?"));
-			
+
 			this.preparedStatements.put("getTournamentFromDay", connection.prepareStatement("SELECT tournament_id FROM day WHERE id=?"));
 			this.preparedStatements.put("getDaysInTournament", connection.prepareStatement("SELECT d.id FROM day AS d WHERE tournament_id=?"));
 
+			// MATCHES
+
+			this.preparedStatements.put("insertMatch", connection.prepareStatement("INSERT INTO match(team1_id, team2_id, day_id, points_earned_from_winning, points_earned_from_losing, team1_goals, team2_goals, status) VALUES (?,?,?,?,?,?,?,?)"));
+			this.preparedStatements.put("deleteMatch", connection.prepareStatement("DELETE FROM match WHERE team1_id=? AND team2_id=? AND day_id=?"));
+			this.preparedStatements.put("setMatchStatus", connection.prepareStatement("UPDATE OR ROLLBACK match set team1_goals=?, team2_goals=?, status=? WHERE team1_id=? AND team2_id=? and day_id=?"));
+
+			this.preparedStatements.put("getMatchesFromTeam", connection.prepareStatement("SELECT team1_id, team2_id, day_id, points_earned_from_winning, points_earned_from_losing, team1_goals, team2_goals, status FROM match WHERE team1_id=? OR team2_id=?"));
+			this.preparedStatements.put("getMatchesFromDay", connection.prepareStatement("SELECT team1_id, team2_id, day_id, points_earned_from_winning, points_earned_from_losing, team1_goals, team2_goals, status FROM match WHERE day_id=?"));
+
+			//GENERAL
+
 			this.preparedStatements.put("lastInsertedRow",connection.prepareStatement("SELECT seq as last_inserted_id FROM sqlite_sequence WHERE name=?;"));
 		}
-		
+
+		public PreparedStatement getGetMatchesFromDay() {
+			return this.get("getMatchesFromDay");
+		}
+
+		public PreparedStatement getGetMatchesFromTeam() {
+			return this.get("getMatchesFromTeam");
+		}
+
+		public PreparedStatement getDeleteMatch() {
+			return this.get("deleteMatch");
+		}
+
+		public PreparedStatement getInsertMatch() {
+			return this.get("insertMatch");
+		}
+
+		public PreparedStatement getSetMatchStatus() {
+			return this.get("setMatchStatus");
+		}
+
 		public PreparedStatement getInsertDivision() {
 			return this.get("insertDivision");
 		}
@@ -279,7 +314,7 @@ public class SQLiteDAOImpl implements DAO {
 	 * the map stores a new reference if it doesn't have already. Otherwise the DAO does not create a new  {@link Day} instance.
 	 */
 	private TableFriendlyObservableMap<Long, Day> days;
-	
+
 	/**
 	 * 
 	 * @param databaseFileName the file sqlite will use to store data.
@@ -289,13 +324,13 @@ public class SQLiteDAOImpl implements DAO {
 	public SQLiteDAOImpl(File databaseFileName, boolean performSetup) throws DAOException {
 		this.databaseFileName = databaseFileName;
 		this.preparedStatements = null;
-		
+
 		//main entities list
 		this.players = new TableFriendlyObservableMap<>();
 		this.teams = new TableFriendlyObservableMap<>();
 		this.tournaments = new TableFriendlyObservableMap<>();
 		this.days = new TableFriendlyObservableMap<>();
-		
+
 		this.connectionUsed = false;
 		if (performSetup) {
 			this.setup();
@@ -310,9 +345,15 @@ public class SQLiteDAOImpl implements DAO {
 				this.players.clear();
 				s.executeUpdate("DELETE FROM team;");
 				this.teams.clear();
-				s.executeUpdate("DELETE FROM tournament;");
 				this.tournaments.clear();
+				s.executeUpdate("DELETE FROM tournament;");
+				this.days.clear();
+				s.executeUpdate("DELETE FROM day;");
+
 				s.executeUpdate("DELETE FROM partecipation;");
+				s.executeUpdate("DELETE FROM player_compose_team;");
+				s.executeUpdate("DELETE FROM match;");
+
 				return null;
 			} catch (SQLException e) {
 				return e;
@@ -336,9 +377,11 @@ public class SQLiteDAOImpl implements DAO {
 				s.executeUpdate("CREATE TABLE IF NOT EXISTS tournament (id INTEGER PRIMARY KEY AUTOINCREMENT, name varchar(100), start_date varchar(20), end_date varchar(20));");
 
 				s.executeUpdate("CREATE TABLE IF NOT EXISTS day (id INTEGER PRIMARY KEY AUTOINCREMENT, number INTEGER, date varchar(20), tournament_id INTEGER REFERENCES tournament(id) ON UPDATE CASCADE);");
-				
+
+				s.executeUpdate("CREATE TABLE IF NOT EXISTS match (team1_id INTEGER REFERENCES team(id) ON UPDATE CASCADE, team2_id INTEGER REFERENCES team(id) ON UPDATE CASCADE, day_id INTEGER REFERENCES day(id) ON UPDATE CASCADE, points_earned_from_winning INTEGER, points_earned_from_losing INTEGER, team1_goals INTEGER, team2_goals INTEGER, status INTEGER, UNIQUE(team1_id, team2_id, day_id));");
+
 				s.executeUpdate("CREATE TABLE IF NOT EXISTS partecipation (team_id INTEGER REFERENCES team(id) ON UPDATE CASCADE, tournament_id INTEGER REFERENCES tournament(id) ON UPDATE CASCADE, bye INTEGER, UNIQUE(team_id, tournament_id));");
-				
+
 				return null;
 			} catch (SQLException e) {
 				return e;
@@ -605,6 +648,51 @@ public class SQLiteDAOImpl implements DAO {
 		}
 		return retVal;
 	}
+	
+	/**
+	 * Often there are several list that the DAO needs to listen to in order to add/remove sutff from the database.
+	 * This method allows you to generate a compliant listener that will add/remove rows from the db
+	 * @return
+	 */
+	private <OBJECTCHANGED> ListChangeListener<OBJECTCHANGED> getDefaultListListener() {
+		return new ListChangeListener<OBJECTCHANGED>() {
+
+			@Override
+			public void onChanged(javafx.collections.ListChangeListener.Change<? extends OBJECTCHANGED> e) {
+				while (e.next()) {
+					try {
+						for (OBJECTCHANGED obj : e.getAddedSubList()) {
+							if (obj instanceof Partecipation) {
+								add((Partecipation)obj);
+							} else if (obj instanceof Match) {
+								add((Match)obj);
+							} else if (obj instanceof Day) {
+								Day d = (Day) obj;
+								add(d.getId(), d.getTournament().get().getId());
+							} else {
+								throw new UnsupportedOperationException(String.format("%s unsupported", e.getClass().getName()));
+							}
+						}
+						for (OBJECTCHANGED obj : e.getRemoved()) {
+							if (obj instanceof Partecipation) {
+								remove((Partecipation)obj);
+							} else if (obj instanceof Match) {
+								remove((Match)obj);
+							} else if (obj instanceof Day) {
+								Day d = (Day) obj;
+								remove(d.getId(), d.getTournament().get().getId());
+							} else {
+								throw new UnsupportedOperationException(String.format("%s unsupported", e.getClass().getName()));
+							}
+						}
+					} catch (Exception ex) {
+						ex.printStackTrace();
+						//TODO complete
+					}
+				}
+			}
+		};
+	}
 
 	@Override
 	public void close() throws IOException {
@@ -705,6 +793,7 @@ public class SQLiteDAOImpl implements DAO {
 				}, 
 				(p, id) -> {
 					try {
+						//TODO compute team used by player
 						p.getTeamWithPlayer().addAll(this.getTeamsWith(id));
 						return null;
 					} catch (Exception e) {
@@ -747,21 +836,9 @@ public class SQLiteDAOImpl implements DAO {
 						ps.getAddPlayerComposeTeam().addBatch();
 						ps.getAddPlayerComposeTeam().executeBatch();
 
-						team.getPartecipations().addListener((ListChangeListener.Change<? extends Partecipation> e) -> {
-							while(e.next()) {
-								try {
-									for (Partecipation p :e.getRemoved()) {
-										this.remove(p);
-									}
-									for (Partecipation p : e.getAddedSubList()) {
-										this.add(p);
-									}
-								} catch (DAOException ex) {
-									ex.printStackTrace();
-									//TODO complete
-								}
-							}
-						});
+						//TODO add players
+						team.getPartecipations().addListener(this.getDefaultListListener());
+						team.getMatches().addListener(this.getDefaultListListener());						
 
 						return null;
 					} catch (SQLException e) {
@@ -817,21 +894,9 @@ public class SQLiteDAOImpl implements DAO {
 						t.setId(rs.getLong("id"));
 						t.getName().set(rs.getString("name"));
 						t.getDate().set(Utils.getDateFrom(rs.getString("date")));
-						t.getPartecipations().addListener((ListChangeListener.Change<? extends Partecipation> e) -> {
-							while (e.next()) {
-								try {
-									for (Partecipation p : e.getAddedSubList()) {
-										this.add(p);
-									}
-									for (Partecipation p : e.getRemoved()) {
-										this.remove(p);
-									}
-								} catch (Exception ex) {
-									ex.printStackTrace();
-									//TODO complete
-								}
-							}
-						});
+						
+						t.getPartecipations().addListener(this.getDefaultListListener());
+						t.getMatches().addListener(this.getDefaultListListener());
 						return null;
 					} catch (SQLException e) {
 						return e;
@@ -839,8 +904,10 @@ public class SQLiteDAOImpl implements DAO {
 				},
 				(t, id) -> {
 					try {
-						this.computePartecipationsOfTeam(t.getId());
+						this.computePartecipationsFromTeam(t);
+						//TODO add players
 						t.getPlayers().addAll(this.getPlayersInTeam(id));
+						this.computeMatchesFromTeam(t);
 						return null;
 					} catch (DAOException e) {
 						return e;
@@ -857,6 +924,7 @@ public class SQLiteDAOImpl implements DAO {
 						ps.getDeleteTeam().setLong(1, team.getId());
 						ps.getDeleteTeam().addBatch();
 						ps.getDeleteTeam().executeBatch();
+						//todo check team removal
 						return null;
 					} catch (SQLException e) {
 						return e;
@@ -942,37 +1010,9 @@ public class SQLiteDAOImpl implements DAO {
 				},
 				(c,s,ps) -> null,
 				() -> {
-					tournament.getPartecipations().addListener((ListChangeListener.Change<? extends Partecipation> e) -> {
-						while (e.next()) {
-							try {
-								for (Partecipation p : e.getRemoved()) {
-									this.remove(p);
-								}
-								for (Partecipation p : e.getAddedSubList()) {
-									this.add(p);
-								}
-							}catch (DAOException ex) {
-								ex.printStackTrace();
-								//TODO complete
-							}
-						}
-					});
 					//the model has changed the divide list
-					tournament.getDays().addListener((ListChangeListener.Change<? extends Day> e) -> {
-						try {
-							while(e.next()) {
-								for (Day d : e.getAddedSubList()) {
-									this.addDivide(d.getId(), tournament.getId());
-								}
-								for (Day d : e.getRemoved()) {
-									this.deleteDivide(d.getId(), tournament.getId());
-								}
-							}
-						} catch (DAOException ex) {
-							ex.printStackTrace();
-							//TODO complete
-						}
-					});
+					tournament.getPartecipations().addListener(this.getDefaultListListener());
+					tournament.getDays().addListener(this.getDefaultListListener());
 					this.tournaments.put(tournament.getId(), tournament);
 				}
 				);
@@ -1037,38 +1077,9 @@ public class SQLiteDAOImpl implements DAO {
 						t.getStartDate().set(Utils.getDateFrom(rs.getString("start_date")));
 						t.getEndDate().set(Optional.ofNullable(!endDate.equalsIgnoreCase(Utils.EMPTY_DATE) ? Utils.getDateFrom(endDate) : null));
 
-						//the model has changed the partecipations list
-						t.getPartecipations().addListener((ListChangeListener.Change<? extends Partecipation> e) -> {
-							try {
-								while (e.next()) {
-									for (Partecipation p : e.getAddedSubList()) {
-										this.add(p);
-									}
-									for (Partecipation p : e.getRemoved()) {
-										this.remove(p);
-									}
-								}
-							} catch (Exception ex) {
-								ex.printStackTrace();
-								//TODO complete
-							}
-						});
-						//the model has changed the divide list
-						t.getDays().addListener((ListChangeListener.Change<? extends Day> e) -> {
-							try {
-								while(e.next()) {
-									for (Day d : e.getAddedSubList()) {
-										this.addDivide(d.getId(), t.getId());
-									}
-									for (Day d : e.getRemoved()) {
-										this.deleteDivide(d.getId(), t.getId());
-									}
-								}
-							} catch (DAOException ex) {
-								ex.printStackTrace();
-								//TODO complete
-							}
-						});
+						//the model has changed the partecipations/days/matches
+						t.getPartecipations().addListener(this.getDefaultListListener());
+						t.getDays().addListener(this.getDefaultListListener());
 						return null;
 					} catch (Exception e) {
 						return e;
@@ -1077,7 +1088,7 @@ public class SQLiteDAOImpl implements DAO {
 				(t,rs) -> {
 					try {
 						//ok, we created a tournament, we need to create the relationships of the model as well
-						this.computePartecipationsInTournament(t.getId());
+						this.computePartecipationsInTournament(t);
 						this.computeDivideFromTournament(t);
 						return null;
 					} catch (Exception e ){
@@ -1125,14 +1136,16 @@ public class SQLiteDAOImpl implements DAO {
 	 * @param tournament_id the id of the tournament involved
 	 * @throws DAOException if something bad happens
 	 */
-	private void computePartecipationsInTournament(long tournament_id) throws DAOException {
-		Collection<Pair<Long, Boolean>> ids = new ArrayList<>();
+	private void computePartecipationsInTournament(Tournament tournament) throws DAOException {
+		List<Long> team_ids = new ArrayList<>();
+		List<Boolean> byes = new ArrayList<>();
 		this.connectAndThenDo((c,s,ps) -> {
 			try {
-				ps.getGetPartecipationsInTournament().setLong(1, tournament_id);
+				ps.getGetPartecipationsInTournament().setLong(1, tournament.getId());
 				ResultSet rs = ps.getGetPartecipationsInTournament().executeQuery();
 				while (rs.next()) {
-					ids.add(new Pair<Long,Boolean>(rs.getLong("team_id"), rs.getInt("bye") > 0));
+					team_ids.add(rs.getLong("team_id"));
+					byes.add(rs.getInt("bye") > 0);
 				}
 				return null;
 			} catch (Exception e) {
@@ -1140,18 +1153,13 @@ public class SQLiteDAOImpl implements DAO {
 			}
 		});
 
-		for (Pair<Long, Boolean> pair : ids) {
-			Optional<Tournament> tournament = this.getAllTournamentsThat(t -> t.getId() == tournament_id).stream().findFirst();
-			Optional<Team> team = this.getAllTeamsThat(p -> p.getId() == pair.getKey()).stream().findFirst();
-			if (tournament.isPresent() && team.isPresent()) {
-				Partecipation p = new Partecipation(pair.getValue(), tournament.get(), team.get());
-				if (!p.getTournament().get().getPartecipations().contains(p)) {
-					p.getTournament().get().getPartecipations().add(p);
-				}
-				if (!p.getTeam().get().getPartecipations().contains(p)) {
-					p.getTeam().get().getPartecipations().add(p);
-				}
-			}
+		for (int j = 0; j<team_ids.size(); j++) {
+			final int i = j;
+			this.getTeamThat(p -> p.getId() == team_ids.get(i)).ifPresent(team -> {
+				Partecipation p = new Partecipation(byes.get(i), tournament, team);
+				p.getTournament().get().getPartecipations().add(p);
+				p.getTeam().get().getPartecipations().add(p);
+			});
 		}
 	}
 
@@ -1164,14 +1172,16 @@ public class SQLiteDAOImpl implements DAO {
 	 * @param team_id the id of the team involved
 	 * @throws DAOException if something bad happens
 	 */
-	private void computePartecipationsOfTeam(long team_id) throws DAOException {
-		Collection<Pair<Long, Boolean>> ids = new ArrayList<>();
+	private void computePartecipationsFromTeam(Team team) throws DAOException {
+		List<Long> tournament_ids = new ArrayList<>();
+		List<Boolean> byes = new ArrayList<>();
 		this.connectAndThenDo((c,s,ps) -> {
 			try {
-				ps.getGetPartecipationsOfTeam().setLong(1, team_id);
+				ps.getGetPartecipationsOfTeam().setLong(1, team.getId());
 				ResultSet rs = ps.getGetPartecipationsOfTeam().executeQuery();
 				while (rs.next()) {
-					ids.add(new Pair<Long, Boolean>(rs.getLong("tournament_id"), rs.getInt("bye") > 0));
+					tournament_ids.add(rs.getLong("tournament_id"));
+					byes.add(rs.getInt("bye") > 0);
 				}
 				return null;
 			} catch (Exception e) {
@@ -1179,18 +1189,13 @@ public class SQLiteDAOImpl implements DAO {
 			}
 		});
 
-		for (Pair<Long, Boolean> pair : ids) {
-			Optional<Team> team = this.getAllTeamsThat(p -> p.getId() == team_id).stream().findFirst();
-			Optional<Tournament> tournament = this.getAllTournamentsThat(t -> t.getId() == pair.getKey()).stream().findFirst();
-			if (tournament.isPresent() && team.isPresent()) {
-				Partecipation p = new Partecipation(pair.getValue(), tournament.get(), team.get());
-				if (!p.getTournament().get().getPartecipations().contains(p)) {
-					p.getTournament().get().getPartecipations().add(p);
-				}
-				if (!p.getTeam().get().getPartecipations().contains(p)) {
-					p.getTeam().get().getPartecipations().add(p);
-				}
-			}
+		for (int j = 0; j<tournament_ids.size(); j++) {
+			final int i = j;
+			this.getTournamentThat(p -> p.getId() == tournament_ids.get(i)).ifPresent(tournament -> {
+				Partecipation p = new Partecipation(byes.get(i), tournament, team);
+				p.getTournament().get().getPartecipations().add(p);
+				p.getTeam().get().getPartecipations().add(p);
+			});
 		}
 	}
 
@@ -1257,7 +1262,10 @@ public class SQLiteDAOImpl implements DAO {
 					}
 				},
 				(c,s,ps) -> null, //there is already a relationship with tournament, hece we do nothing
-				() -> {this.days.put(day.getId(), day);});
+				() -> {
+					//do we need a listener that listens to tournament changes?
+					this.days.put(day.getId(), day);
+				});
 	}
 
 	@Override
@@ -1297,12 +1305,13 @@ public class SQLiteDAOImpl implements DAO {
 				(d,id) -> {
 					//we crete the day, now we have to create inside the memory an instance of Tournament and its relationship
 					try {
-						this.computeDivideTournamentOfDay(d);
+						this.computeDivideTournamentFromDay(d);
+						this.computeMatchesFromDay(d);
 						return null;
 					} catch (DAOException ex) {
 						return ex;
 					}
-					
+
 				});
 	}
 
@@ -1314,6 +1323,7 @@ public class SQLiteDAOImpl implements DAO {
 					try {
 						ps.getDeleteDay().setLong(1, day.getId());
 						ps.getDeleteDay().executeUpdate();
+						//TODO remove day
 						return null;
 					}catch (SQLException e) {
 						return e;
@@ -1359,14 +1369,13 @@ public class SQLiteDAOImpl implements DAO {
 			.stream()
 			.findFirst()
 			.ifPresent(d -> {
-				if (!tournament.getDays().contains(d)) {
-					tournament.getDays().add(d);
-				}
+				d.getTournament().set(tournament);
+				tournament.getDays().add(d);
 			});
 
 		}
 	}
-	
+
 	/**
 	 * Computes the {@link Tournament} of the specific day in relationship "divide"
 	 * 
@@ -1377,32 +1386,32 @@ public class SQLiteDAOImpl implements DAO {
 	 * @param day the day involved
 	 * @throws DAOException if something bad happens
 	 */
-	private void computeDivideTournamentOfDay(Day d) throws DAOException {
-		List<Long> ids = new ArrayList<>();
+	private void computeDivideTournamentFromDay(Day day) throws DAOException {
+		List<Long> tournamentIds = new ArrayList<>();
 		this.connectAndThenDo((c,s,ps) -> {
 			try {
-				ps.getGetTournamentFromDay().setLong(1, d.getId());
+				ps.getGetTournamentFromDay().setLong(1, day.getId());
 				ResultSet rs = ps.getGetTournamentFromDay().executeQuery();
 				while (rs.next()) {
-					ids.add(rs.getLong("tournament_id"));
+					tournamentIds.add(rs.getLong("tournament_id"));
 				}
 				return null;
 			}catch (SQLException e) {
 				return e;
 			}
 		});
-		if (ids.size() != 1) {
-			throw new DAOException(String.format("got multiple tournaments referenced by day %d", d.getId()));
+		if (tournamentIds.size() != 1) {
+			throw new DAOException(String.format("got multiple tournaments referenced by day %d", day.getId()));
 		}
-		long tournamentId = ids.get(0);
-		
-		this.getAllTournamentsThat(t -> t.getId() == tournamentId).stream().findFirst().ifPresent(t -> {
-			if (!t.getDays().contains(d)) {
-				t.getDays().add(d);
-			}
+		long tournamentId = tournamentIds.get(0);
+
+		this.getAllTournamentsThat(tournament -> tournament.getId() == tournamentId).stream().findFirst().ifPresent(tournament -> {
+			//we need to set the tournament before the other because the second insturction relies on the first one
+			day.getTournament().set(tournament);
+			tournament.getDays().add(day);
 		});
 	}
-	
+
 	/**
 	 * Add the relationship between day and tournament inside the db
 	 * 
@@ -1412,7 +1421,7 @@ public class SQLiteDAOImpl implements DAO {
 	 * @param tournamentId the tournament that will aggregates the day referred
 	 * @throws DAOException if something bad happens
 	 */
-	private void addDivide(long dayId, long tournamentId) throws DAOException {
+	private void add(long dayId, long tournamentId) throws DAOException {
 		this.connectAndThenDo((c,s,ps) -> {
 			try {
 				ps.getInsertDivision().setLong(1, tournamentId);
@@ -1424,8 +1433,17 @@ public class SQLiteDAOImpl implements DAO {
 			}
 		});
 	}
-	
-	private void deleteDivide(long dayId, long tournamentId) throws DAOException {
+
+	/**
+	 * remove the relationship between day and tournament inside the db
+	 * 
+	 * The function deals only with <b>database</b> entry, not with models one!
+	 * 
+	 * @param dayId the the day that belong to the tournament
+	 * @param tournamentId the tournament that will aggregates the day referred
+	 * @throws DAOException if something bad happens
+	 */
+	private void remove(long dayId, long tournamentId) throws DAOException {
 		this.connectAndThenDo((c,s,ps) -> {
 			try {
 				ps.getDeleteDay().setLong(1, dayId);
@@ -1437,6 +1455,174 @@ public class SQLiteDAOImpl implements DAO {
 		});
 	}
 
+	/**
+	 * After generating a team inside {@link #teams}, we need to create the model instances
+	 * of {@link Match}. This function does exactly that
+	 * 
+	 * @param team the team just created
+	 * @throws DAOException if something bad happens 
+	 */
+	private void computeMatchesFromTeam(Team team) throws DAOException {
+		List<Long> team1_ids = new ArrayList<>();
+		List<Long> team2_ids = new ArrayList<>();
+		List<Long> day_ids = new ArrayList<>();
+		List<Integer> pointsEarnedFromWinnings = new ArrayList<>();
+		List<Integer> pointsEarnedFromLosings = new ArrayList<>();
+		List<Integer> team1Goals = new ArrayList<>();
+		List<Integer> team2Goals = new ArrayList<>();
+		List<MatchStatus> statuses = new ArrayList<>();
 
+		this.connectAndThenDo((c,s,ps) -> {
+			try {
+				ps.getGetMatchesFromTeam().setLong(1, team.getId());
+				ps.getGetMatchesFromTeam().setLong(2, team.getId());
+				ResultSet rs = ps.getGetMatchesFromTeam().executeQuery();
+				while (rs.next()) {
+					team1_ids.add(rs.getLong("team1_id"));
+					team2_ids.add(rs.getLong("team2_id"));
+					day_ids.add(rs.getLong("day_id"));
+					pointsEarnedFromWinnings.add(rs.getInt("points_earned_from_winning"));
+					pointsEarnedFromLosings.add(rs.getInt("points_earned_from_losing"));
+					team1Goals.add(rs.getInt("team1_goals"));
+					team2Goals.add(rs.getInt("team2_goals"));
+					statuses.add(MatchStatus.from(rs.getInt("status")));
+				}
+				return null;
+			} catch (Exception e) {
+				return e;
+			}
+		});
+		
+		this.addMatchesInEntities(team1_ids, team2_ids, day_ids, pointsEarnedFromWinnings, pointsEarnedFromLosings, team1Goals, team2Goals, statuses);
+	}
+	
+	/**
+	 * After generating a day inside {@link #days}, we need to create the model instances
+	 * of {@link Match}. This function does exactly that
+	 * 
+	 * @param team the team just created
+	 * @throws DAOException if something bad happens 
+	 */
+	private void computeMatchesFromDay(Day day) throws DAOException {
+		List<Long> team1_ids = new ArrayList<>();
+		List<Long> team2_ids = new ArrayList<>();
+		List<Long> day_ids = new ArrayList<>();
+		List<Integer> pointsEarnedFromWinnings = new ArrayList<>();
+		List<Integer> pointsEarnedFromLosings = new ArrayList<>();
+		List<Integer> team1Goals = new ArrayList<>();
+		List<Integer> team2Goals = new ArrayList<>();
+		List<MatchStatus> statuses = new ArrayList<>();
+
+		this.connectAndThenDo((c,s,ps) -> {
+			try {
+				ps.getGetMatchesFromDay().setLong(1, day.getId());
+				ResultSet rs = ps.getGetMatchesFromDay().executeQuery();
+				while (rs.next()) {
+					team1_ids.add(rs.getLong("team1_id"));
+					team2_ids.add(rs.getLong("team2_id"));
+					day_ids.add(rs.getLong("day_id"));
+					pointsEarnedFromWinnings.add(rs.getInt("points_earned_from_winning"));
+					pointsEarnedFromLosings.add(rs.getInt("points_earned_from_losing"));
+					team1Goals.add(rs.getInt("team1_goals"));
+					team2Goals.add(rs.getInt("team2_goals"));
+					statuses.add(MatchStatus.from(rs.getInt("status")));
+				}
+				return null;
+			} catch (Exception e) {
+				return e;
+			}
+		});
+		
+		this.addMatchesInEntities(team1_ids, team2_ids, day_ids, pointsEarnedFromWinnings, pointsEarnedFromLosings, team1Goals, team2Goals, statuses);
+	}
+
+	/**
+	 * Given lists containing all the matches data we need to create, create such {@link Match} and adds them in the references model
+	 * If such entities instances are not available yet in the memory, the function will create them
+	 * 
+	 * <b>All the lists must have the same length</b>
+	 * 
+	 * @param team1_ids 
+	 * @param team2_ids
+	 * @param day_ids
+	 * @param pointsEarnedFromWinnings
+	 * @param pointsEarnedFromLosings
+	 * @param team1Goals
+	 * @param team2Goals
+	 * @param statuses
+	 * @throws DAOException if something bad has happened
+	 */
+	private void addMatchesInEntities(List<Long> team1_ids,
+			List<Long> team2_ids,
+			List<Long> day_ids,
+			List<Integer> pointsEarnedFromWinnings,
+			List<Integer> pointsEarnedFromLosings,
+			List<Integer> team1Goals,
+			List<Integer> team2Goals,
+			List<MatchStatus> statuses) throws DAOException {
+		for (int j=0; j<team1_ids.size(); j++) {
+			final int i = j;
+			Optional<Team> oteam1 = this.getTeamThat(t -> t.getId() == team1_ids.get(i));
+			Optional<Team> oteam2 = this.getTeamThat(t -> t.getId() == team2_ids.get(i));
+			Optional<Day> oday = this.getDayThat(d -> d.getId() == day_ids.get(i));
+
+			oteam1.ifPresent(team1 -> {
+				oteam2.ifPresent(team2 -> {
+					oday.ifPresent(day -> {
+						Match m = new Match(team1, team2, day, pointsEarnedFromWinnings.get(i), pointsEarnedFromLosings.get(i), team1Goals.get(i), team2Goals.get(i), statuses.get(i));
+						//we don't care if the match is already inside the list, because they are ObservableDistinctList
+						team1.getMatches().add(m);
+						team2.getMatches().add(m);
+						day.getMatches().add(m);
+					});
+				});
+			});
+		}
+	}
+
+	/**
+	 * insert in the database the given match
+	 * 
+	 * 
+	 * 
+	 * @param match the match to add
+	 * @throws DAOException if something bad happens
+	 */
+	private void add(Match match) throws DAOException {
+		this.connectAndThenDo((c,s,ps) -> {
+			try {
+				LOG.debug("adding match {}...", match);
+				ps.getInsertMatch().setLong(1, match.getTeam1().get().getId());
+				ps.getInsertMatch().setLong(2, match.getTeam2().get().getId());
+				ps.getInsertMatch().setLong(3, match.getDay().get().getId());
+				ps.getInsertMatch().setLong(4, match.getPointsEarnedByWinning().get());
+				ps.getInsertMatch().setLong(5, match.getPointsEarnedByLosing().get());
+				ps.getInsertMatch().setLong(6, match.getTeam1Goals().get());
+				ps.getInsertMatch().setLong(7, match.getTeam2Goals().get());
+				ps.getInsertMatch().setLong(8, match.getStatus().get().getId());
+				ps.getInsertMatch().executeUpdate();
+				LOG.debug("DONE");
+				return null;
+			} catch (Exception e) {
+				return e;
+			}
+		});
+	}
+
+	private void remove(Match match) throws DAOException {
+		this.connectAndThenDo((c,s,ps) -> {
+			try {
+				LOG.debug("delete match {}...", match);
+				ps.getDeleteMatch().setLong(1, match.getTeam1().get().getId());
+				ps.getDeleteMatch().setLong(2, match.getTeam2().get().getId());
+				ps.getDeleteMatch().setLong(3, match.getDay().get().getId());
+				ps.getDeleteMatch().executeUpdate();
+				LOG.debug("DONE");
+				return null;
+			} catch (Exception e) {
+				return e;
+			}
+		});
+	}
 
 }

@@ -7,6 +7,8 @@ import java.util.HashSet;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
+import com.massimobono.podiliardino.util.ObservableDistinctList;
+
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleLongProperty;
@@ -18,33 +20,30 @@ import javafx.collections.ObservableList;
 
 public class Team implements Indexable {
 
+	//OWNED ATTRIBUTES
+	
 	private final LongProperty id;
 	private final StringProperty name;
-	/**
-	 * The date where the members founded the team
-	 */
 	private final ObjectProperty<LocalDate> date;
 	
-	/**
-	 * A list of all the players inside this team
-	 */
-	private final ObservableList<Player> players;
-	/**
-	 * A list of all the tournaments this team has partecipated
-	 */
-	private final ObservableList<Partecipation> partecipations;
+	//RELATIONSHIPS
 	
-	public Team(long id, String name, LocalDate date, Collection<Player> players, Collection<Partecipation> partecipations){
+	private final ObservableDistinctList<Player> players;
+	private final ObservableDistinctList<Partecipation> partecipations;
+	private final ObservableDistinctList<Match> matches;
+	
+	public Team(long id, String name, LocalDate date, Collection<Player> players, Collection<Partecipation> partecipations, Collection<Match> matches){
 		super();
 		this.id = new SimpleLongProperty(id);
 		this.name = new SimpleStringProperty(name);
 		this.date = new SimpleObjectProperty<>(date);
-		this.players = FXCollections.observableArrayList(players);
-		this.partecipations = FXCollections.observableArrayList(partecipations);
+		this.players = new ObservableDistinctList<>(FXCollections.observableArrayList(players));
+		this.partecipations = new ObservableDistinctList<>(FXCollections.observableArrayList(partecipations));
+		this.matches = new ObservableDistinctList<>(FXCollections.observableArrayList(matches));
 	}
 	
 	public Team() {
-		this(0, "", LocalDate.now(), new ArrayList<>(), new ArrayList<>());
+		this(0, "", LocalDate.now(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
 	}
 	
 	public String toString() {
@@ -95,6 +94,13 @@ public class Team implements Indexable {
 	 */
 	public boolean isPartecipatingIn(Tournament t) {
 		return this.getPartecipations().parallelStream().filter(p -> p.getTournament().get() == t).count() > 0;
+	}
+
+	/**
+	 * @return the matches
+	 */
+	public ObservableList<Match> getMatches() {
+		return matches;
 	}
 
 	/**

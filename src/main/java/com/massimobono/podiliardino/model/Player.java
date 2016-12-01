@@ -7,8 +7,10 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Observer;
 import java.util.Optional;
 
+import com.massimobono.podiliardino.util.ObservableDistinctList;
 import com.massimobono.podiliardino.util.Utils;
 
 import javafx.beans.property.LongProperty;
@@ -27,7 +29,7 @@ public class Player implements Indexable{
 	private final StringProperty surname;
 	private final ObjectProperty<Optional<LocalDate>> birthday;
 	private final ObjectProperty<Optional<String>> phone;
-	private final ObservableList<Team> teams;
+	private final ObservableDistinctList<Team> teams;
 	
 	/**
 	 * 
@@ -45,7 +47,7 @@ public class Player implements Indexable{
 		this.surname = new SimpleStringProperty(surname);
 		this.birthday = new SimpleObjectProperty<Optional<LocalDate>>(Optional.ofNullable(birthday));
 		this.phone = new SimpleObjectProperty<Optional<String>>(Optional.ofNullable(phone));
-		this.teams = FXCollections.observableArrayList(teams);
+		this.teams = new ObservableDistinctList<>(FXCollections.observableArrayList(teams));
 	}
 	
 	public Player() {

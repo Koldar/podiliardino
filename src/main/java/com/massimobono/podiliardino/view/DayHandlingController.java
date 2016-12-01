@@ -10,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 import com.massimobono.podiliardino.Main;
 import com.massimobono.podiliardino.dao.DAOException;
 import com.massimobono.podiliardino.model.Day;
+import com.massimobono.podiliardino.model.Match;
 import com.massimobono.podiliardino.model.Player;
 import com.massimobono.podiliardino.model.Team;
 import com.massimobono.podiliardino.model.Tournament;
@@ -21,6 +22,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.stage.Stage;
@@ -44,6 +46,28 @@ public class DayHandlingController {
 	private Button editDay;
 	@FXML
 	private Button deleteDay;
+	
+	@FXML
+	private Label dayNumberLabel;
+	@FXML
+	private Label dayDateLabel;
+	@FXML
+	private Label matchesToDoLabel;
+	@FXML
+	private Label matchesDoneLabel;
+	@FXML
+	private TableView<Match> matchesTableView;
+	@FXML
+	private TableColumn<Match, String> matchesTableColumn;
+	
+	@FXML
+	private Button generateMatch;
+	@FXML
+	private Button addMatchResult;
+	@FXML
+	private Button removeMatchResult;
+	@FXML
+	private Button printRanking;
 	
 	private Main mainApp;
 	/**
@@ -167,13 +191,43 @@ public class DayHandlingController {
 		try {
 			if (newValue == null) {
 				//we delete the last item of the list
-				
+				this.dayNumberLabel.setText("");
+				this.dayDateLabel.setText("");
+				this.matchesToDoLabel.setText("");
+				this.matchesDoneLabel.setText("");
 			} else {
-				
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			ExceptionAlert.showAndWait(e);
 		}
+	}
+	
+	/**
+	 * Given a selected day with no matches results yet, the function will create some matches.
+	 * Some teams may have no matches in a day. In this case a bye is called
+	 */
+	@FXML
+	private void handleGenerateMatches() {
+		if (this.dayTableView.getSelectionModel().getSelectedItem() == null) {
+			Utils.createDefaultErrorAlert("Can't generate matches", "In order to generate matches you need to select a day");
+			return;
+		}
+		Day day = this.dayTableView.getSelectionModel().getSelectedItem();
+	}
+	
+	@FXML
+	private void handleAddMatchResult() {
+		
+	}
+	
+	@FXML
+	private void handleRemoveMatchResult() {
+		
+	}
+	
+	@FXML
+	private void printRanking() {
+		
 	}
 }
