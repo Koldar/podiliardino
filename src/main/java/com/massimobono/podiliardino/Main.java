@@ -16,6 +16,7 @@ import com.massimobono.podiliardino.dao.DAO;
 import com.massimobono.podiliardino.dao.DAOException;
 import com.massimobono.podiliardino.dao.SQLiteDAOImpl;
 import com.massimobono.podiliardino.util.ExceptionAlert;
+import com.massimobono.podiliardino.view.DayHandlingController;
 import com.massimobono.podiliardino.view.PlayerHandlingController;
 import com.massimobono.podiliardino.view.TeamHandlingController;
 import com.massimobono.podiliardino.view.TournamentHandlingController;
@@ -74,6 +75,14 @@ public class Main extends Application {
 				}
 			});
 			this.addMainSceneToStage("TournamentHandling", "Tournament Management", (TournamentHandlingController c) -> {
+				try {
+					c.setup(this);
+				} catch (Exception e) {
+					e.printStackTrace();
+					ExceptionAlert.showAndWait(e);
+				}
+			});
+			this.addMainSceneToStage("DayHandling", "Day Management", (DayHandlingController c) -> {
 				try {
 					c.setup(this);
 				} catch (Exception e) {

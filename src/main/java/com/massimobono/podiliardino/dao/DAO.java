@@ -4,6 +4,7 @@ import java.io.Closeable;
 import java.util.Collection;
 import java.util.function.Function;
 
+import com.massimobono.podiliardino.model.Day;
 import com.massimobono.podiliardino.model.Partecipation;
 import com.massimobono.podiliardino.model.Player;
 import com.massimobono.podiliardino.model.Team;
@@ -21,6 +22,27 @@ import javafx.collections.ObservableList;
  *  d.addPlayer(p2);
  *  d.addPlayer(p3);
  * }</pre>
+ * 
+ * 
+ * <h1>DAO Organization</h1>
+ * 
+ * The implementation should be aware of the following contracts:
+ * <ul>
+ * 	<li>The model is compose of 2 entities and relationships: entities are concepts big enough to stand by themselves. These are {@link Player},
+ * 		{@link Team}, {@link Tournament} and {@link Day}; relationships are concepts the links the former ones: for example {@link Partecipation} are one of those.</li>
+ * 	<li>The user does <b>not</b> create by themselves entities in order to make them persistence: he calls the function available from the {@link DAO}. For example if a user wants to
+ * 		store a {@link Player} he will call the {@link DAO#addPlayer(Player)} function that will allow him to persist the instance.</li>
+ * 	<li>In order to persist an entity instance from the model , you need to call the <tt>add</tt></li>
+ * 	<li>If you have just started up the application and you want to populate your model in memory, you need to call the <tt>getAll</tt> APIs: for example if
+ * 		have jsut started the application and you want to fetch all the players, you need to call {@link DAO#getAllPlayers()}</li>
+ * 	<li>In order to synchronize the UI of Java FX the {@link DAO} offers to you also APIs returning {@link ObservableList}: such functions are <tt>getXXXList</tt>;
+ * 		the said functions are bounded to return the same list in order that the whole application has a place where all the needed data is stored. Such list
+ * 		deals only with entities, not with relationships</li>
+ * 	<li>Viceversa, relationships can't be created as entities: you can use the model functions to create such relationships. So, if you want to add a {@link Day}
+ * 		to a tournament, you don't query the {@link DAO}, but you query the model itself: you can use {@link Tournament#addDay(Day)} to do so. Implicitly, the {@link DAO}
+ * 		will receive notification each time a model relationship is add or removed and it will synchronize the database accordingly.</li>
+ * 
+ * </ul>
  * 
  * @author massi
  *
@@ -152,4 +174,14 @@ public interface DAO extends Closeable{
 	public default Collection<Tournament> getAllTournaments() throws DAOException {
 		return this.getAllTournamentsThat(t -> true);
 	}
+	
+	public Day add(Day day) throws DAOException;
+	
+	public Day update(Day day) throws DAOException;
+	
+	public Collection<Day> getAllDaysThat(Function<Day, Boolean> filter) throws DAOException;
+	
+	public void remove(Day day) throws DAOException;
+	
+	public ObservableList<Day> getDaysList() throws DAOException;
 }

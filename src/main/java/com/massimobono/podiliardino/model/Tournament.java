@@ -26,13 +26,18 @@ public class Tournament implements Indexable {
 	
 	private static final Logger LOG = LogManager.getLogger(Tournament.class);
 
+	//concept specific attributes
 	private final LongProperty id;
 	private final StringProperty name;
 	private final ObjectProperty<LocalDate> startDate;
 	private final ObjectProperty<Optional<LocalDate>> endDate;
 	
+	//relationships with other concepts
 	private final ObservableList<Partecipation> partecipations;
+	private final ObservableList<Day> days;
 	
+	
+	//derived attributes
 	private final IntegerProperty numberOfPartecipants;
 	
 	
@@ -43,24 +48,32 @@ public class Tournament implements Indexable {
 	 * @param startDate
 	 * @param endDate can be null. Must be after startDate
 	 */
-	public Tournament(long id, String name, LocalDate startDate, LocalDate endDate, Collection<Partecipation> partecipations) {
+	public Tournament(long id, String name, LocalDate startDate, LocalDate endDate, Collection<Partecipation> partecipations, Collection<Day> days) {
 		super();
 		this.id = new SimpleLongProperty(id);
 		this.name = new SimpleStringProperty(name);
 		this.startDate = new SimpleObjectProperty<>(startDate);
 		this.endDate = new SimpleObjectProperty<>(Optional.ofNullable(endDate));
 		this.partecipations = FXCollections.observableArrayList(partecipations);
+		this.days = FXCollections.observableArrayList(days);
 		this.numberOfPartecipants = new SimpleIntegerProperty(0);
 	}
 	
 	public Tournament() {
-		this(0, "", LocalDate.now(), null, new ArrayList<>());
+		this(0, "", LocalDate.now(), null, new ArrayList<>(), new ArrayList<>());
 	}
 	
 	public IntegerProperty getNumberOfPartecipants() {
 		this.numberOfPartecipants.set(this.getPartecipations().parallelStream().mapToInt(p -> p.getTeam().get().getPlayers().size()).sum());
 		LOG.debug("computed numberOfPartecipants: {}. Partecipations: {}", this.numberOfPartecipants.get(), this.partecipations);
 		return this.numberOfPartecipants;
+	}
+
+	/**
+	 * @return the days
+	 */
+	public ObservableList<Day> getDays() {
+		return days;
 	}
 
 	/**
