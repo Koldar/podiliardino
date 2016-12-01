@@ -90,7 +90,7 @@ public class SQLiteDAOImpl implements DAO {
 
 			this.preparedStatements.put("insertDay", connection.prepareStatement("INSERT INTO day(number,date,tournament_id) VALUES(?,?,?);"));
 			this.preparedStatements.put("getAllDays", connection.prepareStatement("SELECT id,number,date,tournament_id FROM day"));
-			this.preparedStatements.put("updateDay", connection.prepareStatement("UPDATE OR ROLLBACK day SET number=?,date=?,tournament_id=? WHERE id=?"));
+			this.preparedStatements.put("updateDay", connection.prepareStatement("UPDATE OR ROLLBACK day SET number=?,date=? WHERE id=?"));
 			this.preparedStatements.put("deleteDay", connection.prepareStatement("DELETE FROM day WHERE id=?"));
 
 			this.preparedStatements.put("insertDivision", connection.prepareStatement("UPDATE day SET tournament_id=? WHERE id=?"));
@@ -279,8 +279,7 @@ public class SQLiteDAOImpl implements DAO {
 	 * the map stores a new reference if it doesn't have already. Otherwise the DAO does not create a new  {@link Day} instance.
 	 */
 	private TableFriendlyObservableMap<Long, Day> days;
-
-	private ObservableSet<Partecipation> participations;
+	
 	/**
 	 * 
 	 * @param databaseFileName the file sqlite will use to store data.
@@ -290,10 +289,13 @@ public class SQLiteDAOImpl implements DAO {
 	public SQLiteDAOImpl(File databaseFileName, boolean performSetup) throws DAOException {
 		this.databaseFileName = databaseFileName;
 		this.preparedStatements = null;
+		
+		//main entities list
 		this.players = new TableFriendlyObservableMap<>();
 		this.teams = new TableFriendlyObservableMap<>();
 		this.tournaments = new TableFriendlyObservableMap<>();
-		this.participations = FXCollections.observableSet(new HashSet<>());
+		this.days = new TableFriendlyObservableMap<>();
+		
 		this.connectionUsed = false;
 		if (performSetup) {
 			this.setup();
@@ -1076,7 +1078,7 @@ public class SQLiteDAOImpl implements DAO {
 					try {
 						//ok, we created a tournament, we need to create the relationships of the model as well
 						this.computePartecipationsInTournament(t.getId());
-						this.computeDivideFromTournament(t.getId());
+						this.computeDivideFromTournament(t);
 						return null;
 					} catch (Exception e ){
 						return e;
@@ -1266,7 +1268,6 @@ public class SQLiteDAOImpl implements DAO {
 					try {
 						ps.getUpdateDay().setInt(1,day.getNumber().get());
 						ps.getUpdateDay().setString(2, Utils.getStandardDateFrom(day.getDate().get()));
-						ps.getUpdateDay().setLong(3, day.getTournament().get().getId());
 						ps.getUpdateDay().setLong(3, day.getId());
 						ps.getUpdateDay().executeUpdate();
 						return null;
@@ -1294,9 +1295,14 @@ public class SQLiteDAOImpl implements DAO {
 					}
 				}, 
 				(d,id) -> {
-					//we crete the day, now we have to create insid the memory an instance of Tournament
-					//TODO
-					return null;
+					//we crete the day, now we have to create inside the memory an instance of Tournament and its relationship
+					try {
+						this.computeDivideTournamentOfDay(d);
+						return null;
+					} catch (DAOException ex) {
+						return ex;
+					}
+					
 				});
 	}
 
@@ -1330,17 +1336,17 @@ public class SQLiteDAOImpl implements DAO {
 	 * it will add them in the {@link Tournament#getDays()} list. Since such list is observed by the {@link DAO} itself,
 	 * the {@link DAO} will be able to update the db properly
 	 * 
-	 * @param tournamentId the tournament involved
+	 * @param tournament the tournament involved
 	 * @throws DAOException if something bad happens
 	 */
-	private void computeDivideFromTournament(long tournamentId) throws DAOException {
+	private void computeDivideFromTournament(Tournament tournament) throws DAOException {
 		List<Long> ids = new ArrayList<>();
 		this.connectAndThenDo((c,s,ps) -> {
 			try {
-				ps.getGetDaysInTournament().setLong(1, tournamentId);
+				ps.getGetDaysInTournament().setLong(1, tournament.getId());
 				ResultSet rs = ps.getGetDaysInTournament().executeQuery();
 				while (rs.next()) {
-					ids.add(rs.getLong("day_id"));
+					ids.add(rs.getLong("id"));
 				}
 				return null;
 			} catch (SQLException e) {
@@ -1348,20 +1354,53 @@ public class SQLiteDAOImpl implements DAO {
 			}
 		});
 
-		Optional<Tournament> ot = this.getAllTournamentsThat(tournament -> tournament.getId() == tournamentId).stream().findFirst();
-		if (!ot.isPresent()) {
-			throw new DAOException(String.format("no tournament with id %d found in the database!", tournamentId));
-		}
-
 		for (Long dayId : ids) {
 			this.getAllDaysThat(d -> d.getId() == dayId)
 			.stream()
 			.findFirst()
 			.ifPresent(d -> {
-				ot.get().getDays().add(d);
+				if (!tournament.getDays().contains(d)) {
+					tournament.getDays().add(d);
+				}
 			});
 
 		}
+	}
+	
+	/**
+	 * Computes the {@link Tournament} of the specific day in relationship "divide"
+	 * 
+	 * the function will fetch the data of the tournaments in relationship with the given day and then
+	 * it will add them in the {@link Day#getTournament()}. Since such element is observed by the {@link DAO} itself,
+	 * the {@link DAO} will be able to update the db properly
+	 * 
+	 * @param day the day involved
+	 * @throws DAOException if something bad happens
+	 */
+	private void computeDivideTournamentOfDay(Day d) throws DAOException {
+		List<Long> ids = new ArrayList<>();
+		this.connectAndThenDo((c,s,ps) -> {
+			try {
+				ps.getGetTournamentFromDay().setLong(1, d.getId());
+				ResultSet rs = ps.getGetTournamentFromDay().executeQuery();
+				while (rs.next()) {
+					ids.add(rs.getLong("tournament_id"));
+				}
+				return null;
+			}catch (SQLException e) {
+				return e;
+			}
+		});
+		if (ids.size() != 1) {
+			throw new DAOException(String.format("got multiple tournaments referenced by day %d", d.getId()));
+		}
+		long tournamentId = ids.get(0);
+		
+		this.getAllTournamentsThat(t -> t.getId() == tournamentId).stream().findFirst().ifPresent(t -> {
+			if (!t.getDays().contains(d)) {
+				t.getDays().add(d);
+			}
+		});
 	}
 	
 	/**

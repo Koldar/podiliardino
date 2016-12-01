@@ -1,6 +1,11 @@
 package com.massimobono.podiliardino.view;
 
+import java.util.Collection;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.massimobono.podiliardino.Main;
 import com.massimobono.podiliardino.dao.DAOException;
@@ -21,6 +26,8 @@ import javafx.scene.control.TableView;
 import javafx.stage.Stage;
 
 public class DayHandlingController {
+	
+	private static final Logger LOG = LogManager.getLogger(DayHandlingController.class);
 
 	@FXML
 	private TableView<Tournament> tournamentTableView;
@@ -29,7 +36,7 @@ public class DayHandlingController {
 	@FXML
 	private TableView<Day> dayTableView;
 	@FXML
-	private TableColumn<Day, String> dayTableColumn;
+	private TableColumn<Day, Integer> dayTableColumn;
 	
 	@FXML
 	private Button addDay;
@@ -52,22 +59,33 @@ public class DayHandlingController {
 		this.mainApp = mainApp;
 		
 		this.tournamentTableView.setItems(this.mainApp.getDAO().getTournamentList());
+		this.dayTableView.setItems(this.daysToDisplay);
 	}
 	
 	@FXML
 	private void initialize() {
 		this.tournamentTableColumn.setCellValueFactory(celldata -> celldata.getValue().getName());
+		this.dayTableColumn.setCellValueFactory(celldata -> celldata.getValue().getNumber().asObject());
+		
+		this.tournamentTableView.getSelectionModel().selectedItemProperty().addListener(this::handleUserSelectTournament);
+		this.dayTableView.getSelectionModel().selectedItemProperty().addListener(this::handleUserSelectDay);
 	}
 	
 	@FXML
 	private void handleAddDay() {
 		try {
+			if (this.tournamentTableView.getSelectionModel().getSelectedItem() == null) {
+				Utils.createDefaultErrorAlert("Can't add a new day", "In order to create a new day, a tournament needs to be selected in the current frame");
+				return;
+			}
 			Optional<Day> d = this.mainApp.showCustomDialog(
 					"DayEditDialog", 
 					"New Day", 
 					(DayEditDialogController c, Stage s) -> {
-						c.setDialog(s);
-						c.setDay(new Day());
+						Day newDay = new Day();
+						newDay.getTournament().set(this.tournamentTableView.getSelectionModel().getSelectedItem());
+						newDay.getNumber().set(newDay.getTournament().get().getDays().size()+1);
+						c.setup(s,newDay); 
 					},
 					(c) -> {return Optional.ofNullable(c.isClickedOK() ? c.getDay() : null);}
 					);
@@ -84,19 +102,58 @@ public class DayHandlingController {
 	
 	@FXML
 	private void handleEditDay() {
-		
+		try {
+			if (this.tournamentTableView.getSelectionModel().getSelectedItem() == null) {
+				Utils.createDefaultErrorAlert("Can't edit a new day", "In order to edit a day, a tournament needs to be selected in the current frame");
+				return;
+			}
+			if (this.dayTableView.getSelectionModel().getSelectedItem() == null) {
+				Utils.createDefaultErrorAlert("Can't edit a new day", "In order to edit a day, a day needs to be selected in the current frame");
+				return;
+			}
+			Optional<Day> d = this.mainApp.showCustomDialog(
+					"DayEditDialog", 
+					"Edit Day", 
+					(DayEditDialogController c, Stage s) -> {
+						c.setup(s,this.dayTableView.getSelectionModel().getSelectedItem());
+					},
+					(c) -> {return Optional.ofNullable(c.isClickedOK() ? c.getDay() : null);}
+					);
+			if (d.isPresent()) {
+				//we have added a new player. We can add it to the DAO
+				this.mainApp.getDAO().update(d.get());
+				this.dayTableView.getSelectionModel().clearSelection();
+			}
+		} catch (Exception e) {
+			ExceptionAlert.showAndWait(e);
+			e.printStackTrace();
+		}
 	}
 	
 	@FXML
 	private void handleRemoveDay() {
-		
+		try {
+			if (this.tournamentTableView.getSelectionModel().getSelectedItem() == null) {
+				Utils.createDefaultErrorAlert("Can't remove a day", "In order to remove a day, a tournament needs to be selected in the current frame");
+				return;
+			}
+			if (this.dayTableView.getSelectionModel().getSelectedItem() == null) {
+				Utils.createDefaultErrorAlert("Can't remove a day", "In order to remove a day, a day needs to be selected in the current frame");
+				return;
+			}
+			Day d =this.dayTableView.getSelectionModel().getSelectedItem();
+			this.mainApp.getDAO().remove(d);
+		} catch (DAOException e) {
+			e.printStackTrace();
+			ExceptionAlert.showAndWait(e);
+		}
 	}
 	
 	private void handleUserSelectTournament(ObservableValue<? extends Tournament> observableValue, Tournament oldValue, Tournament newValue) {
 		try {
+			this.daysToDisplay.clear();
 			if (newValue == null) {
 				//we delete the last item of the list
-				this.daysToDisplay.clear();
 			} else {
 				this.daysToDisplay.addAll(newValue.getDays());
 			}

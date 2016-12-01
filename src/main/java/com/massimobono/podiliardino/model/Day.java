@@ -20,15 +20,16 @@ public class Day implements Indexable {
 	
 	private ObjectProperty<Tournament> tournament;
 	
-	public Day(long id, int number, LocalDate day) {
+	public Day(long id, int number, LocalDate day, Tournament tournament) {
 		super();
 		this.id = id;
 		this.number = new SimpleIntegerProperty(number);
 		this.day = new SimpleObjectProperty<>(day);
+		this.tournament = new SimpleObjectProperty<>(tournament);
 	}
 	
 	public Day() {
-		this(0,1,LocalDate.now());
+		this(0,1,LocalDate.now(), null);
 	}
 	
 	/**
