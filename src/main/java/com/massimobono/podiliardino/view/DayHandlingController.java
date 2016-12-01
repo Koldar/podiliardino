@@ -213,11 +213,27 @@ public class DayHandlingController {
 	 */
 	@FXML
 	private void handleGenerateMatches() {
+		if (this.tournamentTableView.getSelectionModel().getSelectedItem() == null) {
+			Utils.createDefaultErrorAlert("Can't generate matches", "In order to generate matches you need to select a tournament");
+			return;
+		}
 		if (this.dayTableView.getSelectionModel().getSelectedItem() == null) {
 			Utils.createDefaultErrorAlert("Can't generate matches", "In order to generate matches you need to select a day");
 			return;
 		}
+		Tournament tournament = this.tournamentTableView.getSelectionModel().getSelectedItem();
 		Day day = this.dayTableView.getSelectionModel().getSelectedItem();
+		
+		if (tournament.getNumberOfTeams() < 2) {
+			Utils.createDefaultErrorAlert("Can't generate matches", "In order to generate matches you need to select a tournament with at least 2 attending teams!");
+			return;
+		}
+		if (day.getNumberOfMatchesDone() > 0) {
+			Utils.createDefaultErrorAlert("Can't generate matches", "In order to generate matches you need to select a day with no mathces already done. It would be unfair to generate matches in a day when someone has already played!");
+			return;
+		}
+		
+		
 	}
 	
 	@FXML

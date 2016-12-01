@@ -28,6 +28,78 @@ public class Match {
 		this.pointsEarnedByLosing = new SimpleIntegerProperty(pointsEarnedByLosing);
 		this.status = new SimpleObjectProperty<>(status);
 	}
+	
+	/**
+	 * 
+	 * @param t
+	 * @return the number of goals scored by the team in the parameter
+	 * @throws UnsupportedOperationException if you try to call this function with a team not involved in the match
+	 * @throws UnsupportedOperationException if you tried to call this method on a match with status {@link MatchStatus#TODO}
+	 */
+	public int getNumberOfGoalsOfTeam(Team t) throws UnsupportedOperationException{
+		if (this.status.get() == MatchStatus.TODO) {
+			throw new UnsupportedOperationException();
+		}
+		if (this.team1.get() == t) {
+			return this.team1Goals.get();
+		}
+		if (this.team2.get() == t) {
+			return this.team2Goals.get();
+		}
+		throw new UnsupportedOperationException(String.format("team %s not found in the match %s", t, this));
+	}
+	
+	/**
+	 * 
+	 * @param yourTeam your team
+	 * @return the goals the other team scored against you
+	 * @throws UnsupportedOperationException if you try to call this function with a team not involved in the match
+	 * @throws UnsupportedOperationException if you tried to call this method on a match with status {@link MatchStatus#TODO}
+	 */
+	public int getNumberOfGoalssOfOtherTeam(Team yourTeam) throws UnsupportedOperationException {
+		Team other = this.getOtherTeam(yourTeam);
+		return this.getNumberOfGoalsOfTeam(other);
+	}
+	
+	/**
+	 * 
+	 * @param t
+	 * @return the team you have fought in the match
+	 * @throws UnsupportedOperationException if you try to call this function with a team not involved in the match
+	 */
+	public Team getOtherTeam(Team t) throws UnsupportedOperationException {
+		if (this.team1.get() == t) {
+			return this.team2.get();
+		}
+		if (this.team2.get() == t) {
+			return this.team1.get();
+		}
+		throw new UnsupportedOperationException(String.format("team %s is not involved in the match %s", t, this));
+	}
+	
+	/**
+	 * 
+	 * @return the winner of this match
+	 * @throws UnsupportedOperationException if you're trying to get the winner from a match that needs to be done yet
+	 */
+	public Team getWinner() throws UnsupportedOperationException{
+		if (this.status.get() == MatchStatus.TODO) {
+			throw new UnsupportedOperationException();
+		}
+		return this.team1Goals.get() > this.team2Goals.get() ? this.team1.get() : this.team2.get();
+	}
+	
+	/**
+	 * 
+	 * @return the loser of the match
+	 * @throws UnsupportedOperationException if you're trying to get the loser from a match that needs to be done yet
+	 */
+	public Team getLoser() throws UnsupportedOperationException{
+		if (this.status.get() == MatchStatus.TODO) {
+			throw new UnsupportedOperationException();
+		}
+		return this.team1Goals.get() < this.team2Goals.get() ? this.team1.get() : this.team2.get();
+	}
 
 
 	/**

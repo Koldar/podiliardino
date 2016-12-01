@@ -39,10 +39,6 @@ public class Tournament implements Indexable {
 	private final ObservableDistinctList<Day> days;
 	
 	
-	//derived attributes
-	private final IntegerProperty numberOfPartecipants;
-	
-	
 	/**
 	 * 
 	 * @param id
@@ -58,17 +54,26 @@ public class Tournament implements Indexable {
 		this.endDate = new SimpleObjectProperty<>(Optional.ofNullable(endDate));
 		this.partecipations = new ObservableDistinctList<>(FXCollections.observableArrayList(partecipations));
 		this.days = new ObservableDistinctList<>(FXCollections.observableArrayList(days));
-		this.numberOfPartecipants = new SimpleIntegerProperty(0);
 	}
 	
 	public Tournament() {
 		this(0, "", LocalDate.now(), null, new ArrayList<>(), new ArrayList<>());
 	}
 	
-	public IntegerProperty getNumberOfPartecipants() {
-		this.numberOfPartecipants.set(this.getPartecipations().parallelStream().mapToInt(p -> p.getTeam().get().getPlayers().size()).sum());
-		LOG.debug("computed numberOfPartecipants: {}. Partecipations: {}", this.numberOfPartecipants.get(), this.partecipations);
-		return this.numberOfPartecipants;
+	/**
+	 * 
+	 * @return the number of players that will be attending to the tournament
+	 */
+	public int getNumberOfPartecipants() {
+		return this.getPartecipations().parallelStream().mapToInt(p -> p.getTeam().get().getPlayers().size()).sum();
+	}
+	
+	/**
+	 * 
+	 * @return the number of teams that will be attending to the tournament
+	 */
+	public int getNumberOfTeams() {
+		return this.getPartecipations().size();
 	}
 
 	/**

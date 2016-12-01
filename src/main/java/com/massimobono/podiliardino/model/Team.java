@@ -52,6 +52,65 @@ public class Team implements Indexable {
 	
 	/**
 	 * 
+	 * @param t
+	 * @return the number of points scored by the team in the whole tournament 
+	 */
+	public int getPointsScoredIn(Tournament t) {
+		return this.getMatches()
+				.parallelStream()
+				.filter(m -> m.getDay().get().getTournament().get() == t)
+				.filter(m -> m.getStatus().get() == MatchStatus.DONE)
+				.filter(m -> m.getWinner() == this)
+				.mapToInt(m -> m.getPointsEarnedByWinning().get())
+				.sum();
+	}
+	
+	/**
+	 * For example if the team has performed only one match that ended in 3-2, this function will return 3;
+	 * 
+	 * @param t
+	 * @return the number of goals this team scored in the whole tournament
+	 */
+	public int getNumberOfGoalsScored(Tournament t) {
+		return this.getMatches()
+				.parallelStream()
+				.filter(m -> m.getDay().get().getTournament().get() == t)
+				.filter(m -> m.getStatus().get() == MatchStatus.DONE)
+				.mapToInt(m -> m.getNumberOfGoalsOfTeam(this))
+				.sum();
+	}
+	
+	/**
+	 * For example if the team has performed only one match that ended in 3-2, this function will return 2; 
+	 * 
+	 * @param t
+	 * @return the number of goals this team received in the whole tournament
+	 */
+	public int getNumberOfGoalsReceived(Tournament t) {
+		return this.getMatches()
+				.parallelStream()
+				.filter(m -> m.getDay().get().getTournament().get() == t)
+				.filter(m -> m.getStatus().get() == MatchStatus.DONE)
+				.mapToInt(m -> m.getNumberOfGoalssOfOtherTeam(this))
+				.sum();
+	}
+	
+	/**
+	 * 
+	 * @param t
+	 * @return the number of goals all your opponents have scored
+	 */
+	public int getNumberOfGoalsYourOpponentsScored(Tournament t) {
+		return this.getMatches()
+				.parallelStream()
+				.filter(m -> m.getDay().get().getTournament().get() == t)
+				.filter(m -> m.getStatus().get() == MatchStatus.DONE)
+				.mapToInt(m -> m.getOtherTeam(this).getNumberOfGoalsScored(t))
+				.sum();
+	}
+	
+	/**
+	 * 
 	 * @param team another team to compare against
 	 * @return true if the 2 teams share at least one teammates. false otherwise 
 	 */

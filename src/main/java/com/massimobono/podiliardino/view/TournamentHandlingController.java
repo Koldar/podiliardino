@@ -95,7 +95,7 @@ public class TournamentHandlingController {
 	private void initialize() {
 		// Initialize the person table with the two columns.
 		this.tournamentNameColumn.setCellValueFactory(cellData -> cellData.getValue().getName());
-		this.tournamentInfoColumn.setCellValueFactory(cellData -> cellData.getValue().getNumberOfPartecipants().asObject());
+		this.tournamentInfoColumn.setCellValueFactory(cellData -> new SimpleIntegerProperty(cellData.getValue().getNumberOfPartecipants()).asObject());
 
 		// Listen for selection changes and show the person details when changed.
 		this.tournamentTable.getSelectionModel().selectedItemProperty().addListener(this::handleUserSelectTournament);
