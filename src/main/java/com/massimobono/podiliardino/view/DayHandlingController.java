@@ -1,6 +1,7 @@
 package com.massimobono.podiliardino.view;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -14,6 +15,8 @@ import com.massimobono.podiliardino.model.Match;
 import com.massimobono.podiliardino.model.Player;
 import com.massimobono.podiliardino.model.Team;
 import com.massimobono.podiliardino.model.Tournament;
+import com.massimobono.podiliardino.ranking.RankingManager;
+import com.massimobono.podiliardino.ranking.SwissRankingManager;
 import com.massimobono.podiliardino.util.ExceptionAlert;
 import com.massimobono.podiliardino.util.Utils;
 
@@ -232,6 +235,10 @@ public class DayHandlingController {
 			Utils.createDefaultErrorAlert("Can't generate matches", "In order to generate matches you need to select a day with no mathces already done. It would be unfair to generate matches in a day when someone has already played!");
 			return;
 		}
+		
+		RankingManager rm = new SwissRankingManager();
+		//we call the ranking immediately: 
+		List<Team> ranks = rm.getDayRanking(day);
 		
 		
 	}
