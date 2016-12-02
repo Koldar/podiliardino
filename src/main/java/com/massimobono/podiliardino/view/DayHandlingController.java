@@ -83,9 +83,7 @@ public class DayHandlingController {
 	@FXML
 	private Button generateMatch;
 	@FXML
-	private Button addMatchResult;
-	@FXML
-	private Button removeMatchResult;
+	private Button updateMatchResult;
 	@FXML
 	private Button printRanking;
 	
@@ -113,11 +111,13 @@ public class DayHandlingController {
 				celldata.getValue().getTeam1().get().getName().get(),
 				celldata.getValue().getTeam2().get().getName().get()
 		)));
+		this.vsTableColumn.setSortable(false);
 		this.goalsColumn.setCellValueFactory(celldata -> new SimpleStringProperty(String.format(
 				"%d / %d",
 				celldata.getValue().getTeam1Goals().get(),
 				celldata.getValue().getTeam2Goals().get()
 		)));
+		this.goalsColumn.setSortable(false);
 		this.totalGoalsDifferenceColumn.setCellValueFactory(celldata -> new SimpleStringProperty(String.format(
 				"%d / %d",
 				celldata.getValue().getTeam1().get().getNumberOfGoalsScored(tournamentTableView.getSelectionModel().getSelectedItem()) -
@@ -125,12 +125,16 @@ public class DayHandlingController {
 				celldata.getValue().getTeam2().get().getNumberOfGoalsScored(tournamentTableView.getSelectionModel().getSelectedItem()) -
 				celldata.getValue().getTeam2().get().getNumberOfGoalsReceived(tournamentTableView.getSelectionModel().getSelectedItem())
 		)));
+		this.totalGoalsDifferenceColumn.setSortable(false);
 		this.totalOpponentsGoalColumn.setCellValueFactory(celldata -> new SimpleStringProperty(String.format(
 				"%d / %d", 
 				celldata.getValue().getTeam1().get().getNumberOfGoalsYourOpponentsScored(tournamentTableView.getSelectionModel().getSelectedItem()),
 				celldata.getValue().getTeam2().get().getNumberOfGoalsYourOpponentsScored(tournamentTableView.getSelectionModel().getSelectedItem())
 		)));
+		this.totalOpponentsGoalColumn.setSortable(false);
+		
 		this.statusColumn.setCellValueFactory(celldata -> new SimpleStringProperty(celldata.getValue().getStatus().get().toString()));
+		this.statusColumn.setSortable(false);
 	}
 	
 	@FXML
@@ -319,8 +323,29 @@ public class DayHandlingController {
 	}
 	
 	@FXML
-	private void handleAddMatchResult() {
-		
+	private void handleUpdateMatchResult() {
+		try {
+			if (this.matchesTableView.getSelectionModel().getSelectedItem() == null) {
+				Utils.createDefaultErrorAlert("Can't change a match result", "In order to change a match result, a match needs to be selected in the current frame");
+				return;
+			}
+			Optional<Match> m = this.mainApp.showCustomDialog(
+					"MatchResultEditDialog",
+					"Update Match",
+					(MatchResultEditDialogController c, Stage s) -> {
+						c.setup(s, this.matchesTableView.getSelectionModel().getSelectedItem()); 
+					},
+					(c) -> {return Optional.ofNullable(c.isClickedOK() ? c.getMatch() : null);}
+					);
+			if (m.isPresent()) {
+				m.get().getDay().get().remove(m.get());
+				m.get().getDay().get().add(m.get());
+				this.matchesTableView.getSelectionModel().clearSelection();
+			}
+		} catch (Exception e) {
+			ExceptionAlert.showAndWait(e);
+			e.printStackTrace();
+		}
 	}
 	
 	@FXML
