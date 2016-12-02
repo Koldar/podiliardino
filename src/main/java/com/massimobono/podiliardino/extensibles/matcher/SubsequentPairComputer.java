@@ -35,15 +35,14 @@ import javafx.util.Pair;
 public class SubsequentPairComputer<E> implements PairComputer<E>{
 
 	@Override
-	public List<Pair<E, Optional<E>>> computePairs(Collection<E> toPair) {
-		List<Pair<E,Optional<E>>> retVal = new ArrayList<>();
+	public List<Pair<E,E>> computePairs(Collection<E> toPair) {
+		List<Pair<E,E>> retVal = new ArrayList<>();
 		Iterator<E> iterator = toPair.iterator();
-		E first;
-		Optional<E> second;
+		E first, second;
 		
 		while (iterator.hasNext()) {
 			first = iterator.next();
-			second = Optional.of(iterator.hasNext() ? iterator.next() : null);
+			second = iterator.hasNext() ? iterator.next() : null;
 			retVal.add(new Pair<>(first, second));
 		}
 		return retVal;

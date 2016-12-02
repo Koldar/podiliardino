@@ -131,10 +131,6 @@ public interface DAO extends Closeable{
 		return this.getAllTeamsThat(p -> true);
 	}
 	
-	public default Collection<Team> getTeamByName(String name) throws DAOException {
-		return this.getAllTeamsThat(t -> t.getName().get().equalsIgnoreCase(name));
-	}
-	
 	/**
 	 * like {@link #getTeamList()} but it returns an {@link ObservableList}
 	 * that can be used by JavaFX to synchronize its UI

@@ -109,27 +109,28 @@ public class DayHandlingController {
 		this.dayTableView.getSelectionModel().selectedItemProperty().addListener(this::handleUserSelectDay);
 		
 		this.vsTableColumn.setCellValueFactory(celldata -> new SimpleStringProperty(String.format(
-				"%s - %s", 
+				"%s / %s", 
 				celldata.getValue().getTeam1().get().getName().get(),
 				celldata.getValue().getTeam2().get().getName().get()
 		)));
 		this.goalsColumn.setCellValueFactory(celldata -> new SimpleStringProperty(String.format(
-				"%d - %d",
+				"%d / %d",
 				celldata.getValue().getTeam1Goals().get(),
 				celldata.getValue().getTeam2Goals().get()
 		)));
 		this.totalGoalsDifferenceColumn.setCellValueFactory(celldata -> new SimpleStringProperty(String.format(
-				"%d - %d",
+				"%d / %d",
 				celldata.getValue().getTeam1().get().getNumberOfGoalsScored(tournamentTableView.getSelectionModel().getSelectedItem()) -
 				celldata.getValue().getTeam1().get().getNumberOfGoalsReceived(tournamentTableView.getSelectionModel().getSelectedItem()),
 				celldata.getValue().getTeam2().get().getNumberOfGoalsScored(tournamentTableView.getSelectionModel().getSelectedItem()) -
 				celldata.getValue().getTeam2().get().getNumberOfGoalsReceived(tournamentTableView.getSelectionModel().getSelectedItem())
 		)));
 		this.totalOpponentsGoalColumn.setCellValueFactory(celldata -> new SimpleStringProperty(String.format(
-				"%d - %d", 
+				"%d / %d", 
 				celldata.getValue().getTeam1().get().getNumberOfGoalsYourOpponentsScored(tournamentTableView.getSelectionModel().getSelectedItem()),
 				celldata.getValue().getTeam2().get().getNumberOfGoalsYourOpponentsScored(tournamentTableView.getSelectionModel().getSelectedItem())
 		)));
+		this.statusColumn.setCellValueFactory(celldata -> new SimpleStringProperty(celldata.getValue().getStatus().get().toString()));
 	}
 	
 	@FXML
@@ -144,6 +145,7 @@ public class DayHandlingController {
 					"New Day", 
 					(DayEditDialogController c, Stage s) -> {
 						Day newDay = new Day();
+						newDay.getNumber().set(this.tournamentTableView.getSelectionModel().getSelectedItem().getDays().size()+1);
 						c.setup(s,newDay); 
 					},
 					(c) -> {return Optional.ofNullable(c.isClickedOK() ? c.getDay() : null);}
@@ -153,7 +155,6 @@ public class DayHandlingController {
 				//and then we readd the tournament inside it. Why do we do that? because the dao start listening for changes in the tournament object on
 				//after addTDay. If we didn't do this procedure the DAO would never know about the new tournament
 				Day day = this.mainApp.getDAO().add(d.get());
-				day.getNumber().set(this.tournamentTableView.getSelectionModel().getSelectedItem().getDays().size()+1);
 				day.add(this.tournamentTableView.getSelectionModel().getSelectedItem());
 				
 				this.dayTableView.getSelectionModel().clearSelection();
@@ -206,6 +207,13 @@ public class DayHandlingController {
 				return;
 			}
 			Day d =this.dayTableView.getSelectionModel().getSelectedItem();
+			
+			if (d.getMatches().size() > 0) {
+				if (!Utils.waitUserReplyForConfirmationDialog("Confirm the deletion of the whole day", "By deleting a day, you will be deleting every match (done or todo) in that day as well. Are you sure?")) {
+					return;
+				}
+			}
+			
 			this.mainApp.getDAO().remove(d);
 		} catch (DAOException e) {
 			e.printStackTrace();
@@ -259,48 +267,53 @@ public class DayHandlingController {
 	 */
 	@FXML
 	private void handleGenerateMatches() {
-		LOG.debug("Starting generate matches");
-		if (this.tournamentTableView.getSelectionModel().getSelectedItem() == null) {
-			Utils.createDefaultErrorAlert("Can't generate matches", "In order to generate matches you need to select a tournament");
-			return;
-		}
-		if (this.dayTableView.getSelectionModel().getSelectedItem() == null) {
-			Utils.createDefaultErrorAlert("Can't generate matches", "In order to generate matches you need to select a day");
-			return;
-		}
-		Tournament tournament = this.tournamentTableView.getSelectionModel().getSelectedItem();
-		Day day = this.dayTableView.getSelectionModel().getSelectedItem();
-		
-		if (tournament.getNumberOfTeams() < 2) {
-			Utils.createDefaultErrorAlert("Can't generate matches", "In order to generate matches you need to select a tournament with at least 2 attending teams!");
-			return;
-		}
-		if (day.getNumberOfMatchesDone() > 0) {
-			Utils.createDefaultErrorAlert("Can't generate matches", "In order to generate matches you need to select a day with no mathces already done. It would be unfair to generate matches in a day when someone has already played!");
-			return;
-		}
-		
-		RankingComputer<Team> rm = new SwissRankingManager();
-		//we call the ranking immediately: 
-		List<Team> ranks = rm.getDayRanking(day);
-		PairComputer<Team> pairComputer = new SubsequentPairComputer<>();
-		DummyMatchHandler dummyMatchHandler = new AddDefaultVictoryDummyMatchHandler();
-		day.getMatches().clear();
-		for (Pair<Team,Optional<Team>> pair : pairComputer.computePairs(ranks)) {
-			if (pair.getValue().isPresent()) {
-				day.getMatches().add(new Match(
-						pair.getKey(), 
-						pair.getValue().get(),
-						day, 
-						Utils.DEFAULT_POINTS_EARNED_FROM_WINNING,
-						Utils.DEFAULT_POINTS_EARNED_FROM_LOSING, 
-						0, 
-						0,
-						MatchStatus.TODO));
-			} else {
-				//the second pair is empty. We need to perform an action to establish what will happen to the unpaired team
-				//dummyMatchHandler.accept(day, pair.getKey());
+		try {
+			LOG.debug("Starting generate matches");
+			if (this.tournamentTableView.getSelectionModel().getSelectedItem() == null) {
+				Utils.createDefaultErrorAlert("Can't generate matches", "In order to generate matches you need to select a tournament");
+				return;
 			}
+			if (this.dayTableView.getSelectionModel().getSelectedItem() == null) {
+				Utils.createDefaultErrorAlert("Can't generate matches", "In order to generate matches you need to select a day");
+				return;
+			}
+			Tournament tournament = this.tournamentTableView.getSelectionModel().getSelectedItem();
+			Day day = this.dayTableView.getSelectionModel().getSelectedItem();
+			
+			if (tournament.getNumberOfTeams() < 2) {
+				Utils.createDefaultErrorAlert("Can't generate matches", "In order to generate matches you need to select a tournament with at least 2 attending teams!");
+				return;
+			}
+			if (day.getNumberOfMatchesDone() > 0) {
+				Utils.createDefaultErrorAlert("Can't generate matches", "In order to generate matches you need to select a day with no mathces already done. It would be unfair to generate matches in a day when someone has already played!");
+				return;
+			}
+			
+			RankingComputer<Team> rm = new SwissRankingManager();
+			//we call the ranking immediately: 
+			List<Team> ranks = rm.getDayRanking(day);
+			PairComputer<Team> pairComputer = new SubsequentPairComputer<>();
+			DummyMatchHandler dummyMatchHandler = new AddDefaultVictoryDummyMatchHandler();
+			day.getMatches().clear();
+			for (Pair<Team,Team> pair : pairComputer.computePairs(ranks)) {
+				if (pair.getValue() != null) {
+					day.getMatches().add(new Match(
+							pair.getKey(), 
+							pair.getValue(),
+							day, 
+							Utils.DEFAULT_POINTS_EARNED_FROM_WINNING,
+							Utils.DEFAULT_POINTS_EARNED_FROM_LOSING, 
+							0, 
+							0,
+							MatchStatus.TODO));
+				} else {
+					//the second pair is empty. We need to perform an action to establish what will happen to the unpaired team
+					dummyMatchHandler.handleUnPairedTeam(day, pair.getKey());
+				}
+			}
+		} catch (Exception e) {
+			ExceptionAlert.showAndWait(e);
+			e.printStackTrace();
 		}
 		
 	}

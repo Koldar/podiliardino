@@ -22,6 +22,7 @@ import com.massimobono.podiliardino.extensibles.dao.DAO;
 import com.massimobono.podiliardino.extensibles.dao.DAOException;
 import com.massimobono.podiliardino.extensibles.dao.SQLiteDAOImpl;
 import com.massimobono.podiliardino.util.ExceptionAlert;
+import com.massimobono.podiliardino.util.Utils;
 import com.massimobono.podiliardino.view.DayHandlingController;
 import com.massimobono.podiliardino.view.PlayerHandlingController;
 import com.massimobono.podiliardino.view.TeamHandlingController;
@@ -55,6 +56,8 @@ public class Main extends Application {
 	
 	public Main() throws DAOException {
 		this.dao = new SQLiteDAOImpl(new File("data.db"), true);
+		//ensure to have a dummy team with 2 dummy players
+		Utils.addDummyTeam(this.dao);
 		//this.dao.clearAll();
 	}
 

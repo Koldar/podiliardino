@@ -8,6 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.massimobono.podiliardino.util.ObservableDistinctList;
+import com.massimobono.podiliardino.util.Utils;
 
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
@@ -54,6 +55,15 @@ public class Day implements Indexable {
 		t.getDays().add(this);
 	}
 	
+	/**
+	 * Removes a relationship "divide" between tournament-day
+	 * 
+	 * @param t
+	 */
+	public void remove(Tournament t) {
+		t.getDays().remove(this);
+	}
+	
 	public void add(Match m) {
 		m.getDay().get().getMatches().add(m);
 		m.getTeam1().get().getMatches().add(m);
@@ -67,6 +77,15 @@ public class Day implements Indexable {
 	}
 	
 	/**
+	 * Iteratively call {@link #remove(Match)} until no matches are inside it
+	 */
+	public void removeAllMatches() {
+		while (!this.matches.isEmpty()) {
+			this.remove(this.matches.get(0));
+		}
+	}
+	
+	/**
 	 * We get all the matches in the day and then we retain only those with status {@link MatchStatus#TODO}
 	 * 
 	 * @return the number of mathces that we have left in order to conclude the day
@@ -76,12 +95,27 @@ public class Day implements Indexable {
 	}
 	
 	/**
-	 * We get all the matches in the day and then we retain only those with status {@link MatchStatus#DONE}
+	 * like {@link #getNumberOfMatchesDone(boolean)} but we exclude fake matches by default
 	 * 
-	 * @return the number of matches already terminated
+	 * @return the number of matches already terminated (fake matches are excluded by default)
 	 */
 	public int getNumberOfMatchesDone() {
-		return this.getMatches().parallelStream().filter(m -> m.getStatus().get() == MatchStatus.DONE).mapToInt(m -> 1).sum();
+		return this.getNumberOfMatchesDone(false);
+	}
+	
+	/**
+	 * We get all the matches in the day and then we retain only those with status {@link MatchStatus#DONE}
+	 * 
+	 * @param includeBye true if you want to consider "done" also the bye match. Technically they are match, but practically there are not
+	 * @return the number of matches already terminated
+	 */
+	public int getNumberOfMatchesDone(final boolean includeBye) {
+		return this.getMatches()
+		.parallelStream()
+		.filter(m -> m.getStatus().get() == MatchStatus.DONE)
+		.filter(m -> !m.getLoser().equals(Utils.DUMMYTEAM) || includeBye) //implication
+		.mapToInt(m -> 1)
+		.sum();
 	}
 	
 	/**

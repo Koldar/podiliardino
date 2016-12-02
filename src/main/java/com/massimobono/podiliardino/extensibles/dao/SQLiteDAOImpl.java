@@ -97,13 +97,14 @@ public class SQLiteDAOImpl implements DAO {
 			this.preparedStatements.put("deleteDay", connection.prepareStatement("DELETE FROM day WHERE id=?"));
 
 			this.preparedStatements.put("insertDivision", connection.prepareStatement("UPDATE day SET tournament_id=? WHERE id=?"));
+			this.preparedStatements.put("deleteDivision", connection.prepareStatement("UPDATE day SET tournament_id=NULL WHERE id=?"));
 
 			this.preparedStatements.put("getTournamentFromDay", connection.prepareStatement("SELECT tournament_id FROM day WHERE id=?"));
 			this.preparedStatements.put("getDaysInTournament", connection.prepareStatement("SELECT d.id FROM day AS d WHERE tournament_id=?"));
 
 			// MATCHES
 
-			this.preparedStatements.put("insertMatch", connection.prepareStatement("INSERT INTO match(team1_id, team2_id, day_id, points_earned_from_winning, points_earned_from_losing, team1_goals, team2_goals, status) VALUES (?,?,?,?,?,?,?,?)"));
+			this.preparedStatements.put("insertMatch", connection.prepareStatement("INSERT OR IGNORE INTO match(team1_id, team2_id, day_id, points_earned_from_winning, points_earned_from_losing, team1_goals, team2_goals, status) VALUES (?,?,?,?,?,?,?,?)"));
 			this.preparedStatements.put("deleteMatch", connection.prepareStatement("DELETE FROM match WHERE team1_id=? AND team2_id=? AND day_id=?"));
 			this.preparedStatements.put("setMatchStatus", connection.prepareStatement("UPDATE OR ROLLBACK match set team1_goals=?, team2_goals=?, status=? WHERE team1_id=? AND team2_id=? and day_id=?"));
 
@@ -135,6 +136,10 @@ public class SQLiteDAOImpl implements DAO {
 			return this.get("setMatchStatus");
 		}
 
+		public PreparedStatement getDeleteDivision() {
+			return this.get("deleteDivision");
+		}
+		
 		public PreparedStatement getInsertDivision() {
 			return this.get("insertDivision");
 		}
@@ -1553,14 +1558,21 @@ public class SQLiteDAOImpl implements DAO {
 					try {
 						ps.getDeleteDay().setLong(1, day.getId());
 						ps.getDeleteDay().executeUpdate();
-						//TODO remove day
 						return null;
 					}catch (SQLException e) {
 						return e;
 					}
 				}, 
-				() -> null,
-				() -> null
+				() -> {
+					//before we remove a day, we need to remove every match performed in that day adn the relationship with the tournament
+					day.removeAllMatches();
+					day.remove(day.getTournament().get());
+					return null;
+				},
+				() -> {
+					this.days.remove(day);
+					return null;
+				}
 				);
 	}
 
@@ -1676,8 +1688,8 @@ public class SQLiteDAOImpl implements DAO {
 	private void removeDBDivide(long dayId, long tournamentId) throws DAOException {
 		this.connectAndThenDo((c,s,ps) -> {
 			try {
-				ps.getDeleteDay().setLong(1, dayId);
-				ps.getDeleteDay().executeUpdate();
+				ps.getDeleteDivision().setLong(1, dayId);
+				ps.getDeleteDivision().executeUpdate();
 				return null;
 			} catch (SQLException e) {
 				return e;
@@ -1822,6 +1834,7 @@ public class SQLiteDAOImpl implements DAO {
 		this.connectAndThenDo((c,s,ps) -> {
 			try {
 				LOG.debug("adding match {}...", match);
+				LOG.debug("team1Id: {} team2Id: {} dayId: {}", match.getTeam1().get().getId(), match.getTeam2().get().getId(), match.getDay().get().getId());
 				ps.getInsertMatch().setLong(1, match.getTeam1().get().getId());
 				ps.getInsertMatch().setLong(2, match.getTeam2().get().getId());
 				ps.getInsertMatch().setLong(3, match.getDay().get().getId());
