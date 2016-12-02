@@ -51,6 +51,66 @@ public class Team implements Indexable {
 	}
 	
 	/**
+	 * Add a new relationship "compose" between player-team
+	 * 
+	 * @param t
+	 */
+	public void add(Player p) {
+		p.add(this);
+	}
+	
+	/**
+	 * Removes new relationship "compose" between player-team
+	 * 
+	 * @param t
+	 */
+	public void remove(Player p) {
+		p.remove(this);
+	}
+	
+	/**
+	 * Add a new relationship "partecipate" between tournament-team
+	 * 
+	 * @param t
+	 */
+	public void add(Partecipation p) {
+		this.partecipations.add(p);
+		p.getTournament().get().getPartecipations().add(p);
+	}
+	
+	/**
+	 * Removes relationship "partecipate" between tournament-team
+	 * 
+	 * @param t
+	 */
+	public void remove(Partecipation p) {
+		this.partecipations.remove(p);
+		p.getTournament().get().getPartecipations().remove(p);
+	}
+	
+	/**
+	 * Add a new relationship "match" between day-team
+	 * 
+	 * @param t
+	 */
+	public void add(Match m) {
+		m.getTeam1().get().getMatches().add(m);
+		m.getTeam2().get().getMatches().add(m);
+		m.getDay().get().getMatches().add(m);
+	}
+	
+	/**
+	 * Removes relationship "match" between day-team
+	 * 
+	 * @param t
+	 */
+	public void remove(Match m) {
+		m.getTeam1().get().getMatches().remove(m);
+		m.getTeam2().get().getMatches().remove(m);
+		m.getDay().get().getMatches().remove(m);
+	}
+	
+	/**
 	 * 
 	 * @param t
 	 * @return the number of points scored by the team in the whole tournament 

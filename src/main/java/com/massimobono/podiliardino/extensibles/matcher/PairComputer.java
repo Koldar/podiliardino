@@ -2,6 +2,7 @@ package com.massimobono.podiliardino.extensibles.matcher;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import com.massimobono.podiliardino.extensibles.ranking.RankingComputer;
 
@@ -28,5 +29,5 @@ public interface PairComputer<E> {
 	 * @return the pairs computed. Every item inside <tt>toPair</tt> is present in exactly one pair, but nothing is said about whether it is in {@link Pair#getKey()}
 	 * or in {@link Pair#getValue()}. If the size of <tt>toPair</tt> is odd, the last pair will have the {@link Pair#getValue()} set to "null"
 	 */
-	public List<Pair<E,E>> computePairs(Collection<E> toPair);
+	public List<Pair<E,Optional<E>>> computePairs(Collection<E> toPair);
 }

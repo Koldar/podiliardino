@@ -2,8 +2,10 @@ package com.massimobono.podiliardino;
 	
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -11,6 +13,10 @@ import java.util.function.Function;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jdom2.Document;
+import org.jdom2.Element;
+import org.jdom2.output.Format;
+import org.jdom2.output.XMLOutputter;
 
 import com.massimobono.podiliardino.extensibles.dao.DAO;
 import com.massimobono.podiliardino.extensibles.dao.DAOException;
@@ -42,7 +48,7 @@ public class Main extends Application {
 	
 	private DAO dao;
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		launch(args);
 	}
 	

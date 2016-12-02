@@ -6,22 +6,12 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
 public class Partecipation{
-
-	private final BooleanProperty bye;
 	private final ObjectProperty<Tournament> tournament;
 	private final ObjectProperty<Team> team;
 	
-	public Partecipation(boolean bye, Tournament tournament, Team team) {
-		this.bye = new SimpleBooleanProperty(bye);
+	public Partecipation( Tournament tournament, Team team) {
 		this.tournament = new SimpleObjectProperty<>(tournament);
 		this.team = new SimpleObjectProperty<>(team);
-	}
-
-	/**
-	 * @return the bye
-	 */
-	public BooleanProperty getBye() {
-		return bye;
 	}
 
 	/**
@@ -39,11 +29,10 @@ public class Partecipation{
 	}
 	
 	public String toString() {
-		return String.format("<%s team_name=%s tournament_name=%s byte=%s>", 
+		return String.format("<%s team_name=%s tournament_name=%s>", 
 				this.getClass().getSimpleName(), 
 				this.team.get().getName().get(), 
-				this.tournament.get().getName().get(), 
-				this.bye.get()?"yes":"no");
+				this.tournament.get().getName().get());
 	}
 
 	@Override

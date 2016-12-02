@@ -121,7 +121,7 @@ public class TournamentHandlingController {
 									data.getCheckBox().setOnAction(e -> {
 										Partecipation partecipation = null;
 										if (data.getCheckBox().isSelected()) {
-											partecipation = new Partecipation(false, tournament, team);
+											partecipation = new Partecipation(tournament, team);
 											tournament.getPartecipations().add(partecipation);
 											team.getPartecipations().add(partecipation);
 										} else {

@@ -41,7 +41,7 @@ public class TeamListCell extends ListCell<Team>
             	Tournament tournament = this.tournamentTable.getSelectionModel().getSelectedItem(); 
             	Partecipation partecipation = null;
             	if (data.getCheckBox().isSelected()) {
-            		partecipation = new Partecipation(false, tournament, team);
+            		partecipation = new Partecipation(tournament, team);
             		tournament.getPartecipations().add(partecipation);
             		team.getPartecipations().add(partecipation);
             		this.availableTeams.removeIf(t -> t.getPlayers().contains(team.getPlayers().get(0)) || t.getPlayers().contains(team.getPlayers().get(1)));

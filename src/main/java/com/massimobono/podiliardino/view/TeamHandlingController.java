@@ -1,5 +1,7 @@
 package com.massimobono.podiliardino.view;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -90,8 +92,15 @@ public class TeamHandlingController {
 					(TeamEditDialogController c) -> {return Optional.ofNullable(c.isClickedOK() ? c.getTeam() : null);}
 					);
 			if (t.isPresent()) {
-				//we have added a new player. We can add it to the DAO
+				//we have added a new team. We copy the players from the newly generated team, we flush its list, we add the team inside the DAO
+				//and then we readd the players inside it. Why do we do that? because the dao start listening for changes in the players list on
+				//after addTeam. If we didn't do this procedure the DAO would never know about the new players
+				Collection<Player> players = new ArrayList<>(t.get().getPlayers());
+				t.get().getPlayers().clear();
 				this.mainApp.getDAO().addTeam(t.get());
+				for (Player p : players) {
+					t.get().add(p);
+				}
 				this.teamTable.getSelectionModel().clearSelection();
 			}
 

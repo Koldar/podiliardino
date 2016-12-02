@@ -73,9 +73,13 @@
                <center>
                   <AnchorPane prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
                      <children>
-                        <TableView fx:id="matchesTableView" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="150.0">
+                        <TableView fx:id="matchesTableView" disable="true" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="150.0">
                           <columns>
-                            <TableColumn fx:id="matchesTableColumn" prefWidth="75.0" text="Matches" />
+                            <TableColumn fx:id="vsTableColumn" prefWidth="75.0" text="VS" />
+                              <TableColumn fx:id="goalsColumn" prefWidth="75.0" text="Goals" />
+                              <TableColumn fx:id="totalGoalsDifferenceColumn" prefWidth="75.0" text="Total Goal Difference" />
+                              <TableColumn fx:id="totalOpponentsGoalColumn" prefWidth="75.0" text="Total Opponents Goal Difference" />
+                              <TableColumn fx:id="statusColumn" prefWidth="75.0" text="Status" />
                           </columns>
                            <columnResizePolicy>
                               <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />

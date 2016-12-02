@@ -32,7 +32,7 @@ import javafx.collections.ObservableList;
  * 	<li>The model is compose of 2 entities and relationships: entities are concepts big enough to stand by themselves. These are {@link Player},
  * 		{@link Team}, {@link Tournament} and {@link Day}; relationships are concepts the links the former ones: for example {@link Partecipation} are one of those.</li>
  * 	<li>The user does <b>not</b> create by themselves entities in order to make them persistence: he calls the function available from the {@link DAO}. For example if a user wants to
- * 		store a {@link Player} he will call the {@link DAO#addPlayer(Player)} function that will allow him to persist the instance.</li>
+ * 		store a {@link Player} he will call the {@link DAO#add(Player)} function that will allow him to persist the instance.</li>
  * 	<li>In order to persist an entity instance from the model , you need to call the <tt>add</tt></li>
  * 	<li>If you have just started up the application and you want to populate your model in memory, you need to call the <tt>getAll</tt> APIs: for example if
  * 		have jsut started the application and you want to fetch all the players, you need to call {@link DAO#getAllPlayers()}</li>
@@ -72,7 +72,7 @@ public interface DAO extends Closeable{
 	 * @return the same {@link Player} instane you've provided but with the ID used to synchornize it in the db
 	 * @throws DAOException if somethign bad goes wrong
 	 */
-	public Player addPlayer(Player p) throws DAOException;
+	public Player add(Player p) throws DAOException;
 	
 	/**
 	 * Updates the DAO with the changes you've made on a {@link Player} instance you've changed 

@@ -10,16 +10,23 @@ import org.apache.logging.log4j.Logger;
 
 import com.massimobono.podiliardino.Main;
 import com.massimobono.podiliardino.extensibles.dao.DAOException;
+import com.massimobono.podiliardino.extensibles.dummymatch.AddDefaultVictoryDummyMatchHandler;
+import com.massimobono.podiliardino.extensibles.dummymatch.DummyMatchHandler;
+import com.massimobono.podiliardino.extensibles.matcher.PairComputer;
+import com.massimobono.podiliardino.extensibles.matcher.SubsequentPairComputer;
 import com.massimobono.podiliardino.extensibles.ranking.RankingComputer;
 import com.massimobono.podiliardino.extensibles.ranking.SwissRankingManager;
 import com.massimobono.podiliardino.model.Day;
 import com.massimobono.podiliardino.model.Match;
+import com.massimobono.podiliardino.model.MatchStatus;
 import com.massimobono.podiliardino.model.Player;
 import com.massimobono.podiliardino.model.Team;
 import com.massimobono.podiliardino.model.Tournament;
 import com.massimobono.podiliardino.util.ExceptionAlert;
+import com.massimobono.podiliardino.util.ObservableDistinctList;
 import com.massimobono.podiliardino.util.Utils;
 
+import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -29,6 +36,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.stage.Stage;
+import javafx.util.Pair;
 
 public class DayHandlingController {
 	
@@ -61,7 +69,16 @@ public class DayHandlingController {
 	@FXML
 	private TableView<Match> matchesTableView;
 	@FXML
-	private TableColumn<Match, String> matchesTableColumn;
+	private TableColumn<Match, String> vsTableColumn;
+	@FXML
+	private TableColumn<Match, String> goalsColumn;
+	@FXML
+	private TableColumn<Match, String> totalGoalsDifferenceColumn;
+	@FXML
+	private TableColumn<Match, String> totalOpponentsGoalColumn;
+	@FXML
+	private TableColumn<Match, String> statusColumn;
+	
 	
 	@FXML
 	private Button generateMatch;
@@ -73,20 +90,14 @@ public class DayHandlingController {
 	private Button printRanking;
 	
 	private Main mainApp;
-	/**
-	 * A list representing all the day to display inside dayTableView
-	 */
-	private ObservableList<Day> daysToDisplay;
 	
 	public DayHandlingController() {
-		this.daysToDisplay = FXCollections.observableArrayList();
 	}
 	
 	public void setup(Main mainApp) throws DAOException {
 		this.mainApp = mainApp;
 		
 		this.tournamentTableView.setItems(this.mainApp.getDAO().getTournamentList());
-		this.dayTableView.setItems(this.daysToDisplay);
 	}
 	
 	@FXML
@@ -96,6 +107,29 @@ public class DayHandlingController {
 		
 		this.tournamentTableView.getSelectionModel().selectedItemProperty().addListener(this::handleUserSelectTournament);
 		this.dayTableView.getSelectionModel().selectedItemProperty().addListener(this::handleUserSelectDay);
+		
+		this.vsTableColumn.setCellValueFactory(celldata -> new SimpleStringProperty(String.format(
+				"%s - %s", 
+				celldata.getValue().getTeam1().get().getName().get(),
+				celldata.getValue().getTeam2().get().getName().get()
+		)));
+		this.goalsColumn.setCellValueFactory(celldata -> new SimpleStringProperty(String.format(
+				"%d - %d",
+				celldata.getValue().getTeam1Goals().get(),
+				celldata.getValue().getTeam2Goals().get()
+		)));
+		this.totalGoalsDifferenceColumn.setCellValueFactory(celldata -> new SimpleStringProperty(String.format(
+				"%d - %d",
+				celldata.getValue().getTeam1().get().getNumberOfGoalsScored(tournamentTableView.getSelectionModel().getSelectedItem()) -
+				celldata.getValue().getTeam1().get().getNumberOfGoalsReceived(tournamentTableView.getSelectionModel().getSelectedItem()),
+				celldata.getValue().getTeam2().get().getNumberOfGoalsScored(tournamentTableView.getSelectionModel().getSelectedItem()) -
+				celldata.getValue().getTeam2().get().getNumberOfGoalsReceived(tournamentTableView.getSelectionModel().getSelectedItem())
+		)));
+		this.totalOpponentsGoalColumn.setCellValueFactory(celldata -> new SimpleStringProperty(String.format(
+				"%d - %d", 
+				celldata.getValue().getTeam1().get().getNumberOfGoalsYourOpponentsScored(tournamentTableView.getSelectionModel().getSelectedItem()),
+				celldata.getValue().getTeam2().get().getNumberOfGoalsYourOpponentsScored(tournamentTableView.getSelectionModel().getSelectedItem())
+		)));
 	}
 	
 	@FXML
@@ -110,15 +144,18 @@ public class DayHandlingController {
 					"New Day", 
 					(DayEditDialogController c, Stage s) -> {
 						Day newDay = new Day();
-						newDay.getTournament().set(this.tournamentTableView.getSelectionModel().getSelectedItem());
-						newDay.getNumber().set(newDay.getTournament().get().getDays().size()+1);
 						c.setup(s,newDay); 
 					},
 					(c) -> {return Optional.ofNullable(c.isClickedOK() ? c.getDay() : null);}
 					);
 			if (d.isPresent()) {
-				//we have added a new player. We can add it to the DAO
-				Day p1 = this.mainApp.getDAO().add(d.get());
+				//we have added a new day. We copy the tournament from the newly generated team, we flush it, we add the tournament inside the DAO
+				//and then we readd the tournament inside it. Why do we do that? because the dao start listening for changes in the tournament object on
+				//after addTDay. If we didn't do this procedure the DAO would never know about the new tournament
+				Day day = this.mainApp.getDAO().add(d.get());
+				day.getNumber().set(this.tournamentTableView.getSelectionModel().getSelectedItem().getDays().size()+1);
+				day.add(this.tournamentTableView.getSelectionModel().getSelectedItem());
+				
 				this.dayTableView.getSelectionModel().clearSelection();
 			}
 		} catch (Exception e) {
@@ -178,11 +215,12 @@ public class DayHandlingController {
 	
 	private void handleUserSelectTournament(ObservableValue<? extends Tournament> observableValue, Tournament oldValue, Tournament newValue) {
 		try {
-			this.daysToDisplay.clear();
+			//this.daysToDisplay.clear();
 			if (newValue == null) {
 				//we delete the last item of the list
+				this.dayTableView.setItems(FXCollections.emptyObservableList());
 			} else {
-				this.daysToDisplay.addAll(newValue.getDays());
+				this.dayTableView.setItems(newValue.getDays());
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -198,11 +236,16 @@ public class DayHandlingController {
 				this.dayDateLabel.setText("");
 				this.matchesToDoLabel.setText("");
 				this.matchesDoneLabel.setText("");
+				
+				this.matchesTableView.setItems(FXCollections.emptyObservableList());
 			} else {
 				this.dayNumberLabel.setText(Integer.toString(newValue.getNumber().get()));
 				this.dayDateLabel.setText(Utils.getStandardDateFrom(newValue.getDate().get()));
 				this.matchesToDoLabel.setText(Integer.toString(newValue.getNumberOfMatchesToDo()));
 				this.matchesDoneLabel.setText(Integer.toString(newValue.getNumberOfMatchesDone()));
+				
+				this.matchesTableView.setItems(newValue.getMatches());
+				
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -216,6 +259,7 @@ public class DayHandlingController {
 	 */
 	@FXML
 	private void handleGenerateMatches() {
+		LOG.debug("Starting generate matches");
 		if (this.tournamentTableView.getSelectionModel().getSelectedItem() == null) {
 			Utils.createDefaultErrorAlert("Can't generate matches", "In order to generate matches you need to select a tournament");
 			return;
@@ -236,10 +280,28 @@ public class DayHandlingController {
 			return;
 		}
 		
-		RankingComputer rm = new SwissRankingManager();
+		RankingComputer<Team> rm = new SwissRankingManager();
 		//we call the ranking immediately: 
 		List<Team> ranks = rm.getDayRanking(day);
-		
+		PairComputer<Team> pairComputer = new SubsequentPairComputer<>();
+		DummyMatchHandler dummyMatchHandler = new AddDefaultVictoryDummyMatchHandler();
+		day.getMatches().clear();
+		for (Pair<Team,Optional<Team>> pair : pairComputer.computePairs(ranks)) {
+			if (pair.getValue().isPresent()) {
+				day.getMatches().add(new Match(
+						pair.getKey(), 
+						pair.getValue().get(),
+						day, 
+						Utils.DEFAULT_POINTS_EARNED_FROM_WINNING,
+						Utils.DEFAULT_POINTS_EARNED_FROM_LOSING, 
+						0, 
+						0,
+						MatchStatus.TODO));
+			} else {
+				//the second pair is empty. We need to perform an action to establish what will happen to the unpaired team
+				//dummyMatchHandler.accept(day, pair.getKey());
+			}
+		}
 		
 	}
 	

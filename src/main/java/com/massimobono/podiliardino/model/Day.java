@@ -45,6 +45,28 @@ public class Day implements Indexable {
 	}
 	
 	/**
+	 * Add a new relationship "divide" between tournament-day
+	 * 
+	 * @param t
+	 */
+	public void add(Tournament t) {
+		this.tournament.set(t);
+		t.getDays().add(this);
+	}
+	
+	public void add(Match m) {
+		m.getDay().get().getMatches().add(m);
+		m.getTeam1().get().getMatches().add(m);
+		m.getTeam2().get().getMatches().add(m);
+	}
+	
+	public void remove(Match m) {
+		m.getDay().get().getMatches().remove(m);
+		m.getTeam1().get().getMatches().remove(m);
+		m.getTeam2().get().getMatches().remove(m);
+	}
+	
+	/**
 	 * We get all the matches in the day and then we retain only those with status {@link MatchStatus#TODO}
 	 * 
 	 * @return the number of mathces that we have left in order to conclude the day

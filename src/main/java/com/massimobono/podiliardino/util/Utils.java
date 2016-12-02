@@ -11,6 +11,8 @@ public class Utils {
 	public static final String STANDARD_DATE_PATTERN = "dd-MM-yyyy";
 	public static final String  EMPTY_PHONE = "";
 	public static final String EMPTY_DATE = "";
+	public static final int DEFAULT_POINTS_EARNED_FROM_WINNING = 3;
+	public static final int DEFAULT_POINTS_EARNED_FROM_LOSING = 0;
 	
 	/**
 	 * 

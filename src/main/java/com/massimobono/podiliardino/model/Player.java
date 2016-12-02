@@ -53,6 +53,26 @@ public class Player implements Indexable{
 	public Player() {
 		this(0, "", "", LocalDate.now(), null, new ArrayList<>());
 	}
+	
+	/**
+	 * Add a new relationship "compose" between player-team
+	 * 
+	 * @param t
+	 */
+	public void add(Team t) {
+		this.teams.add(t);
+		t.getPlayers().add(this);
+	}
+	
+	/**
+	 * Removes a relationship "compose" between player-team
+	 * 
+	 * @param t
+	 */
+	public void remove(Team t) {
+		this.teams.remove(t);
+		t.getPlayers().remove(this);
+	}
 
 	/**
 	 * @return the name
@@ -105,7 +125,7 @@ public class Player implements Indexable{
 		return phone;
 	}
 	
-	public ObservableList<Team> getTeamWithPlayer() {
+	public ObservableList<Team> getTeams() {
 		return this.teams;
 	}
 	

@@ -61,6 +61,34 @@ public class Tournament implements Indexable {
 	}
 	
 	/**
+	 * Add a new relationship "partecipate" between tournament-team
+	 * 
+	 * @param p
+	 */
+	public void add(Partecipation p) {
+		p.getTeam().get().add(p);
+	}
+	
+	/**
+	 * Removes relationship "partecipate" between tournament-team
+	 * 
+	 * @param p
+	 */
+	public void remove(Partecipation p) {
+		p.getTeam().get().remove(p);
+	}
+	
+	/**
+	 * Add a new relationship "divide" between tournament-day
+	 * 
+	 * @param d
+	 */
+	public void add(Day d) {
+		this.days.add(d);
+		d.getTournament().set(this);
+	}
+	
+	/**
 	 * 
 	 * @return the number of players that will be attending to the tournament
 	 */
