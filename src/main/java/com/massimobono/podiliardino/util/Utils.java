@@ -84,7 +84,6 @@ public class Utils {
 		alert.setTitle("Error Dialog");
 		alert.setHeaderText(header);
 		alert.setContentText(body);
-		alert.showAndWait();
 		return alert;
 	}
 	
@@ -102,5 +101,13 @@ public class Utils {
 
 		Optional<ButtonType> result = alert.showAndWait();
 		return result.get() == ButtonType.OK;
+	}
+	
+	public Alert createInformationAlert(String header, String body) {
+		Alert alert = new Alert(AlertType.INFORMATION);
+		alert.setTitle("Information");
+		alert.setHeaderText(header);
+		alert.setContentText(body);
+		return alert;
 	}
 }

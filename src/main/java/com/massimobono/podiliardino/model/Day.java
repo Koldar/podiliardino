@@ -46,6 +46,14 @@ public class Day implements Indexable {
 	}
 	
 	/**
+	 * 
+	 * @return True if there are no matched to do in this day
+	 */
+	public boolean isDayCompleted() {
+		return this.getNumberOfMatchesToDo() == 0;
+	}
+	
+	/**
 	 * Add a new relationship "divide" between tournament-day
 	 * 
 	 * @param t

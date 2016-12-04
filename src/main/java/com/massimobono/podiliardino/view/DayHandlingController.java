@@ -1,5 +1,7 @@
 package com.massimobono.podiliardino.view;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -14,6 +16,8 @@ import com.massimobono.podiliardino.extensibles.dummymatch.AddDefaultVictoryDumm
 import com.massimobono.podiliardino.extensibles.dummymatch.DummyMatchHandler;
 import com.massimobono.podiliardino.extensibles.matcher.PairComputer;
 import com.massimobono.podiliardino.extensibles.matcher.SubsequentPairComputer;
+import com.massimobono.podiliardino.extensibles.ranking.CSVRankingFormatter;
+import com.massimobono.podiliardino.extensibles.ranking.Formatter;
 import com.massimobono.podiliardino.extensibles.ranking.RankingComputer;
 import com.massimobono.podiliardino.extensibles.ranking.SwissRankingManager;
 import com.massimobono.podiliardino.model.Day;
@@ -31,6 +35,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
@@ -144,6 +149,14 @@ public class DayHandlingController {
 				Utils.createDefaultErrorAlert("Can't add a new day", "In order to create a new day, a tournament needs to be selected in the current frame");
 				return;
 			}
+			Tournament t = this.tournamentTableView.getSelectionModel().getSelectedItem();
+			for (Day d : t.getDays()) {
+				if (!d.isDayCompleted()) {
+					Utils.createDefaultErrorAlert("Can't add a new day", "In order to create a new day, all previous days of the tournament needs to be completed (no matches are left to run)");
+					return;
+				}
+			}
+			
 			Optional<Day> d = this.mainApp.showCustomDialog(
 					"DayEditDialog", 
 					"New Day", 
@@ -227,7 +240,6 @@ public class DayHandlingController {
 	
 	private void handleUserSelectTournament(ObservableValue<? extends Tournament> observableValue, Tournament oldValue, Tournament newValue) {
 		try {
-			//this.daysToDisplay.clear();
 			if (newValue == null) {
 				//we delete the last item of the list
 				this.dayTableView.setItems(FXCollections.emptyObservableList());
@@ -349,12 +361,32 @@ public class DayHandlingController {
 	}
 	
 	@FXML
-	private void handleRemoveMatchResult() {
-		
-	}
-	
-	@FXML
 	private void printRanking() {
+		
+		try {
+			if (this.dayTableView.getSelectionModel().getSelectedItem() == null) {
+				Utils.createDefaultErrorAlert("Can't generate ranking", "In order to generate a ranking you need to select a day");
+				return;
+			}
+			
+			Day day = this.dayTableView.getSelectionModel().getSelectedItem();
+			RankingComputer<Team> rm = new SwissRankingManager();
+			List<Team> ranks = rm.getDayRanking(day);
+			File outfile = new File("ranking.csv");
+			Formatter<List<Team>, File> rf = new CSVRankingFormatter(outfile.getAbsolutePath(), day);
+			rf.format(ranks);
+			
+			Alert alert = Utils.createDefaultErrorAlert("Ranking produced", String.format(
+					"The ranking of the day %d of tournament %s has been produced. You can view it at %s", 
+					day.getNumber().get(),
+					day.getTournament().get().getName().get(),
+					outfile.getAbsolutePath()
+					));
+			alert.showAndWait();
+		} catch (Exception e) {
+			ExceptionAlert.showAndWait(e);
+			e.printStackTrace();
+		}
 		
 	}
 }

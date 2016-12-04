@@ -59,6 +59,7 @@ public class Tournament implements Indexable {
 	public Tournament() {
 		this(0, "", LocalDate.now(), null, new ArrayList<>(), new ArrayList<>());
 	}
+
 	
 	/**
 	 * Add a new relationship "partecipate" between tournament-team

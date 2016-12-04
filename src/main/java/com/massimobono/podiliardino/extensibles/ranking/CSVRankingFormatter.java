@@ -1,0 +1,64 @@
+package com.massimobono.podiliardino.extensibles.ranking;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Arrays;
+import java.util.Formattable;
+import java.util.List;
+
+import com.massimobono.podiliardino.model.Day;
+import com.massimobono.podiliardino.model.Team;
+import com.massimobono.podiliardino.model.Tournament;
+
+/**
+ * Allows you to convert a ranking into a txt file
+ * 
+ * @author massi
+ *
+ */
+public class CSVRankingFormatter implements Formatter<List<Team>, File> {
+
+	private static final String DELIMITER = ",";
+	private static final String CSVOPTIONS = "";
+	private static final String HEADER = String.join(DELIMITER, "RANK", "TEAM", "POINTS", "GOALS SCORED", "GOALS RECEIVED", "GOALS DIFFERENCE", "OPPONENTS GOALS");
+	
+	private File txtFile;
+	private Day day;
+	
+	public CSVRankingFormatter(String txtFile, Day day) throws IOException{
+		this.txtFile = new File(txtFile);
+		if (!this.txtFile.exists()) {
+			this.txtFile.createNewFile();
+		}
+		this.day = day;
+	}
+	
+	@Override
+	public File format(List<Team> toFormat) {
+		Team team = null;
+		
+		try (PrintWriter pw = new PrintWriter(this.txtFile)) {
+			pw.println(HEADER);
+			for (int i=0 ; i<toFormat.size(); i++) {
+				team = toFormat.get(i);
+				pw.println(String.join(DELIMITER,
+						String.format("%3d", i+1),
+						team.getName().get(),
+						String.format("%3d", team.getPointsScoredIn(this.day.getTournament().get())),
+						String.format("%3d", team.getNumberOfGoalsScored(this.day.getTournament().get())),
+						String.format("%3d", team.getNumberOfGoalsReceived(this.day.getTournament().get())),
+						String.format("%3d", team.getNumberOfGoalsScored(this.day.getTournament().get()) - team.getNumberOfGoalsReceived(this.day.getTournament().get())),
+						String.format("%3d", team.getNumberOfGoalsYourOpponentsScored(this.day.getTournament().get()))
+						));
+			}
+			pw.flush();
+		} catch (FileNotFoundException e) {
+			//it should be impossible that this exception happens... but who knows?
+			e.printStackTrace();
+		}
+		return this.txtFile;
+	}
+
+}
