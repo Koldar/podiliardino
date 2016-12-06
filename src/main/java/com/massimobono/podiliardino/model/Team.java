@@ -52,6 +52,14 @@ public class Team implements Indexable {
 	}
 	
 	/**
+	 * 
+	 * @return true if this team represents some special team for the application
+	 */
+	public boolean isSpecial() {
+		return this.equals(Utils.DUMMYTEAM);
+	}
+	
+	/**
 	 * Check if the current team has used the bye in the tournament
 	 * @param t the tournament to check
 	 * @param checkDaysWithNoMatches true if you want to take into account days with no matches. False otherwise.
@@ -144,7 +152,6 @@ public class Team implements Indexable {
 			Match m = this.matches.get(0);
 			this.remove(m);
 		}
-		
 	}
 	
 	/**
