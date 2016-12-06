@@ -140,7 +140,9 @@ public class Day implements Indexable {
 		return this.getMatches()
 		.parallelStream()
 		.filter(m -> m.getStatus().get() == MatchStatus.DONE)
-		.filter(m -> !m.getLoser().equals(Utils.DUMMYTEAM) || includeBye) //implication
+		.filter(m -> {
+			return !m.getLoser().equals(Utils.DUMMYTEAM) || includeBye;
+		}) //implication
 		.mapToInt(m -> 1)
 		.sum();
 	}

@@ -35,7 +35,7 @@ public class Match {
 	 * @return true if the team has fought inside this match, false otherwise
 	 */
 	public boolean hasTeamFoughtInThisMatch(Team t) throws UnsupportedOperationException{
-		return (this.team1.get() == t)||(this.team2.get() == t);
+		return (this.team1.get().equals(t))||(this.team2.get().equals(t));
 	}
 	
 	/**

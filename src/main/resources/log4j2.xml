@@ -14,7 +14,7 @@
 		</RollingFile>
 		<Console name="console" target="SYSTEM_OUT">
 			<PatternLayout>
-				<Pattern>%date %level %logger:%line[%threadName] %message%n</Pattern>
+				<Pattern>%date %level %logger{1}:%line[%threadName] %message%n</Pattern>
 			</PatternLayout>
 		</Console>
 	</Appenders>

@@ -81,7 +81,7 @@ public class DistinctMatchesByeAwarePairComputer<T extends Team> implements Pair
 						continue;
 					}
 					//we need to check if the team is already paired with someone else
-					if (this.hasAlreadyASetupMatch(team1, retVal)) {
+					if (this.hasAlreadyASetupMatch(team2, retVal)) {
 						continue;
 					}
 					//we check if team1 and team2 has already fought against
@@ -92,6 +92,11 @@ public class DistinctMatchesByeAwarePairComputer<T extends Team> implements Pair
 					retVal.add(new Pair<>(team1, team2));
 					LOG.info("{} paired with lower-ranked {}", team1, team2);
 					pairFound = true;
+					break;
+				}
+				
+				if (pairFound) {
+					break;
 				}
 				//ok, this team has fought all the teams below itself (according to a specific ranking). We look at teams higher in ranking
 				for (int j=(i-1); j>=0; j--) {
@@ -101,7 +106,7 @@ public class DistinctMatchesByeAwarePairComputer<T extends Team> implements Pair
 						continue;
 					}
 					//we need to check if the team is already paired with someone else
-					if (this.hasAlreadyASetupMatch(team1, retVal)) {
+					if (this.hasAlreadyASetupMatch(team2, retVal)) {
 						continue;
 					}
 					//we check if team1 and team2 has already fought against
@@ -112,7 +117,13 @@ public class DistinctMatchesByeAwarePairComputer<T extends Team> implements Pair
 					retVal.add(new Pair<>(team1, team2));
 					LOG.info("{} paired with higher-ranked {}", team1, team2);
 					pairFound = true;
+					break;
 				}
+				
+				if (pairFound) {
+					break;
+				}
+				
 				//ok, it seems this team has fought against everyone. It appears we need to increase maximumNumberOfMatchesAllowed
 				maximumNumberOfMatchesAllowed++;
 			}
@@ -163,10 +174,12 @@ public class DistinctMatchesByeAwarePairComputer<T extends Team> implements Pair
 		//compute the list of teams with minimum bye
 		for (int i=(ranking.size()-1); i>=0; i--){
 			teamAnalyzed = ranking.get(i);
-			bye = teamAnalyzed.checkByeNumber(tournament);
+			bye = teamAnalyzed.checkByeNumber(tournament, false);
 			if (minBye > bye) {
 				minBye = bye;
 				teamsWithMinimumBye.clear();
+			}
+			if (minBye == bye) {
 				teamsWithMinimumBye.add(teamAnalyzed);
 			}
 		}

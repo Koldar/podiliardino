@@ -8,6 +8,7 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import com.massimobono.podiliardino.util.ObservableDistinctList;
+import com.massimobono.podiliardino.util.Utils;
 
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.ObjectProperty;
@@ -53,12 +54,17 @@ public class Team implements Indexable {
 	/**
 	 * Check if the current team has used the bye in the tournament
 	 * @param t the tournament to check
+	 * @param checkDaysWithNoMatches true if you want to take into account days with no matches. False otherwise.
+	 * Usually you want to not take into account those days because they are temporary
 	 * @return the number of bye of this team
 	 */
-	public int checkByeNumber(Tournament t) {
+	public int checkByeNumber(Tournament t, boolean checkDaysWithNoMatches) {
 		int retVal = 0;
 		for (Day d : t.getDays()) {
-			if (!this.hasTeamFoughtInDay(d)) {
+			if (!checkDaysWithNoMatches && (d.getMatches().size() == 0)) {
+				continue;
+			}
+			if (!this.hasTeamFoughtInDay(d, false)) {
 				retVal++;
 			}
 		}
@@ -68,14 +74,16 @@ public class Team implements Indexable {
 	/**
 	 * Check if the current team has fought at least once in a given tournament day
 	 * @param d the day to check
+	 * @param includeBye true if you want to include the "byes" as "match fought", false otherwise
 	 * @return true if the team has fought at least once in that day, false otherwise
 	 */
-	public boolean hasTeamFoughtInDay(Day d) {
+	public boolean hasTeamFoughtInDay(Day d, boolean includeBye) {
 		return this.getMatches()
 		.parallelStream()
 		.filter(m -> m.getDay().get() == d) //consider only a particular day
 		.filter(m -> m.getStatus().get() == MatchStatus.DONE)
 		.filter(m -> m.hasTeamFoughtInThisMatch(this))
+		.filter(m -> includeBye || !m.hasTeamFoughtInThisMatch(Utils.DUMMYTEAM))
 		.count() > 0;
 		
 	}
@@ -300,10 +308,7 @@ public class Team implements Indexable {
 
 	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((id == null) ? 0 : id.hashCode());
-		return result;
+		return (int)id.get();
 	}
 
 	@Override
@@ -318,7 +323,7 @@ public class Team implements Indexable {
 		if (id == null) {
 			if (other.id != null)
 				return false;
-		} else if (!id.equals(other.id))
+		} else if (id.get() !=other.id.get())
 			return false;
 		return true;
 	}
