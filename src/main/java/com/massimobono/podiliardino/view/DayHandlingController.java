@@ -1,6 +1,7 @@
 package com.massimobono.podiliardino.view;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
@@ -42,6 +43,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import javafx.util.Pair;
 
@@ -380,17 +383,31 @@ public class DayHandlingController {
 			Day day = this.dayTableView.getSelectionModel().getSelectedItem();
 			RankingComputer<Team> rm = new SwissRankingManager();
 			List<Team> ranks = rm.getDayRanking(day);
-			File outfile = new File("ranking.csv");
-			Formatter<List<Team>, File> rf = new CSVRankingFormatter(outfile.getAbsolutePath(), day);
-			rf.format(ranks);
 			
-			Utils.createInformationAlert("Ranking produced", String.format(
-					"The ranking of the day %d of tournament %s has been produced. You can view it at %s", 
-					day.getNumber().get(),
-					day.getTournament().get().getName().get(),
-					outfile.getAbsolutePath()
-					));
+			
+			FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Save Ranking");
+            fileChooser.getExtensionFilters().add(new ExtensionFilter("CSV", "*.csv"));
+            fileChooser.setInitialFileName("ranking.csv");
+            File outFile = fileChooser.showSaveDialog(this.mainApp.getPrimaryStage());
+            if (outFile != null) {
+            	Formatter<List<Team>, File> rf = new CSVRankingFormatter(outFile.getAbsolutePath(), day);
+    			rf.format(ranks);
+    			
+    			Utils.createInformationAlert("Ranking produced", String.format(
+    					"The ranking of the day %d of tournament %s has been produced. You can view it at %s", 
+    					day.getNumber().get(),
+    					day.getTournament().get().getName().get(),
+    					outFile.getAbsolutePath()
+    					));
+            }
+			
 		} catch (Exception e) {
+			Throwable cause = Utils.getBaseCause(e);
+			if (cause.getClass() == FileNotFoundException.class) {
+				Utils.createDefaultErrorAlert("Cannot perform operator", cause.getLocalizedMessage());
+				return;
+			}
 			ExceptionAlert.showAndWait(e);
 			e.printStackTrace();
 			LOG.catching(e);
@@ -412,17 +429,30 @@ public class DayHandlingController {
 				return;
 			}
 			
-			File outFile = new File("matches.csv");
-			Formatter<Day, File> matchesFormatter = new SimpleCSVMatchesFormatter(outFile.getAbsolutePath());
-			outFile = matchesFormatter.format(day);
+			FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Save Matches");
+            fileChooser.setInitialFileName("matches.csv");
+            fileChooser.getExtensionFilters().add(new ExtensionFilter("CSV", "*.csv"));
+            File outFile = fileChooser.showSaveDialog(this.mainApp.getPrimaryStage());
+            if (outFile != null) {
+    			Formatter<Day, File> matchesFormatter = new SimpleCSVMatchesFormatter(outFile.getAbsolutePath());
+    			outFile = matchesFormatter.format(day);
+    			
+    			Utils.createInformationAlert("Matches produced", String.format(
+    					"The matches needed to do of the day %d of tournament %s has been produced. You can view it at %s", 
+    					day.getNumber().get(),
+    					day.getTournament().get().getName().get(),
+    					outFile.getAbsolutePath()
+    					));
+            }
 			
-			Utils.createInformationAlert("Matches produced", String.format(
-					"The matches needed to do of the day %d of tournament %s has been produced. You can view it at %s", 
-					day.getNumber().get(),
-					day.getTournament().get().getName().get(),
-					outFile.getAbsolutePath()
-					));
+			
 		} catch (Exception e) {
+			Throwable cause = Utils.getBaseCause(e);
+			if (cause.getClass() == FileNotFoundException.class) {
+				Utils.createDefaultErrorAlert("Cannot perform operator", cause.getLocalizedMessage());
+				return;
+			}
 			ExceptionAlert.showAndWait(e);
 			LOG.catching(e);
 			e.printStackTrace();

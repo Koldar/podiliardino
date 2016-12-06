@@ -8,6 +8,7 @@ import java.io.PrintWriter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.massimobono.podiliardino.extensibles.FormatException;
 import com.massimobono.podiliardino.extensibles.Formatter;
 import com.massimobono.podiliardino.model.Day;
 import com.massimobono.podiliardino.model.Match;
@@ -40,7 +41,7 @@ public class SimpleCSVMatchesFormatter implements Formatter<Day, File> {
 	}
 	
 	@Override
-	public File format(Day toFormat) {
+	public File format(Day toFormat) throws FormatException{
 		int i = 0;
 		
 		try (PrintWriter pw = new PrintWriter(this.csvFile)) {
@@ -58,8 +59,7 @@ public class SimpleCSVMatchesFormatter implements Formatter<Day, File> {
 			}
 			pw.flush();
 		} catch (FileNotFoundException e) {
-			//it should be impossible that this exception happens... but who knows?
-			LOG.catching(e);
+			throw new FormatException(e);
 		}
 		return this.csvFile;
 	}

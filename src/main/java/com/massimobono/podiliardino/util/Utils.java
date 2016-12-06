@@ -112,4 +112,15 @@ public class Utils {
 		alert.showAndWait();
 		return alert;
 	}
+	
+	/**
+	 * @param e
+	 * @return the root cause of the {@link Throwable}
+	 */
+	public static Throwable getBaseCause(Throwable e) {
+		while (e.getCause() != null) {
+			e = e.getCause();
+		}
+		return e;
+	}
 }

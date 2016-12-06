@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Formattable;
 import java.util.List;
 
+import com.massimobono.podiliardino.extensibles.FormatException;
 import com.massimobono.podiliardino.extensibles.Formatter;
 import com.massimobono.podiliardino.model.Day;
 import com.massimobono.podiliardino.model.Team;
@@ -36,7 +37,7 @@ public class CSVRankingFormatter implements Formatter<List<Team>, File> {
 	}
 	
 	@Override
-	public File format(List<Team> toFormat) {
+	public File format(List<Team> toFormat) throws FormatException {
 		Team team = null;
 		
 		try (PrintWriter pw = new PrintWriter(this.csvFile)) {
@@ -54,8 +55,7 @@ public class CSVRankingFormatter implements Formatter<List<Team>, File> {
 			}
 			pw.flush();
 		} catch (FileNotFoundException e) {
-			//it should be impossible that this exception happens... but who knows?
-			e.printStackTrace();
+			throw new FormatException(e);
 		}
 		return this.csvFile;
 	}

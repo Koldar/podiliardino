@@ -228,4 +228,8 @@ public class Main extends Application {
 		return this.dao;
 	}
 	
+	public Stage getPrimaryStage() {
+		return this.primaryStage;
+	}
+	
 }
