@@ -387,6 +387,7 @@ public class DayHandlingController {
 			
 			FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("Save Ranking");
+            fileChooser.setInitialDirectory(new File("."));
             fileChooser.getExtensionFilters().add(new ExtensionFilter("CSV", "*.csv"));
             fileChooser.setInitialFileName("ranking.csv");
             File outFile = fileChooser.showSaveDialog(this.mainApp.getPrimaryStage());
@@ -431,6 +432,7 @@ public class DayHandlingController {
 			
 			FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("Save Matches");
+            fileChooser.setInitialDirectory(new File("."));
             fileChooser.setInitialFileName("matches.csv");
             fileChooser.getExtensionFilters().add(new ExtensionFilter("CSV", "*.csv"));
             File outFile = fileChooser.showSaveDialog(this.mainApp.getPrimaryStage());
