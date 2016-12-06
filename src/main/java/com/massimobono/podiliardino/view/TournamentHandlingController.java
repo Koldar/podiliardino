@@ -117,6 +117,11 @@ public class TournamentHandlingController {
 								} else  {
 									CheckableListCellViewController data = new CheckableListCellViewController();
 									final Tournament tournament = tournamentTable.getSelectionModel().getSelectedItem();
+									if (tournament == null) {
+										setText(null);
+										setGraphic(null);
+										return;
+									}
 									//adds the listener
 									data.getCheckBox().setOnAction(e -> {
 										Partecipation partecipation = null;
@@ -217,15 +222,15 @@ public class TournamentHandlingController {
 	private void handleRemoveTournament() {
 		try {
 			if (this.tournamentTable.getSelectionModel().getSelectedItem() == null) {
-				//the user has selected nothing
+				Utils.createDefaultErrorAlert("Can't remove tournament", "In order to remove a tournament you need to select one first.");
 				return;
 			}
 			Tournament t =this.tournamentTable.getSelectionModel().getSelectedItem();
-			for (Partecipation p : t.getPartecipations()) {
-				p.getTeam().get().getPartecipations().remove(p);
+			if (!Utils.waitUserReplyForConfirmationDialog(String.format("Are you sure to delete tournament \"%s\"?", t.getName().get()), "Removing a tournament will delete all its days and the matches of that tournament within the database! Are you sure?")){
+				return;
 			}
-			t.getPartecipations().clear();
 			this.mainApp.getDAO().remove(t);
+			this.tournamentTable.getSelectionModel().clearSelection();
 		} catch (DAOException e) {
 			e.printStackTrace();
 			ExceptionAlert.showAndWait(e);

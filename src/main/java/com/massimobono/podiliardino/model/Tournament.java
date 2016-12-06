@@ -119,6 +119,16 @@ public class Tournament implements Indexable {
 	}
 	
 	/**
+	 * Removes all the partecipations betwee tournament and teams
+	 */
+	public void removeAllPartecipations() {
+		while (!this.partecipations.isEmpty()){
+			Partecipation p = this.partecipations.get(0);
+			this.remove(p);
+		}
+	}
+	
+	/**
 	 * Add a new relationship "divide" between tournament-day
 	 * 
 	 * @param d
@@ -126,6 +136,12 @@ public class Tournament implements Indexable {
 	public void add(Day d) {
 		this.days.add(d);
 		d.getTournament().set(this);
+	}
+	
+	public void removeAllDays() {
+		while (!this.days.isEmpty()) {
+			Day d = this.days.get(0);
+		}
 	}
 	
 	/**

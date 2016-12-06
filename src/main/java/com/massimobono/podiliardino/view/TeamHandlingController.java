@@ -149,11 +149,10 @@ public class TeamHandlingController {
 				return;
 			}
 			Team t =this.teamTable.getSelectionModel().getSelectedItem();
-			for (Partecipation p : t.getPartecipations()) {
-				p.getTournament().get().getPartecipations().remove(p);
+			if (!Utils.waitUserReplyForConfirmationDialog(String.format("Do you really want to delete team \"%s\"?",t.getName().get()), "Removing the team wil lalso remove every tournament the team has ever partecipate in in, all its days and all its matches. Are you sure?")){
+				return;
 			}
-			t.getPartecipations().clear();
-			this.mainApp.getDAO().removeTeam(t);
+			this.mainApp.getDAO().remove(t);
 		} catch (DAOException e) {
 			e.printStackTrace();
 			ExceptionAlert.showAndWait(e);

@@ -82,7 +82,17 @@ public interface DAO extends Closeable{
 	 */
 	public Player updatePlayer(Player player) throws DAOException;
 	
-	public void removePlayer(Player p) throws DAOException;
+	/**
+	 * Removes a player within the DAO
+	 * 
+	 * The function will <b>automatically remove</b> all the relationships of the player as well.
+	 * Hence the function will automatically remove all the teams where the player was in, with all the tournaments, the days and the matches connected
+	 * This because logics heavily uses number of partecipants to take care of data
+	 * 
+	 * @param p
+	 * @throws DAOException
+	 */
+	public void remove(Player p) throws DAOException;
 	
 	/**
 	 * like {@link #getAllPlayers()} but it returns an {@link ObservableList}
@@ -120,7 +130,17 @@ public interface DAO extends Closeable{
 	
 	public Collection<Team> getAllTeamsThat(Function<Team, Boolean> filter) throws DAOException;
 	
-	public void removeTeam(Team team) throws DAOException;
+	/**
+	 * Removes a team within the DAO
+	 * 
+	 * The function will <b>automatically remove</b> all the relationships of the team as well.
+	 * Hence the function will automatically remove all the matches where the team took part and all the tournament it partecipate in.
+	 * This because logics heavily uses number of partecipants to take care of data
+	 * 
+	 * @param tournament
+	 * @throws DAOException
+	 */
+	public void remove(Team team) throws DAOException;
 	
 	/**
 	 * 
@@ -159,6 +179,15 @@ public interface DAO extends Closeable{
 	
 	public Tournament update(Tournament tournament) throws DAOException;
 	
+	/**
+	 * Removes a tournament within the DAO
+	 * 
+	 * The function will <b>automatically remove</b> all the relationships of the tournament as well.
+	 * Hence the function wil lautomatically remove dependencies with Day and all {@link Partecipation} linked
+	 * 
+	 * @param tournament
+	 * @throws DAOException
+	 */
 	public void remove(Tournament tournament) throws DAOException;
 	
 	public ObservableList<Tournament> getTournamentList() throws DAOException;

@@ -131,16 +131,11 @@ public class PlayerHandlingController {
 				//the user has selected nothing
 				return;
 			}
-			Player p =this.playersTable.getSelectionModel().getSelectedItem();
-			Collection<Team> teamWithPlayer = this.mainApp.getDAO().getAllTeamsThat(t -> t.getPlayers().contains(p));
-			if (!teamWithPlayer.isEmpty()) {
-				Utils.createDefaultErrorAlert(
-					String.format("Player \"%s %s\" is inside the following teams:", p.getName().get(), p.getSurname().get()),
-					String.join("\n", teamWithPlayer.stream().map(t -> t.getName().get()).collect(Collectors.toList()))
-				);
+			Player p = this.playersTable.getSelectionModel().getSelectedItem();
+			if (!Utils.waitUserReplyForConfirmationDialog(String.format("Do you really want to remove the player \"%s\"?", p.getName().get()), "If you remove the following player all the team he belongs will be removed as well. This will also removes all the tournament they partecipate in with all the related days and related matches. Are you sure?")){
 				return;
 			}
-			this.mainApp.getDAO().removePlayer(p);
+			this.mainApp.getDAO().remove(p);
 		} catch (DAOException e) {
 			e.printStackTrace();
 			ExceptionAlert.showAndWait(e);

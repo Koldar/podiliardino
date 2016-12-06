@@ -107,6 +107,16 @@ public class Team implements Indexable {
 	}
 	
 	/**
+	 * Removes all the relationships bettewn this team and players
+	 */
+	public void removeAllPlayers(){
+		while (!this.players.isEmpty()){
+			Player p = this.players.get(0);
+			this.remove(p);
+		}
+	}
+	
+	/**
 	 * Add a new relationship "partecipate" between tournament-team
 	 * 
 	 * @param p the partecipation to add througout all the model entities involved in the relationship
@@ -124,6 +134,17 @@ public class Team implements Indexable {
 	public void remove(Partecipation p) {
 		this.partecipations.remove(p);
 		p.getTournament().get().getPartecipations().remove(p);
+	}
+	
+	/**
+	 * Removes all the relationships of team-match-team-in-day of this particular team
+	 */
+	public void removeAllMatches() {
+		while (!this.matches.isEmpty()) {
+			Match m = this.matches.get(0);
+			this.remove(m);
+		}
+		
 	}
 	
 	/**

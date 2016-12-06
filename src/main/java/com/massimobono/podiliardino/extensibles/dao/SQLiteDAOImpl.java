@@ -774,7 +774,7 @@ public class SQLiteDAOImpl implements DAO {
 	}
 
 	@Override
-	public void removePlayer(final Player p) throws DAOException {
+	public void remove(final Player p) throws DAOException {
 		this.abstractRemove(
 				p,
 				(c,s,ps) -> {
@@ -787,7 +787,19 @@ public class SQLiteDAOImpl implements DAO {
 						return e;
 					}
 				},
-				() -> null,
+				() -> {
+					try {
+						//we remove all the team annexed
+						while (!p.getTeams().isEmpty()){
+							Team t = p.getTeams().get(0);
+							p.remove(t);
+							this.remove(t);
+						}
+						return null;
+					} catch (DAOException e) {
+						return e;
+					}
+				},
 				() -> {this.players.remove(p.getId()); return null;}
 				);
 	}
@@ -1077,7 +1089,7 @@ public class SQLiteDAOImpl implements DAO {
 	}
 
 	@Override
-	public void removeTeam(final Team team) throws DAOException {
+	public void remove(final Team team) throws DAOException {
 		this.abstractRemove(
 				team, 
 				(c,s,ps) -> {
@@ -1091,7 +1103,22 @@ public class SQLiteDAOImpl implements DAO {
 						return e;
 					}
 				},
-				() -> null,
+				() -> {
+					try {
+						//we need to remove all the matches
+						team.removeAllMatches();
+						//we need to remove all the composition
+						team.removeAllPlayers();
+						//we need to remove all the tournaments where this team took part. This because all the logics are based upon the partecipants
+						while (!team.getPartecipations().isEmpty()) {
+							Partecipation p = team.getPartecipations().get(0);
+							this.remove(p.getTournament().get());
+						}
+						return null;
+					} catch (DAOException e){
+						return e;
+					}
+				},
 				() -> {this.teams.remove(team.getId()); return null;}
 				);
 	}
@@ -1252,7 +1279,6 @@ public class SQLiteDAOImpl implements DAO {
 				tournament, 
 				(c,s,ps) -> {
 					try {
-						//TODO remove days
 						ps.getDeleteTournament().setLong(1, tournament.getId());
 						ps.getDeleteTournament().executeUpdate();
 						return null;
@@ -1260,8 +1286,25 @@ public class SQLiteDAOImpl implements DAO {
 						return e;
 					}
 				},
-				() -> null,
-				() -> {this.tournaments.remove(tournament.getId()); return null;});
+				() -> {
+					try {
+						//we need to remove every relationship before removing the tournament
+						tournament.removeAllPartecipations();
+						//we need to remove all the days (both in model and in db). This because day is a weak entity related to tournament
+						while (!tournament.getDays().isEmpty()) {
+							Day d = tournament.getDays().get(0);
+							this.remove(d);
+						}
+						tournament.getDays().clear();
+						return null;
+					} catch (DAOException e) {
+						return e;
+					}
+				},
+				() -> {
+					this.tournaments.remove(tournament.getId()); 
+					return null;
+				});
 	}
 
 	@Override
