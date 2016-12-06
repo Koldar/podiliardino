@@ -104,7 +104,7 @@ public class Utils {
 		return result.get() == ButtonType.OK;
 	}
 	
-	public Alert createInformationAlert(String header, String body) {
+	public static Alert createInformationAlert(String header, String body) {
 		Alert alert = new Alert(AlertType.INFORMATION);
 		alert.setTitle("Information");
 		alert.setHeaderText(header);

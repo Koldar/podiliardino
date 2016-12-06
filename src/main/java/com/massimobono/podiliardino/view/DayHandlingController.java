@@ -380,7 +380,7 @@ public class DayHandlingController {
 			Formatter<List<Team>, File> rf = new CSVRankingFormatter(outfile.getAbsolutePath(), day);
 			rf.format(ranks);
 			
-			Utils.createDefaultErrorAlert("Ranking produced", String.format(
+			Utils.createInformationAlert("Ranking produced", String.format(
 					"The ranking of the day %d of tournament %s has been produced. You can view it at %s", 
 					day.getNumber().get(),
 					day.getTournament().get().getName().get(),
