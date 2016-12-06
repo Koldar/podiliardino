@@ -80,7 +80,7 @@ public class TeamHandlingController {
 		try {
 			Optional<Team> t = this.mainApp.showCustomDialog(
 					"TeamEditDialog", 
-					"New Team", 
+					"New Team",
 					(TeamEditDialogController c, Stage s) -> {
 						try {
 							c.setup(s, new Team(), this.mainApp.getDAO().getAllPlayersThat(p -> !p.isSpecial()));

@@ -125,12 +125,11 @@ public class Main extends Application {
 		super.stop();
 	}
 	
-	
 	private void loadAndShowRootLayout() throws IOException {
 		FXMLLoader loader = new FXMLLoader();
-		loader.setLocation(this.getClass().getResource("view/RootLayout.fxml"));
+		loader.setLocation(Main.class.getResource("/com/massimobono/podiliardino/view/RootLayout.fxml"));
 		this.rootScene = loader.load();
-		this.rootScene.getStylesheets().add(this.getClass().getResource("application.css").toExternalForm());
+		this.rootScene.getStylesheets().add(Main.class.getResource("application.css").toExternalForm());
 		this.primaryStage.setScene(new Scene(this.rootScene));
 		this.primaryStage.show();
 	}
@@ -150,8 +149,8 @@ public class Main extends Application {
 			fxmlFile +=".fxml";
 		}
 		FXMLLoader loader = new FXMLLoader();
-		String baseUrl = String.format("view/%s", fxmlFile);
-		Optional<URL> resourceURL = Optional.of(this.getClass().getResource(baseUrl));
+		String baseUrl = String.format("/com/massimobono/podiliardino/view/%s", fxmlFile);
+		Optional<URL> resourceURL = Optional.of(Main.class.getResource(baseUrl));
 		if (!resourceURL.isPresent()) {
 			throw new FileNotFoundException(String.format("Couldn't find %s", baseUrl));
 		} else {
@@ -198,8 +197,8 @@ public class Main extends Application {
 			fxmlFile +=".fxml";
 		}
 		FXMLLoader loader = new FXMLLoader();
-		String baseUrl = String.format("view/%s", fxmlFile);
-		Optional<URL> resourceURL = Optional.of(this.getClass().getResource(baseUrl));
+		String baseUrl = String.format("/com/massimobono/podiliardino/view/%s", fxmlFile);
+		Optional<URL> resourceURL = Optional.of(Main.class.getResource(baseUrl));
 		if (!resourceURL.isPresent()) {
 			throw new FileNotFoundException(String.format("Couldn't find %s", baseUrl));
 		} else {
