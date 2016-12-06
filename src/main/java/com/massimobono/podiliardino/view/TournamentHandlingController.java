@@ -156,7 +156,7 @@ public class TournamentHandlingController {
 	public void setup(Main mainApp) throws DAOException {
 		this.mainApp = mainApp;
 
-		this.availableTeams = this.mainApp.getDAO().getTeamList();
+		this.availableTeams = this.mainApp.getDAO().getTeamList().filtered(t -> !t.isSpecial());
 		this.tournamentTable.setItems(this.mainApp.getDAO().getTournamentList());
 	}
 

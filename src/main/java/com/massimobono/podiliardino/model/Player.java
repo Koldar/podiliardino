@@ -55,6 +55,14 @@ public class Player implements Indexable{
 	}
 	
 	/**
+	 * 
+	 * @return true if the player is not a player with special meaning inside the application, false otherwise
+	 */
+	public boolean isSpecial() {
+		return this.getName().get().equals(Utils.DUMMYPLAYER1.getName().get()) || this.getName().get().equals(Utils.DUMMYPLAYER2.getName().get());
+	}
+	
+	/**
 	 * Add a new relationship "compose" between player-team
 	 * 
 	 * @param t

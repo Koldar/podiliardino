@@ -24,8 +24,8 @@ public class Utils {
 	public static final int DEFAULT_POINTS_EARNED_FROM_LOSING = 0;
 	
 	
-	private static final Player DUMMYPLAYER1 = new Player(0, "dummy1", "", LocalDate.now(), "", new ArrayList<>());
-	private static final Player DUMMYPLAYER2 = new Player(0, "dummy2", "", LocalDate.now(), "", new ArrayList<>());
+	public static final Player DUMMYPLAYER1 = new Player(0, "dummy1", "", LocalDate.now(), "", new ArrayList<>());
+	public static final Player DUMMYPLAYER2 = new Player(0, "dummy2", "", LocalDate.now(), "", new ArrayList<>());
 	public static final Team DUMMYTEAM = new Team(0, "", LocalDate.now(), Arrays.asList(), new ArrayList<>(), new ArrayList<>());
 	
 	/**

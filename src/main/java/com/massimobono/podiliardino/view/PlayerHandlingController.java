@@ -69,7 +69,7 @@ public class PlayerHandlingController {
 
 	public void setup(Main mainApp) throws DAOException {
 		this.mainApp = mainApp;
-		this.playersTable.setItems(this.mainApp.getDAO().getPlayerList());
+		this.playersTable.setItems(this.mainApp.getDAO().getPlayerList().filtered(p -> !p.isSpecial()));
 	}
 
 	@FXML

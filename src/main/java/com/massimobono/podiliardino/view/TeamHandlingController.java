@@ -72,7 +72,7 @@ public class TeamHandlingController {
 	public void setup(Main mainApp) throws DAOException {
 		this.mainApp = mainApp;
 		
-		this.teamTable.setItems(this.mainApp.getDAO().getTeamList());
+		this.teamTable.setItems(this.mainApp.getDAO().getTeamList().filtered(t -> !t.isSpecial()));
 	}
 
 	@FXML
@@ -83,7 +83,7 @@ public class TeamHandlingController {
 					"New Team", 
 					(TeamEditDialogController c, Stage s) -> {
 						try {
-							c.setup(s, new Team(), this.mainApp.getDAO().getAllPlayers());
+							c.setup(s, new Team(), this.mainApp.getDAO().getAllPlayersThat(p -> !p.isSpecial()));
 						} catch (Exception e){
 							e.printStackTrace();
 							ExceptionAlert.showAndWait(e);
