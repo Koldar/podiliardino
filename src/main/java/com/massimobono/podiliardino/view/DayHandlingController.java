@@ -14,6 +14,7 @@ import com.massimobono.podiliardino.Main;
 import com.massimobono.podiliardino.extensibles.dao.DAOException;
 import com.massimobono.podiliardino.extensibles.dummymatch.AddDefaultVictoryDummyMatchHandler;
 import com.massimobono.podiliardino.extensibles.dummymatch.DummyMatchHandler;
+import com.massimobono.podiliardino.extensibles.matcher.DistinctMatchesByeAwarePairComputer;
 import com.massimobono.podiliardino.extensibles.matcher.PairComputer;
 import com.massimobono.podiliardino.extensibles.matcher.SubsequentPairComputer;
 import com.massimobono.podiliardino.extensibles.ranking.CSVRankingFormatter;
@@ -308,10 +309,13 @@ public class DayHandlingController {
 			RankingComputer<Team> rm = new SwissRankingManager();
 			//we call the ranking immediately: 
 			List<Team> ranks = rm.getDayRanking(day);
-			PairComputer<Team> pairComputer = new SubsequentPairComputer<>();
+			PairComputer<Team> pairComputer = new DistinctMatchesByeAwarePairComputer<Team>();
 			DummyMatchHandler dummyMatchHandler = new AddDefaultVictoryDummyMatchHandler();
 			day.getMatches().clear();
-			for (Pair<Team,Team> pair : pairComputer.computePairs(ranks)) {
+			
+			
+			LOG.info("The ranking used to do computation is {}", ranks);
+			for (Pair<Team,Team> pair : pairComputer.computePairs(day, ranks)) {
 				if (pair.getValue() != null) {
 					day.getMatches().add(new Match(
 							pair.getKey(), 
@@ -376,13 +380,12 @@ public class DayHandlingController {
 			Formatter<List<Team>, File> rf = new CSVRankingFormatter(outfile.getAbsolutePath(), day);
 			rf.format(ranks);
 			
-			Alert alert = Utils.createDefaultErrorAlert("Ranking produced", String.format(
+			Utils.createDefaultErrorAlert("Ranking produced", String.format(
 					"The ranking of the day %d of tournament %s has been produced. You can view it at %s", 
 					day.getNumber().get(),
 					day.getTournament().get().getName().get(),
 					outfile.getAbsolutePath()
 					));
-			alert.showAndWait();
 		} catch (Exception e) {
 			ExceptionAlert.showAndWait(e);
 			e.printStackTrace();

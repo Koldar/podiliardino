@@ -84,6 +84,7 @@ public class Utils {
 		alert.setTitle("Error Dialog");
 		alert.setHeaderText(header);
 		alert.setContentText(body);
+		alert.showAndWait();
 		return alert;
 	}
 	

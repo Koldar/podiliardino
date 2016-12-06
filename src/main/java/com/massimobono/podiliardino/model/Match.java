@@ -31,6 +31,15 @@ public class Match {
 	
 	/**
 	 * 
+	 * @param t the team involved
+	 * @return true if the team has fought inside this match, false otherwise
+	 */
+	public boolean hasTeamFoughtInThisMatch(Team t) throws UnsupportedOperationException{
+		return (this.team1.get() == t)||(this.team2.get() == t);
+	}
+	
+	/**
+	 * 
 	 * @param t
 	 * @return the number of goals scored by the team in the parameter
 	 * @throws UnsupportedOperationException if you try to call this function with a team not involved in the match

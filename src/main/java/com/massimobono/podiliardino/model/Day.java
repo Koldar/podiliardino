@@ -47,6 +47,25 @@ public class Day implements Indexable {
 	
 	/**
 	 * 
+	 * @param team1 the team involved
+	 * @param team2 the team involved
+	 * @return True if the 2 teams have a match/ has already fought eachother in this day, false otherwise
+	 */
+	public boolean hasAMatchAgainst(Team team1, Team team2) {
+		for (Match m : this.getMatches()) {
+			if (!m.hasTeamFoughtInThisMatch(team1)) {
+				continue;
+			}
+			if (!m.hasTeamFoughtInThisMatch(team2)) {
+				continue;
+			}
+			return true;
+		}
+		return false;
+	}
+	
+	/**
+	 * 
 	 * @return True if there are no matched to do in this day
 	 */
 	public boolean isDayCompleted() {

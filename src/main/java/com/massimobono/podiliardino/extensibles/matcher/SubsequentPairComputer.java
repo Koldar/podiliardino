@@ -6,6 +6,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
+import com.massimobono.podiliardino.model.Day;
+import com.massimobono.podiliardino.model.Team;
+
 import javafx.util.Pair;
 
 /**
@@ -32,13 +35,13 @@ import javafx.util.Pair;
  *
  * @param <E>
  */
-public class SubsequentPairComputer<E> implements PairComputer<E>{
+public class SubsequentPairComputer implements PairComputer<Team>{
 
 	@Override
-	public List<Pair<E,E>> computePairs(Collection<E> toPair) {
-		List<Pair<E,E>> retVal = new ArrayList<>();
-		Iterator<E> iterator = toPair.iterator();
-		E first, second;
+	public List<Pair<Team,Team>> computePairs(Day d, Collection<Team> toPair) {
+		List<Pair<Team,Team>> retVal = new ArrayList<>();
+		Iterator<Team> iterator = toPair.iterator();
+		Team first, second;
 		
 		while (iterator.hasNext()) {
 			first = iterator.next();

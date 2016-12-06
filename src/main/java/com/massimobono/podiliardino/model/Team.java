@@ -51,9 +51,39 @@ public class Team implements Indexable {
 	}
 	
 	/**
+	 * Check if the current team has used the bye in the tournament
+	 * @param t the tournament to check
+	 * @return the number of bye of this team
+	 */
+	public int checkByeNumber(Tournament t) {
+		int retVal = 0;
+		for (Day d : t.getDays()) {
+			if (!this.hasTeamFoughtInDay(d)) {
+				retVal++;
+			}
+		}
+		return retVal;
+	}
+	
+	/**
+	 * Check if the current team has fought at least once in a given tournament day
+	 * @param d the day to check
+	 * @return true if the team has fought at least once in that day, false otherwise
+	 */
+	public boolean hasTeamFoughtInDay(Day d) {
+		return this.getMatches()
+		.parallelStream()
+		.filter(m -> m.getDay().get() == d) //consider only a particular day
+		.filter(m -> m.getStatus().get() == MatchStatus.DONE)
+		.filter(m -> m.hasTeamFoughtInThisMatch(this))
+		.count() > 0;
+		
+	}
+	
+	/**
 	 * Add a new relationship "compose" between player-team
 	 * 
-	 * @param t
+	 * @param p the player to add througout all the model entities involved in the relationship
 	 */
 	public void add(Player p) {
 		p.add(this);
@@ -62,7 +92,7 @@ public class Team implements Indexable {
 	/**
 	 * Removes new relationship "compose" between player-team
 	 * 
-	 * @param t
+	 * @param p the player to remove througout all the model entities involved in the relationship
 	 */
 	public void remove(Player p) {
 		p.remove(this);
@@ -71,7 +101,7 @@ public class Team implements Indexable {
 	/**
 	 * Add a new relationship "partecipate" between tournament-team
 	 * 
-	 * @param t
+	 * @param p the partecipation to add througout all the model entities involved in the relationship
 	 */
 	public void add(Partecipation p) {
 		this.partecipations.add(p);
@@ -81,7 +111,7 @@ public class Team implements Indexable {
 	/**
 	 * Removes relationship "partecipate" between tournament-team
 	 * 
-	 * @param t
+	 * @param p the partecipation to remove througout all the model entities involved in the relationship
 	 */
 	public void remove(Partecipation p) {
 		this.partecipations.remove(p);
@@ -91,9 +121,13 @@ public class Team implements Indexable {
 	/**
 	 * Add a new relationship "match" between day-team
 	 * 
-	 * @param t
+	 * @param m the match to add througout all the model entities involved in the relationship
+	 * @throws UnsupportedOperationException if the team haven't fought in this match
 	 */
-	public void add(Match m) {
+	public void add(Match m) throws UnsupportedOperationException{
+		if (!m.hasTeamFoughtInThisMatch(this)){
+			throw new UnsupportedOperationException();
+		}
 		m.getTeam1().get().getMatches().add(m);
 		m.getTeam2().get().getMatches().add(m);
 		m.getDay().get().getMatches().add(m);
@@ -102,9 +136,13 @@ public class Team implements Indexable {
 	/**
 	 * Removes relationship "match" between day-team
 	 * 
-	 * @param t
+	 * @param m the match to remove througout all the model entities involved in the relationship
+	 * @throws UnsupportedOperationException if the team haven't fought in this match
 	 */
 	public void remove(Match m) {
+		if (!m.hasTeamFoughtInThisMatch(this)){
+			throw new UnsupportedOperationException();
+		}
 		m.getTeam1().get().getMatches().remove(m);
 		m.getTeam2().get().getMatches().remove(m);
 		m.getDay().get().getMatches().remove(m);

@@ -59,7 +59,46 @@ public class Tournament implements Indexable {
 	public Tournament() {
 		this(0, "", LocalDate.now(), null, new ArrayList<>(), new ArrayList<>());
 	}
+	
+	/**
+	 * 
+	 * @return true if the partecipants of the tournament are odd in number, false otherwise
+	 * @see #hasEvenPartecipants()
+	 */
+	public boolean hasOddPartecipants() {
+		return (this.partecipations.size() % 2) > 0;
+	}
+	
+	/**
+	 * 
+	 * @return true if the partecipants of the tournament are odd in number, false otherwise
+	 * @see #hasOddPartecipants()
+	 */
+	public boolean hasEvenPartecipants() {
+		return (this.partecipations.size() % 2) == 0;
+	}
 
+	
+	/**
+	 * 
+	 * @param team1 the team involved
+	 * @param team2 the team involved
+	 * @param maximumPreviousMatchAllowed non negative number of previous fights between 2 team allowed. forexample if 2 teams fought eachother 2 times,
+	 * 	calling this method with either 0 or 1 will return true but calling this method with 2 or an higher alue will return false
+	 * @return True if the 2 teams have a match/ has already fought eachother in this day, false otherwise
+	 */
+	public boolean hasAMatchAgainst(Team team1, Team team2, int maximumPreviousMatchAllowed) {
+		int count = 0;
+		for (Day d : this.getDays()) {
+			if (d.hasAMatchAgainst(team1, team2)){
+				count++;
+				if (count > maximumPreviousMatchAllowed) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 	
 	/**
 	 * Add a new relationship "partecipate" between tournament-team

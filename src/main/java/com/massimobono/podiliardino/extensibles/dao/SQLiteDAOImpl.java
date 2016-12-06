@@ -1830,10 +1830,9 @@ public class SQLiteDAOImpl implements DAO {
 	 * @param match the match to add
 	 * @throws DAOException if something bad happens
 	 */
-	private void addDBMatch(Match match) throws DAOException {
+	private void addDBMatch(final Match match) throws DAOException {
 		this.connectAndThenDo((c,s,ps) -> {
 			try {
-				LOG.debug("adding match {}...", match);
 				LOG.debug("team1Id: {} team2Id: {} dayId: {}", match.getTeam1().get().getId(), match.getTeam2().get().getId(), match.getDay().get().getId());
 				ps.getInsertMatch().setLong(1, match.getTeam1().get().getId());
 				ps.getInsertMatch().setLong(2, match.getTeam2().get().getId());
