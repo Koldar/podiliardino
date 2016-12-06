@@ -13,7 +13,7 @@ import javafx.scene.layout.Priority;
 public class ExceptionAlert extends Alert {
 
 	private static final String TITLE = "Exception Dialog";
-	private static final String HEADER = "An unhandled exception has occured. Please send an email to the developer pasting the text down here.";
+	private static final String HEADER = "An unhandled exception has occured. Please send an email to the developer with the following data: log file inside logs/; the text down here; the file \"data.db\" file.";
 	private static final String STACKTRACE_HEADER = "The exception stacktrace was:";
 	
 	public ExceptionAlert(Exception ex) {
