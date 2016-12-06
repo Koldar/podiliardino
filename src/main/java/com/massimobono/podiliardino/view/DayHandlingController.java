@@ -11,14 +11,15 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.massimobono.podiliardino.Main;
+import com.massimobono.podiliardino.extensibles.Formatter;
 import com.massimobono.podiliardino.extensibles.dao.DAOException;
 import com.massimobono.podiliardino.extensibles.dummymatch.AddDefaultVictoryDummyMatchHandler;
 import com.massimobono.podiliardino.extensibles.dummymatch.DummyMatchHandler;
-import com.massimobono.podiliardino.extensibles.matcher.DistinctMatchesByeAwarePairComputer;
-import com.massimobono.podiliardino.extensibles.matcher.PairComputer;
-import com.massimobono.podiliardino.extensibles.matcher.SubsequentPairComputer;
+import com.massimobono.podiliardino.extensibles.matches.DistinctMatchesByeAwarePairComputer;
+import com.massimobono.podiliardino.extensibles.matches.PairComputer;
+import com.massimobono.podiliardino.extensibles.matches.SimpleCSVMatchesFormatter;
+import com.massimobono.podiliardino.extensibles.matches.SubsequentPairComputer;
 import com.massimobono.podiliardino.extensibles.ranking.CSVRankingFormatter;
-import com.massimobono.podiliardino.extensibles.ranking.Formatter;
 import com.massimobono.podiliardino.extensibles.ranking.RankingComputer;
 import com.massimobono.podiliardino.extensibles.ranking.SwissRankingManager;
 import com.massimobono.podiliardino.model.Day;
@@ -91,7 +92,9 @@ public class DayHandlingController {
 	@FXML
 	private Button updateMatchResult;
 	@FXML
-	private Button printRanking;
+	private Button exportRanking;
+	@FXML
+	private Button exportMatches;
 	
 	private Main mainApp;
 	
@@ -361,11 +364,12 @@ public class DayHandlingController {
 		} catch (Exception e) {
 			ExceptionAlert.showAndWait(e);
 			e.printStackTrace();
+			LOG.catching(e);
 		}
 	}
 	
 	@FXML
-	private void printRanking() {
+	private void exportRanking() {
 		
 		try {
 			if (this.dayTableView.getSelectionModel().getSelectedItem() == null) {
@@ -389,7 +393,39 @@ public class DayHandlingController {
 		} catch (Exception e) {
 			ExceptionAlert.showAndWait(e);
 			e.printStackTrace();
+			LOG.catching(e);
 		}
 		
+	}
+	
+	@FXML
+	private void exportMatches() {
+		try {
+			LOG.info("Export matches...");
+			if (this.dayTableView.getSelectionModel().getSelectedItem() == null) {
+				Utils.createDefaultErrorAlert("Can't export matches", "In order to export the matches you need to select a day");
+				return;
+			}
+			Day day = this.dayTableView.getSelectionModel().getSelectedItem();
+			if (day.getNumberOfMatchesToDo() == 0){
+				Utils.createDefaultErrorAlert("Can't export matches", "In order to export matches you need to select a day with at least one match that needs to be done");
+				return;
+			}
+			
+			File outFile = new File("matches.csv");
+			Formatter<Day, File> matchesFormatter = new SimpleCSVMatchesFormatter(outFile.getAbsolutePath());
+			outFile = matchesFormatter.format(day);
+			
+			Utils.createInformationAlert("Matches produced", String.format(
+					"The matches needed to do of the day %d of tournament %s has been produced. You can view it at %s", 
+					day.getNumber().get(),
+					day.getTournament().get().getName().get(),
+					outFile.getAbsolutePath()
+					));
+		} catch (Exception e) {
+			ExceptionAlert.showAndWait(e);
+			LOG.catching(e);
+			e.printStackTrace();
+		}
 	}
 }

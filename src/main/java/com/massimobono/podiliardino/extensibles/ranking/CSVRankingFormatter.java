@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Formattable;
 import java.util.List;
 
+import com.massimobono.podiliardino.extensibles.Formatter;
 import com.massimobono.podiliardino.model.Day;
 import com.massimobono.podiliardino.model.Team;
 import com.massimobono.podiliardino.model.Tournament;
@@ -21,16 +22,15 @@ import com.massimobono.podiliardino.model.Tournament;
 public class CSVRankingFormatter implements Formatter<List<Team>, File> {
 
 	private static final String DELIMITER = ",";
-	private static final String CSVOPTIONS = "";
 	private static final String HEADER = String.join(DELIMITER, "RANK", "TEAM", "POINTS", "GOALS SCORED", "GOALS DIFFERENCE", "OPPONENTS GOALS");
 	
-	private File txtFile;
+	private File csvFile;
 	private Day day;
 	
 	public CSVRankingFormatter(String txtFile, Day day) throws IOException{
-		this.txtFile = new File(txtFile);
-		if (!this.txtFile.exists()) {
-			this.txtFile.createNewFile();
+		this.csvFile = new File(txtFile);
+		if (!this.csvFile.exists()) {
+			this.csvFile.createNewFile();
 		}
 		this.day = day;
 	}
@@ -39,7 +39,7 @@ public class CSVRankingFormatter implements Formatter<List<Team>, File> {
 	public File format(List<Team> toFormat) {
 		Team team = null;
 		
-		try (PrintWriter pw = new PrintWriter(this.txtFile)) {
+		try (PrintWriter pw = new PrintWriter(this.csvFile)) {
 			pw.println(HEADER);
 			for (int i=0 ; i<toFormat.size(); i++) {
 				team = toFormat.get(i);
@@ -57,7 +57,7 @@ public class CSVRankingFormatter implements Formatter<List<Team>, File> {
 			//it should be impossible that this exception happens... but who knows?
 			e.printStackTrace();
 		}
-		return this.txtFile;
+		return this.csvFile;
 	}
 
 }

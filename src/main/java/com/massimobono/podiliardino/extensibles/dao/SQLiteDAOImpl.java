@@ -1564,7 +1564,7 @@ public class SQLiteDAOImpl implements DAO {
 					}
 				}, 
 				() -> {
-					//before we remove a day, we need to remove every match performed in that day adn the relationship with the tournament
+					//before we remove a day, we need to remove every match performed in that day and the relationship with the tournament
 					day.removeAllMatches();
 					day.remove(day.getTournament().get());
 					return null;

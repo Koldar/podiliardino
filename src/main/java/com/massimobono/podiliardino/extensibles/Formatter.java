@@ -1,4 +1,4 @@
-package com.massimobono.podiliardino.extensibles.ranking;
+package com.massimobono.podiliardino.extensibles;
 
 @FunctionalInterface
 public interface Formatter<IN, OUT> {

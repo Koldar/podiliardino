@@ -109,6 +109,7 @@ public class Utils {
 		alert.setTitle("Information");
 		alert.setHeaderText(header);
 		alert.setContentText(body);
+		alert.showAndWait();
 		return alert;
 	}
 }

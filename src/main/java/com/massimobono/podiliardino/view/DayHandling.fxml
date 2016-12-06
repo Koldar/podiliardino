@@ -63,7 +63,8 @@
                            <buttons>
                               <Button fx:id="generateMatch" mnemonicParsing="false" onAction="#handleGenerateMatches" text="Generate Matches" />
                               <Button fx:id="updateMatchResult" mnemonicParsing="false" onAction="#handleUpdateMatchResult" text="Update match result" />
-                              <Button fx:id="printRanking" mnemonicParsing="false" onAction="#printRanking" text="Print Ranking" />
+                              <Button fx:id="exportRanking" mnemonicParsing="false" onAction="#exportRanking" text="Export Ranking" />
+                              <Button fx:id="exportMatches" mnemonicParsing="false" onAction="#exportMatches" text="Export Matches" />
                            </buttons>
                         </ButtonBar>
                      </children>

@@ -1,4 +1,4 @@
-package com.massimobono.podiliardino.extensibles.matcher;
+package com.massimobono.podiliardino.extensibles.matches;
 
 import java.util.Collection;
 import java.util.List;
