@@ -68,19 +68,21 @@ public class SwissRankingManager implements RankingComputer<Team> {
 				}
 				int goals1 = o1.getNumberOfGoalsScored(currentDay.getTournament().get());
 				int goals2 = o2.getNumberOfGoalsScored(currentDay.getTournament().get());
-				LOG.info("goals: {} VS {}", goals1, goals2);
-				if (goals1 != goals2) {
-					LOG.info("wins {}", (goals1 - goals2) > 0 ? o1 : o2);
-					return goals1 - goals2;
-				}
 				int goalsReceived1 = o1.getNumberOfGoalsReceived(currentDay.getTournament().get());
 				int goalsReceived2 = o2.getNumberOfGoalsReceived(currentDay.getTournament().get());
 				int goalsDifference1 = goals1 - goalsReceived1;
 				int goalsDifference2 = goals2 - goalsReceived2;
+				
 				LOG.info("difference of goals received: {} VS {}", goalsDifference1, goalsDifference2);
 				if (goalsDifference1 != goalsDifference2) {
 					LOG.info("wins {}", (goalsDifference1 - goalsDifference2) > 0 ? o1 : o2);
 					return goalsDifference1 - goalsDifference2;
+				}
+				
+				LOG.info("goals: {} VS {}", goals1, goals2);
+				if (goals1 != goals2) {
+					LOG.info("wins {}", (goals1 - goals2) > 0 ? o1 : o2);
+					return goals1 - goals2;
 				}
 				
 				int opponentsGoals1 = o1.getNumberOfGoalsYourOpponentsScored(currentDay.getTournament().get());

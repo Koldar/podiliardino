@@ -45,4 +45,10 @@ Almost all the feature podiliardino has can be found in this tab. The tab lets y
  * set the result of a match;
  * generate the ranking among the teams using the swiss mode;
  
+After selecting a tournament in the left pane, you can add/change or remove days. Removing days will delete all the data associated to that day; however, players, teams and tournaments won't be affected at all.
+
+After selecting a day, you may generate the matches of that day. You can generate matches only if at least 2 teams joined the tournament. By pressing "Generate matches" the software will generate the matches according to the "swiss tournament mode". You can press as many times you want such button: the computer will recompute new matches according to the swiss mode. The computer will also take care of the "bye": in case of odd number of partecipants, the tournament will bye one of those.
+
+Teams that will bye will have a fake match already done. Viceversa, real matches will be displayed in the right part of the window.
+ 
  
