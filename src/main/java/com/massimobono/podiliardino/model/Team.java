@@ -206,10 +206,18 @@ public class Team implements Indexable {
 	public int getPointsScoredIn(Tournament t) {
 		return this.getMatches()
 				.parallelStream()
-				.filter(m -> m.getDay().get().getTournament().get() == t)
-				.filter(m -> m.getStatus().get() == MatchStatus.DONE)
-				.filter(m -> m.getWinner() == this)
-				.mapToInt(m -> m.getPointsEarnedByWinning().get())
+				.filter(m -> {
+					return m.getDay().get().getTournament().get() == t;
+				})
+				.filter(m -> {
+					return m.getStatus().get() == MatchStatus.DONE;
+				})
+				.filter(m -> {
+					return m.getWinner() == this;
+				})
+				.mapToInt(m -> {
+					return m.getPointsEarnedByWinning().get();
+				})
 				.sum();
 	}
 	

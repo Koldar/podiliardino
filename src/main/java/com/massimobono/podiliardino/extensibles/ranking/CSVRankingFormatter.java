@@ -22,8 +22,8 @@ import com.massimobono.podiliardino.model.Tournament;
  */
 public class CSVRankingFormatter implements Formatter<List<Team>, File> {
 
-	private static final String DELIMITER = ",";
-	private static final String HEADER = String.join(DELIMITER, "RANK", "TEAM", "POINTS", "GOALS SCORED", "GOALS DIFFERENCE", "OPPONENTS POINTS", "OPPONENTS GOALS");
+	private static final String DELIMITER = "\t";
+	private static final String HEADER = String.join(DELIMITER, "RANK", "TEAM", "POINTS", "GOALS DIFFERENCE", "GOALS SCORED", "OPPONENTS POINTS", "OPPONENTS GOALS");
 	
 	private File csvFile;
 	private Day day;
@@ -48,8 +48,8 @@ public class CSVRankingFormatter implements Formatter<List<Team>, File> {
 						String.format("%3d", i+1),
 						team.getName().get(),
 						String.format("%3d", team.getPointsScoredIn(this.day.getTournament().get())),
-						String.format("%3d", team.getNumberOfGoalsScored(this.day.getTournament().get())),
 						String.format("%3d", team.getNumberOfGoalsScored(this.day.getTournament().get()) - team.getNumberOfGoalsReceived(this.day.getTournament().get())),
+						String.format("%3d", team.getNumberOfGoalsScored(this.day.getTournament().get())),
 						String.format("%3d", team.getPointsYourOpponentsScored(this.day.getTournament().get())),
 						String.format("%3d", team.getNumberOfGoalsYourOpponentsScored(this.day.getTournament().get()))
 						));
