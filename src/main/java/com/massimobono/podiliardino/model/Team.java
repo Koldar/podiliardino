@@ -186,6 +186,20 @@ public class Team implements Indexable {
 	
 	/**
 	 * 
+	 * @param t the tournament involved
+	 * @return the sum of the number of points all your opponents in the given tournament scored in their matches 
+	 */
+	public int getPointsYourOpponentsScored(Tournament t) {
+		return this.getMatches()
+				.parallelStream()
+				.filter(m -> m.getDay().get().getTournament().get() == t)
+				.filter(m -> m.getStatus().get() == MatchStatus.DONE)
+				.mapToInt(m -> m.getOtherTeam(this).getPointsScoredIn(t))
+				.sum();
+	}
+	
+	/**
+	 * 
 	 * @param t
 	 * @return the number of points scored by the team in the whole tournament 
 	 */
