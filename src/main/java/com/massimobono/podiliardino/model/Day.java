@@ -79,7 +79,7 @@ public class Day implements Indexable {
 	 */
 	public void add(Tournament t) {
 		this.tournament.set(t);
-		t.getDays().add(this);
+		t.daysProperty().add(this);
 	}
 	
 	/**
@@ -88,7 +88,7 @@ public class Day implements Indexable {
 	 * @param t
 	 */
 	public void remove(Tournament t) {
-		t.getDays().remove(this);
+		t.daysProperty().remove(this);
 	}
 	
 	public void add(Match m) {

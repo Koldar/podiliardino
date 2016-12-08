@@ -68,7 +68,7 @@ public class DayEditDialogController {
 	            if (bln) {
 	                setText("");
 	            } else {
-	                setText(String.format("%s", t.getName().get()));
+	                setText(String.format("%s", t.nameProperty().get()));
 	            }
 	        }
 		};
@@ -85,7 +85,7 @@ public class DayEditDialogController {
                         if (item == null || empty) {
                             setGraphic(null);
                         } else {
-                            setText(String.format("%s", item.getName().get()));
+                            setText(String.format("%s", item.nameProperty().get()));
                         }
                     }
                 } ;

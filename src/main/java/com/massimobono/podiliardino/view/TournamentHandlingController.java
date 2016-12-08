@@ -95,7 +95,7 @@ public class TournamentHandlingController {
 	@FXML
 	private void initialize() {
 		// Initialize the person table with the two columns.
-		this.tournamentNameColumn.setCellValueFactory(cellData -> cellData.getValue().getName());
+		this.tournamentNameColumn.setCellValueFactory(cellData -> cellData.getValue().nameProperty());
 		//this.tournamentInfoColumn.setCellValueFactory(new PropertyValueFactory<Tournament, Integer>("numberOfPartecipants"));
 		this.tournamentInfoColumn.setCellValueFactory(cellData -> {
 			return cellData.getValue().numberOfPartecipantsProperty().asObject();
@@ -131,21 +131,21 @@ public class TournamentHandlingController {
 										Partecipation partecipation = null;
 										if (data.getCheckBox().isSelected()) {
 											partecipation = new Partecipation(tournament, team);
-											tournament.getPartecipations().add(partecipation);
+											tournament.partecipationsProperty().add(partecipation);
 											team.partecipationsProperty().add(partecipation);
 										} else {
-											Optional<Partecipation> op = tournament.getPartecipations()
+											Optional<Partecipation> op = tournament.partecipationsProperty()
 													.parallelStream()
 													.filter(p -> {return p.getTeam().get().getId() == team.getId();}).findFirst();
 											op.ifPresent( p -> {
-												tournament.getPartecipations().remove(p);	
+												tournament.partecipationsProperty().remove(p);	
 												team.partecipationsProperty().remove(p);
 											});
 
 										}
 									});
 									data.getNameLabel().setText(team.nameProperty().get());
-									data.getCheckBox().setSelected(tournament.getPartecipations()
+									data.getCheckBox().setSelected(tournament.partecipationsProperty()
 											.parallelStream()
 											.filter(p -> p.getTeam().get() == team)
 											.findFirst().isPresent());
@@ -230,7 +230,7 @@ public class TournamentHandlingController {
 				return;
 			}
 			Tournament t =this.tournamentTable.getSelectionModel().getSelectedItem();
-			if (!Utils.waitUserReplyForConfirmationDialog(String.format("Are you sure to delete tournament \"%s\"?", t.getName().get()), "Removing a tournament will delete all its days and the matches of that tournament within the database! Are you sure?")){
+			if (!Utils.waitUserReplyForConfirmationDialog(String.format("Are you sure to delete tournament \"%s\"?", t.nameProperty().get()), "Removing a tournament will delete all its days and the matches of that tournament within the database! Are you sure?")){
 				return;
 			}
 			this.mainApp.getDAO().remove(t);
@@ -250,11 +250,11 @@ public class TournamentHandlingController {
 				this.tournamentEndDateLabel.setText("");
 				this.minimumDaysRequiredLabel.setText("");
 			}else {
-				Optional<LocalDate> endDate = newValue.getEndDate().get();
-				this.tournamentNameLabel.setText(newValue.getName().get());
-				this.tournamentStartDateLabel.setText(Utils.getStandardDateFrom(newValue.getStartDate().get()));
+				Optional<LocalDate> endDate = newValue.endDateProperty().get();
+				this.tournamentNameLabel.setText(newValue.nameProperty().get());
+				this.tournamentStartDateLabel.setText(Utils.getStandardDateFrom(newValue.startDateProperty().get()));
 				this.tournamentEndDateLabel.setText(endDate.isPresent() ? Utils.getStandardDateFrom(endDate.get()) : Utils.EMPTY_DATE);
-				this.minimumDaysRequiredLabel.setText(Integer.toString(this.computeMinimumDaysRequired(newValue.getPartecipations())));
+				this.minimumDaysRequiredLabel.setText(Integer.toString(this.computeMinimumDaysRequired(newValue.partecipationsProperty())));
 				
 				this.teamsToDisplay.clear();
 				this.teamsToDisplay.addAll(this.availableTeams);
@@ -269,7 +269,7 @@ public class TournamentHandlingController {
 						updateTeamsToDisplayFromPartecipationChange(c);
 					}
 				};
-				this.tournamentPartcipations = this.tournamentTable.getSelectionModel().getSelectedItem().getPartecipations();
+				this.tournamentPartcipations = this.tournamentTable.getSelectionModel().getSelectedItem().partecipationsProperty();
 				this.tournamentPartcipations.addListener(this.tournamentParticipationsListener);
 				this.updateTeamsToDisplayFromPartecipationChange(this.tournamentPartcipations, new ArrayList<>());
 			}

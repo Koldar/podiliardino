@@ -32,7 +32,7 @@ public class Partecipation{
 		return String.format("<%s team_name=%s tournament_name=%s>", 
 				this.getClass().getSimpleName(), 
 				this.team.get().nameProperty().get(), 
-				this.tournament.get().getName().get());
+				this.tournament.get().nameProperty().get());
 	}
 
 	@Override

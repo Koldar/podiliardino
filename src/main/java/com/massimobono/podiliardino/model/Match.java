@@ -180,7 +180,7 @@ public class Match {
 				this.getStatus().get(),
 				this.getTeam1().get().nameProperty().get(),
 				this.getTeam2().get().nameProperty().get(),
-				this.getDay().get().getTournament().get().getName().get(),
+				this.getDay().get().getTournament().get().nameProperty().get(),
 				this.getDay().get().getNumber().get(),
 				this.getTeam1Goals().get(),
 				this.getTeam2Goals().get());

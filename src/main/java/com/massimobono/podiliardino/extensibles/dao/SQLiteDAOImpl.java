@@ -1184,7 +1184,7 @@ public class SQLiteDAOImpl implements DAO {
 	 */
 	private void setupTournamentListeners(Tournament tournament) {
 		//the model has changed the divide list
-		tournament.getPartecipations().addListener(this.getDefaultListListener(
+		tournament.partecipationsProperty().addListener(this.getDefaultListListener(
 				tournament,
 				(t,p) -> {
 					try {
@@ -1202,7 +1202,7 @@ public class SQLiteDAOImpl implements DAO {
 						return e;
 					}
 				}));
-		tournament.getDays().addListener(this.getDefaultListListener(
+		tournament.daysProperty().addListener(this.getDefaultListListener(
 				tournament,
 				(t,d) -> {
 					//TODO this function should wor with references
@@ -1231,9 +1231,9 @@ public class SQLiteDAOImpl implements DAO {
 				"tournament", 
 				(c,s,ps) -> {
 					try {
-						Optional<LocalDate> endDate = tournament.getEndDate().get();
-						ps.getInsertTournament().setString(1, tournament.getName().get());
-						ps.getInsertTournament().setString(2, Utils.getStandardDateFrom(tournament.getStartDate().get()));
+						Optional<LocalDate> endDate = tournament.endDateProperty().get();
+						ps.getInsertTournament().setString(1, tournament.nameProperty().get());
+						ps.getInsertTournament().setString(2, Utils.getStandardDateFrom(tournament.startDateProperty().get()));
 						ps.getInsertTournament().setString(3, endDate.isPresent() ? Utils.getStandardDateFrom(endDate.get()) : Utils.EMPTY_DATE);
 						ps.getInsertTournament().addBatch();
 						ps.getInsertTournament().executeBatch();
@@ -1258,9 +1258,9 @@ public class SQLiteDAOImpl implements DAO {
 				tournament,
 				(c,s,ps) -> {
 					try {
-						Optional<LocalDate> endDate = tournament.getEndDate().get();
-						ps.getUpdateTournament().setString(1, tournament.getName().get());
-						ps.getUpdateTournament().setString(2, Utils.getStandardDateFrom(tournament.getStartDate().get()));
+						Optional<LocalDate> endDate = tournament.endDateProperty().get();
+						ps.getUpdateTournament().setString(1, tournament.nameProperty().get());
+						ps.getUpdateTournament().setString(2, Utils.getStandardDateFrom(tournament.startDateProperty().get()));
 						ps.getUpdateTournament().setString(3, endDate.isPresent() ? Utils.getStandardDateFrom(endDate.get()) : Utils.EMPTY_DATE);
 						ps.getUpdateTournament().setLong(4, tournament.getId());
 						ps.getUpdateTournament().addBatch();
@@ -1291,11 +1291,11 @@ public class SQLiteDAOImpl implements DAO {
 						//we need to remove every relationship before removing the tournament
 						tournament.removeAllPartecipations();
 						//we need to remove all the days (both in model and in db). This because day is a weak entity related to tournament
-						while (!tournament.getDays().isEmpty()) {
-							Day d = tournament.getDays().get(0);
+						while (!tournament.daysProperty().isEmpty()) {
+							Day d = tournament.daysProperty().get(0);
 							this.remove(d);
 						}
-						tournament.getDays().clear();
+						tournament.daysProperty().clear();
 						return null;
 					} catch (DAOException e) {
 						return e;
@@ -1323,9 +1323,9 @@ public class SQLiteDAOImpl implements DAO {
 					try {
 						String endDate = rs.getString("end_date");
 						t.setId(rs.getLong("id"));
-						t.getName().set(rs.getString("name"));
-						t.getStartDate().set(Utils.getDateFrom(rs.getString("start_date")));
-						t.getEndDate().set(Optional.ofNullable(!endDate.equalsIgnoreCase(Utils.EMPTY_DATE) ? Utils.getDateFrom(endDate) : null));
+						t.nameProperty().set(rs.getString("name"));
+						t.startDateProperty().set(Utils.getDateFrom(rs.getString("start_date")));
+						t.endDateProperty().set(Optional.ofNullable(!endDate.equalsIgnoreCase(Utils.EMPTY_DATE) ? Utils.getDateFrom(endDate) : null));
 						return null;
 					} catch (Exception e) {
 						return e;
@@ -1402,7 +1402,7 @@ public class SQLiteDAOImpl implements DAO {
 			final int i = j;
 			this.getTeamThat(p -> p.getId() == team_ids.get(i)).ifPresent(team -> {
 				Partecipation p = new Partecipation(tournament, team);
-				p.getTournament().get().getPartecipations().add(p);
+				p.getTournament().get().partecipationsProperty().add(p);
 				p.getTeam().get().partecipationsProperty().add(p);
 			});
 		}
@@ -1436,7 +1436,7 @@ public class SQLiteDAOImpl implements DAO {
 			final int i = j;
 			this.getTournamentThat(p -> p.getId() == tournament_ids.get(i)).ifPresent(tournament -> {
 				Partecipation p = new Partecipation(tournament, team);
-				p.getTournament().get().getPartecipations().add(p);
+				p.getTournament().get().partecipationsProperty().add(p);
 				p.getTeam().get().partecipationsProperty().add(p);
 			});
 		}
@@ -1628,7 +1628,7 @@ public class SQLiteDAOImpl implements DAO {
 	 * Computes the list of days in relationship "divide" with the given tournament
 	 * 
 	 * the function will fetch the data of the days in relationship with the given tournament and then
-	 * it will add them in the {@link Tournament#getDays()} list. Since such list is observed by the {@link DAO} itself,
+	 * it will add them in the {@link Tournament#daysProperty()} list. Since such list is observed by the {@link DAO} itself,
 	 * the {@link DAO} will be able to update the db properly
 	 * 
 	 * @param tournament the tournament involved
@@ -1655,7 +1655,7 @@ public class SQLiteDAOImpl implements DAO {
 			.findFirst()
 			.ifPresent(d -> {
 				d.getTournament().set(tournament);
-				tournament.getDays().add(d);
+				tournament.daysProperty().add(d);
 			});
 
 		}
@@ -1693,7 +1693,7 @@ public class SQLiteDAOImpl implements DAO {
 		this.getAllTournamentsThat(tournament -> tournament.getId() == tournamentId).stream().findFirst().ifPresent(tournament -> {
 			//we need to set the tournament before the other because the second insturction relies on the first one
 			day.getTournament().set(tournament);
-			tournament.getDays().add(day);
+			tournament.daysProperty().add(day);
 		});
 	}
 

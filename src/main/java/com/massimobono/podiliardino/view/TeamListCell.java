@@ -42,23 +42,23 @@ public class TeamListCell extends ListCell<Team>
             	Partecipation partecipation = null;
             	if (data.getCheckBox().isSelected()) {
             		partecipation = new Partecipation(tournament, team);
-            		tournament.getPartecipations().add(partecipation);
+            		tournament.partecipationsProperty().add(partecipation);
             		team.partecipationsProperty().add(partecipation);
             		this.availableTeams.removeIf(t -> t.playersProperty().contains(team.playersProperty().get(0)) || t.playersProperty().contains(team.playersProperty().get(1)));
             	} else {
-            		Optional<Partecipation> op = tournament.getPartecipations()
+            		Optional<Partecipation> op = tournament.partecipationsProperty()
             		.stream()
             		.parallel()
             		.filter(p -> {return p.getTeam().get().getId() == team.getId();}).findFirst();
             		op.ifPresent( p -> {
-            			this.tournamentTable.getSelectionModel().getSelectedItem().getPartecipations().remove(p);	
+            			this.tournamentTable.getSelectionModel().getSelectedItem().partecipationsProperty().remove(p);	
             			team.partecipationsProperty().remove(p);
             		});
             		
             	}
             });
             data.getNameLabel().setText(team.nameProperty().get());
-			data.getCheckBox().setSelected(this.tournamentTable.getSelectionModel().getSelectedItem().getPartecipations().parallelStream().filter(p -> p.getTeam().get() == team).findFirst().isPresent());
+			data.getCheckBox().setSelected(this.tournamentTable.getSelectionModel().getSelectedItem().partecipationsProperty().parallelStream().filter(p -> p.getTeam().get() == team).findFirst().isPresent());
             setGraphic(data.getPane());
         }
     }

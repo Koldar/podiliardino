@@ -70,7 +70,7 @@ public class Team implements Indexable {
 	 */
 	public int checkByeNumber(Tournament t, boolean checkDaysWithNoMatches) {
 		int retVal = 0;
-		for (Day d : t.getDays()) {
+		for (Day d : t.daysProperty()) {
 			if (!checkDaysWithNoMatches && (d.getMatches().size() == 0)) {
 				continue;
 			}
@@ -133,7 +133,7 @@ public class Team implements Indexable {
 	 */
 	public void add(Partecipation p) {
 		this.partecipations.add(p);
-		p.getTournament().get().getPartecipations().add(p);
+		p.getTournament().get().partecipationsProperty().add(p);
 	}
 	
 	/**
@@ -143,7 +143,7 @@ public class Team implements Indexable {
 	 */
 	public void remove(Partecipation p) {
 		this.partecipations.remove(p);
-		p.getTournament().get().getPartecipations().remove(p);
+		p.getTournament().get().partecipationsProperty().remove(p);
 	}
 	
 	/**

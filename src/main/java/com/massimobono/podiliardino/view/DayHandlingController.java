@@ -112,7 +112,7 @@ public class DayHandlingController {
 	
 	@FXML
 	private void initialize() {
-		this.tournamentTableColumn.setCellValueFactory(celldata -> celldata.getValue().getName());
+		this.tournamentTableColumn.setCellValueFactory(celldata -> celldata.getValue().nameProperty());
 		this.dayTableColumn.setCellValueFactory(celldata -> celldata.getValue().getNumber().asObject());
 		
 		this.tournamentTableView.getSelectionModel().selectedItemProperty().addListener(this::handleUserSelectTournament);
@@ -157,7 +157,7 @@ public class DayHandlingController {
 				return;
 			}
 			Tournament t = this.tournamentTableView.getSelectionModel().getSelectedItem();
-			for (Day d : t.getDays()) {
+			for (Day d : t.daysProperty()) {
 				if (!d.isDayCompleted()) {
 					Utils.createDefaultErrorAlert("Can't add a new day", "In order to create a new day, all previous days of the tournament needs to be completed (no matches are left to run)");
 					return;
@@ -169,7 +169,7 @@ public class DayHandlingController {
 					"New Day", 
 					(DayEditDialogController c, Stage s) -> {
 						Day newDay = new Day();
-						newDay.getNumber().set(this.tournamentTableView.getSelectionModel().getSelectedItem().getDays().size()+1);
+						newDay.getNumber().set(this.tournamentTableView.getSelectionModel().getSelectedItem().daysProperty().size()+1);
 						c.setup(s,newDay); 
 					},
 					(c) -> {return Optional.ofNullable(c.isClickedOK() ? c.getDay() : null);}
@@ -251,7 +251,7 @@ public class DayHandlingController {
 				//we delete the last item of the list
 				this.dayTableView.setItems(FXCollections.emptyObservableList());
 			} else {
-				this.dayTableView.setItems(newValue.getDays());
+				this.dayTableView.setItems(newValue.daysProperty());
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -398,7 +398,7 @@ public class DayHandlingController {
     			Utils.createInformationAlert("Ranking produced", String.format(
     					"The ranking of the day %d of tournament %s has been produced. You can view it at %s", 
     					day.getNumber().get(),
-    					day.getTournament().get().getName().get(),
+    					day.getTournament().get().nameProperty().get(),
     					outFile.getAbsolutePath()
     					));
             }
@@ -443,7 +443,7 @@ public class DayHandlingController {
     			Utils.createInformationAlert("Matches produced", String.format(
     					"The matches needed to do of the day %d of tournament %s has been produced. You can view it at %s", 
     					day.getNumber().get(),
-    					day.getTournament().get().getName().get(),
+    					day.getTournament().get().nameProperty().get(),
     					outFile.getAbsolutePath()
     					));
             }

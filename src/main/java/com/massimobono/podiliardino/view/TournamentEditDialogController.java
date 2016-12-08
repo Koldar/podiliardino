@@ -71,9 +71,9 @@ public class TournamentEditDialogController {
 	@FXML
 	private void handleOK() {
 		if (this.checkValues()) {
-			this.tournamentInvolved.getName().set(this.nameTextField.getText());
-			this.tournamentInvolved.getStartDate().set(Utils.getDateFrom(this.startDateTextField.getText()));
-			this.tournamentInvolved.getEndDate().set(Optional.ofNullable(!this.endDateTextField.getText().equalsIgnoreCase(Utils.EMPTY_DATE) ? Utils.getDateFrom(this.endDateTextField.getText()) : null));
+			this.tournamentInvolved.nameProperty().set(this.nameTextField.getText());
+			this.tournamentInvolved.startDateProperty().set(Utils.getDateFrom(this.startDateTextField.getText()));
+			this.tournamentInvolved.endDateProperty().set(Optional.ofNullable(!this.endDateTextField.getText().equalsIgnoreCase(Utils.EMPTY_DATE) ? Utils.getDateFrom(this.endDateTextField.getText()) : null));
 			this.clickedOK = true;
 			this.dialog.close();
 		}
@@ -124,9 +124,9 @@ public class TournamentEditDialogController {
 	private void setTournament(Tournament tournament) {
 		this.tournamentInvolved = tournament;
 		
-		this.nameTextField.setText(tournament.getName().get());
-		this.startDateTextField.setText(Utils.getStandardDateFrom(tournament.getStartDate().get()));
-		this.endDateTextField.setText(tournament.getEndDate().get().isPresent() ? Utils.getStandardDateFrom(tournament.getEndDate().get().get()) : Utils.EMPTY_DATE);
+		this.nameTextField.setText(tournament.nameProperty().get());
+		this.startDateTextField.setText(Utils.getStandardDateFrom(tournament.startDateProperty().get()));
+		this.endDateTextField.setText(tournament.endDateProperty().get().isPresent() ? Utils.getStandardDateFrom(tournament.endDateProperty().get().get()) : Utils.EMPTY_DATE);
 	}
 
 	/**

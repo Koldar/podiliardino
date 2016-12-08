@@ -43,6 +43,7 @@ public class Tournament implements Indexable {
 	
 	//derived properties
 	private final ReadOnlyIntegerWrapper numberOfPartecipants;
+	private final ReadOnlyIntegerWrapper numberOfTeams;
 	
 	
 	/**
@@ -63,6 +64,8 @@ public class Tournament implements Indexable {
 		
 		this.numberOfPartecipants = new ReadOnlyIntegerWrapper();
 		this.numberOfPartecipants.bind(Bindings.createIntegerBinding(this::getNumberOfPartecipants, this.partecipations));
+		this.numberOfTeams = new ReadOnlyIntegerWrapper();
+		this.numberOfTeams.bind(Bindings.createIntegerBinding(this::getNumberOfTeams, this.partecipations));
 	}
 	
 	public Tournament() {
@@ -98,7 +101,7 @@ public class Tournament implements Indexable {
 	 */
 	public boolean hasAMatchAgainst(Team team1, Team team2, int maximumPreviousMatchAllowed) {
 		int count = 0;
-		for (Day d : this.getDays()) {
+		for (Day d : this.daysProperty()) {
 			if (d.hasAMatchAgainst(team1, team2)){
 				count++;
 				if (count > maximumPreviousMatchAllowed) {
@@ -158,7 +161,7 @@ public class Tournament implements Indexable {
 	 * @return the number of players that will be attending to the tournament
 	 */
 	public int getNumberOfPartecipants() {
-		return this.getPartecipations().parallelStream().mapToInt(p -> p.getTeam().get().playersProperty().size()).sum();
+		return this.partecipationsProperty().parallelStream().mapToInt(p -> p.getTeam().get().playersProperty().size()).sum();
 	}
 	
 	public ReadOnlyIntegerProperty numberOfPartecipantsProperty() {
@@ -170,13 +173,17 @@ public class Tournament implements Indexable {
 	 * @return the number of teams that will be attending to the tournament
 	 */
 	public int getNumberOfTeams() {
-		return this.getPartecipations().size();
+		return this.partecipationsProperty().size();
+	}
+	
+	public ReadOnlyIntegerProperty numberOfTeamsProperty() {
+		return this.numberOfTeams.getReadOnlyProperty();
 	}
 
 	/**
 	 * @return the days
 	 */
-	public ObservableList<Day> getDays() {
+	public ObservableList<Day> daysProperty() {
 		return days;
 	}
 
@@ -185,7 +192,7 @@ public class Tournament implements Indexable {
 	 * @return a list of teams partecipating in the current tournament
 	 */
 	public Collection<Team> getPartecipatingTeams() {
-		return this.getPartecipations().parallelStream().map(p -> p.getTeam().get()).collect(Collectors.toSet());
+		return this.partecipationsProperty().parallelStream().map(p -> p.getTeam().get()).collect(Collectors.toSet());
 	}
 	
 	/**
@@ -215,7 +222,7 @@ public class Tournament implements Indexable {
 	/**
 	 * @return the name
 	 */
-	public StringProperty getName() {
+	public StringProperty nameProperty() {
 		return name;
 	}
 
@@ -223,7 +230,7 @@ public class Tournament implements Indexable {
 	/**
 	 * @return the startDate
 	 */
-	public ObjectProperty<LocalDate> getStartDate() {
+	public ObjectProperty<LocalDate> startDateProperty() {
 		return startDate;
 	}
 
@@ -231,7 +238,7 @@ public class Tournament implements Indexable {
 	/**
 	 * @return the endDate
 	 */
-	public ObjectProperty<Optional<LocalDate>> getEndDate() {
+	public ObjectProperty<Optional<LocalDate>> endDateProperty() {
 		return endDate;
 	}
 
@@ -239,8 +246,29 @@ public class Tournament implements Indexable {
 	/**
 	 * @return the partecipations
 	 */
-	public ObservableList<Partecipation> getPartecipations() {
+	public ObservableList<Partecipation> partecipationsProperty() {
 		return partecipations;
+	}
+
+	/**
+	 * @return the name
+	 */
+	public final String getName() {
+		return name.get();
+	}
+
+	/**
+	 * @return the startDate
+	 */
+	public final LocalDate getStartDate() {
+		return startDate.get();
+	}
+
+	/**
+	 * @return the endDate
+	 */
+	public final Optional<LocalDate> getEndDate() {
+		return endDate.get();
 	}
 
 	@Override
