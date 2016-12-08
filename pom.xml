@@ -83,4 +83,7 @@
 
 	</dependencies>
 
+	<name>Podiliardino</name>
+	<url>https://github.com/Koldar/podiliardino</url>
+	<description>A software helping you managing your &quot;biliardino&quot; tournaments. Bathed with holy water as well!</description>
 </project>
