@@ -47,8 +47,17 @@ Almost all the feature podiliardino has can be found in this tab. The tab lets y
  
 After selecting a tournament in the left pane, you can add/change or remove days. Removing days will delete all the data associated to that day; however, players, teams and tournaments won't be affected at all.
 
-After selecting a day, you may generate the matches of that day. You can generate matches only if at least 2 teams joined the tournament. By pressing "Generate matches" the software will generate the matches according to the "swiss tournament mode". You can press as many times you want such button: the computer will recompute new matches according to the swiss mode. The computer will also take care of the "bye": in case of odd number of partecipants, the tournament will bye one of those.
+After selecting a day, you may generate the matches of that day. You can generate matches only if at least 2 teams joined the tournament. By pressing "Generate matches" the software will generate the matches according to the "swiss tournament mode". You can press as many times you want such button: the computer will recompute new matches according to the swiss mode. The computer will also take care of the "bye": in case of odd number of partecipants, the tournament will assign a bye to one team. Team bye assignment follows "swiss mode" rules. 
 
-Teams that will bye will have a fake match already done. Viceversa, real matches will be displayed in the right part of the window.
+Bying Teams will have a fake match already done. Viceversa, real matches will need to use the button "Update match result" in order to be declared "done".
+You can also update a match result as many time as you want: the software will update the result accordingly. However, once you update the match for the first time, follows update won't affect its status (it will remain set to "done").
+
+### Exporting useful information
+
+While you compile the match results of the day, you can press **anytime** "export ranking" and "export matches": the former will gneerate a CSV containing the ranking of all the teams (updated to the matches you've set) whilst the latter will also export a CSV containing all the matches that "needs to be done". You can't export matches if the day is already completed. 
+
+### Tournament Advancement
+
+After you totally completed a day, you may add another day in the same tournament. You may not add a day in a tournament if at least one day in the same tourney has still a match to be done.
  
  
