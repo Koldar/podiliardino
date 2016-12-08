@@ -13,9 +13,12 @@ import org.apache.logging.log4j.Logger;
 
 import com.massimobono.podiliardino.util.ObservableDistinctList;
 
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyIntegerProperty;
+import javafx.beans.property.ReadOnlyIntegerWrapper;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -38,6 +41,9 @@ public class Tournament implements Indexable {
 	private final ObservableDistinctList<Partecipation> partecipations;
 	private final ObservableDistinctList<Day> days;
 	
+	//derived properties
+	private final ReadOnlyIntegerWrapper numberOfPartecipants;
+	
 	
 	/**
 	 * 
@@ -54,6 +60,9 @@ public class Tournament implements Indexable {
 		this.endDate = new SimpleObjectProperty<>(Optional.ofNullable(endDate));
 		this.partecipations = new ObservableDistinctList<>(FXCollections.observableArrayList(partecipations));
 		this.days = new ObservableDistinctList<>(FXCollections.observableArrayList(days));
+		
+		this.numberOfPartecipants = new ReadOnlyIntegerWrapper();
+		this.numberOfPartecipants.bind(Bindings.createIntegerBinding(this::getNumberOfPartecipants, this.partecipations));
 	}
 	
 	public Tournament() {
@@ -150,6 +159,10 @@ public class Tournament implements Indexable {
 	 */
 	public int getNumberOfPartecipants() {
 		return this.getPartecipations().parallelStream().mapToInt(p -> p.getTeam().get().getPlayers().size()).sum();
+	}
+	
+	public ReadOnlyIntegerProperty numberOfPartecipantsProperty() {
+		return this.numberOfPartecipants.getReadOnlyProperty();
 	}
 	
 	/**

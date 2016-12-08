@@ -36,6 +36,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 
@@ -95,7 +96,10 @@ public class TournamentHandlingController {
 	private void initialize() {
 		// Initialize the person table with the two columns.
 		this.tournamentNameColumn.setCellValueFactory(cellData -> cellData.getValue().getName());
-		this.tournamentInfoColumn.setCellValueFactory(cellData -> new SimpleIntegerProperty(cellData.getValue().getNumberOfPartecipants()).asObject());
+		//this.tournamentInfoColumn.setCellValueFactory(new PropertyValueFactory<Tournament, Integer>("numberOfPartecipants"));
+		this.tournamentInfoColumn.setCellValueFactory(cellData -> {
+			return cellData.getValue().numberOfPartecipantsProperty().asObject();
+		});
 
 		// Listen for selection changes and show the person details when changed.
 		this.tournamentTable.getSelectionModel().selectedItemProperty().addListener(this::handleUserSelectTournament);
