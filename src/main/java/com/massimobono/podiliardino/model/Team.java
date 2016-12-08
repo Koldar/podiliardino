@@ -71,7 +71,7 @@ public class Team implements Indexable {
 	public int checkByeNumber(Tournament t, boolean checkDaysWithNoMatches) {
 		int retVal = 0;
 		for (Day d : t.daysProperty()) {
-			if (!checkDaysWithNoMatches && (d.getMatches().size() == 0)) {
+			if (!checkDaysWithNoMatches && (d.matchesProperty().size() == 0)) {
 				continue;
 			}
 			if (!this.hasTeamFoughtInDay(d, false)) {
@@ -168,7 +168,7 @@ public class Team implements Indexable {
 		}
 		m.getTeam1().get().matchesProperty().add(m);
 		m.getTeam2().get().matchesProperty().add(m);
-		m.getDay().get().getMatches().add(m);
+		m.getDay().get().matchesProperty().add(m);
 	}
 	
 	/**
@@ -183,7 +183,7 @@ public class Team implements Indexable {
 		}
 		m.getTeam1().get().matchesProperty().remove(m);
 		m.getTeam2().get().matchesProperty().remove(m);
-		m.getDay().get().getMatches().remove(m);
+		m.getDay().get().matchesProperty().remove(m);
 	}
 	
 	/**
@@ -194,7 +194,7 @@ public class Team implements Indexable {
 	public int getPointsYourOpponentsScored(Tournament t) {
 		return this.matchesProperty()
 				.parallelStream()
-				.filter(m -> m.getDay().get().getTournament().get() == t)
+				.filter(m -> m.getDay().get().tournamentProperty().get() == t)
 				.filter(m -> m.getStatus().get() == MatchStatus.DONE)
 				.mapToInt(m -> m.getOtherTeam(this).getPointsScoredIn(t))
 				.sum();
@@ -209,7 +209,7 @@ public class Team implements Indexable {
 		return this.matchesProperty()
 				.parallelStream()
 				.filter(m -> {
-					return m.getDay().get().getTournament().get() == t;
+					return m.getDay().get().tournamentProperty().get() == t;
 				})
 				.filter(m -> {
 					return m.getStatus().get() == MatchStatus.DONE;
@@ -232,7 +232,7 @@ public class Team implements Indexable {
 	public int getNumberOfGoalsScored(Tournament t) {
 		return this.matchesProperty()
 				.parallelStream()
-				.filter(m -> m.getDay().get().getTournament().get() == t)
+				.filter(m -> m.getDay().get().tournamentProperty().get() == t)
 				.filter(m -> m.getStatus().get() == MatchStatus.DONE)
 				.mapToInt(m -> m.getNumberOfGoalsOfTeam(this))
 				.sum();
@@ -247,7 +247,7 @@ public class Team implements Indexable {
 	public int getNumberOfGoalsReceived(Tournament t) {
 		return this.matchesProperty()
 				.parallelStream()
-				.filter(m -> m.getDay().get().getTournament().get() == t)
+				.filter(m -> m.getDay().get().tournamentProperty().get() == t)
 				.filter(m -> m.getStatus().get() == MatchStatus.DONE)
 				.mapToInt(m -> m.getNumberOfGoalssOfOtherTeam(this))
 				.sum();
@@ -261,7 +261,7 @@ public class Team implements Indexable {
 	public int getNumberOfGoalsYourOpponentsScored(Tournament t) {
 		return this.matchesProperty()
 				.parallelStream()
-				.filter(m -> m.getDay().get().getTournament().get() == t)
+				.filter(m -> m.getDay().get().tournamentProperty().get() == t)
 				.filter(m -> m.getStatus().get() == MatchStatus.DONE)
 				.mapToInt(m -> m.getOtherTeam(this).getNumberOfGoalsScored(t))
 				.sum();

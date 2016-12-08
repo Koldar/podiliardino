@@ -59,17 +59,17 @@ public class SwissRankingManager implements RankingComputer<Team> {
 			@Override
 			public int compare(Team o1, Team o2) {
 				LOG.info("comparing {} and {}", o1, o2);
-				int score1 = o1.getPointsScoredIn(currentDay.getTournament().get());
-				int score2 = o2.getPointsScoredIn(currentDay.getTournament().get());
+				int score1 = o1.getPointsScoredIn(currentDay.tournamentProperty().get());
+				int score2 = o2.getPointsScoredIn(currentDay.tournamentProperty().get());
 				LOG.info("score: {} VS {}", score1, score2);
 				if (score1 != score2) {
 					LOG.info("wins {}", (score1 - score2) > 0 ? o1 : o2);
 					return score1 - score2;
 				}
-				int goals1 = o1.getNumberOfGoalsScored(currentDay.getTournament().get());
-				int goals2 = o2.getNumberOfGoalsScored(currentDay.getTournament().get());
-				int goalsReceived1 = o1.getNumberOfGoalsReceived(currentDay.getTournament().get());
-				int goalsReceived2 = o2.getNumberOfGoalsReceived(currentDay.getTournament().get());
+				int goals1 = o1.getNumberOfGoalsScored(currentDay.tournamentProperty().get());
+				int goals2 = o2.getNumberOfGoalsScored(currentDay.tournamentProperty().get());
+				int goalsReceived1 = o1.getNumberOfGoalsReceived(currentDay.tournamentProperty().get());
+				int goalsReceived2 = o2.getNumberOfGoalsReceived(currentDay.tournamentProperty().get());
 				int goalsDifference1 = goals1 - goalsReceived1;
 				int goalsDifference2 = goals2 - goalsReceived2;
 				
@@ -85,8 +85,8 @@ public class SwissRankingManager implements RankingComputer<Team> {
 					return goals1 - goals2;
 				}
 				
-				int opponentsGoals1 = o1.getNumberOfGoalsYourOpponentsScored(currentDay.getTournament().get());
-				int opponentsGoals2 = o2.getNumberOfGoalsYourOpponentsScored(currentDay.getTournament().get());
+				int opponentsGoals1 = o1.getNumberOfGoalsYourOpponentsScored(currentDay.tournamentProperty().get());
+				int opponentsGoals2 = o2.getNumberOfGoalsYourOpponentsScored(currentDay.tournamentProperty().get());
 				LOG.info("number of opponents goals: {} VS {}", opponentsGoals1, opponentsGoals2);
 				if (opponentsGoals1 != opponentsGoals2) {
 					LOG.info("wins {}", (opponentsGoals1 - opponentsGoals2) > 0 ? o1 : o2);
@@ -116,7 +116,7 @@ public class SwissRankingManager implements RankingComputer<Team> {
 		this.currentDay = d;
 		
 		//we use a priority queue to automatically sort the teams
-		this.ranking.addAll(d.getTournament().get().getPartecipatingTeams());
+		this.ranking.addAll(d.tournamentProperty().get().getPartecipatingTeams());
 		while (!this.ranking.isEmpty()) {
 			retVal.add(0, this.ranking.poll());
 		}
@@ -128,7 +128,7 @@ public class SwissRankingManager implements RankingComputer<Team> {
 		this.currentDay = d;
 		
 		//we use a priority queue to automatically sort the teams
-		this.ranking.addAll(d.getTournament().get().getPartecipatingTeams());
+		this.ranking.addAll(d.tournamentProperty().get().getPartecipatingTeams());
 		this.observableRanking.clear();
 		while (!this.ranking.isEmpty()) {
 			this.observableRanking.add(0, this.ranking.poll());

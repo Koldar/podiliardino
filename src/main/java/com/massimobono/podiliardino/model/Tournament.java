@@ -147,7 +147,7 @@ public class Tournament implements Indexable {
 	 */
 	public void add(Day d) {
 		this.days.add(d);
-		d.getTournament().set(this);
+		d.tournamentProperty().set(this);
 	}
 	
 	public void removeAllDays() {

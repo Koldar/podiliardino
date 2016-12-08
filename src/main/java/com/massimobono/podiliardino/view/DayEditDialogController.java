@@ -106,7 +106,7 @@ public class DayEditDialogController {
 	@FXML
 	private void handleOK() {
 		if (this.checkValues()) {
-			this.dayInvolved.getDate().set(Utils.getDateFrom(this.dateTextField.getText()));
+			this.dayInvolved.dateProperty().set(Utils.getDateFrom(this.dateTextField.getText()));
 			this.clickedOK = true;
 			this.dialog.close();
 		}
@@ -146,7 +146,7 @@ public class DayEditDialogController {
 	public void setDay(Day day) {
 		this.dayInvolved = day;
 		
-		this.dateTextField.setText(Utils.getStandardDateFrom(day.getDate().get()));
+		this.dateTextField.setText(Utils.getStandardDateFrom(day.dateProperty().get()));
 	}
 
 	/**

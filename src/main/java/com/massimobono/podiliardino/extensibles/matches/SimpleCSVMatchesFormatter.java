@@ -46,7 +46,7 @@ public class SimpleCSVMatchesFormatter implements Formatter<Day, File> {
 		
 		try (PrintWriter pw = new PrintWriter(this.csvFile)) {
 			pw.println(HEADER);
-			for (Match match : toFormat.getMatches()){
+			for (Match match : toFormat.matchesProperty()){
 				if (match.getStatus().get() != MatchStatus.TODO) {
 					continue;
 				}

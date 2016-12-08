@@ -1486,7 +1486,7 @@ public class SQLiteDAOImpl implements DAO {
 	}
 	
 	private void setupDayListeners(Day day) {
-		day.getTournament().addListener((ov, oldValue, newValue) -> {
+		day.tournamentProperty().addListener((ov, oldValue, newValue) -> {
 			try {
 				if (newValue == null) {
 					//it's safe because that value is not used at all
@@ -1499,7 +1499,7 @@ public class SQLiteDAOImpl implements DAO {
 				e.printStackTrace();
 			}
 		});
-		day.getMatches().addListener(this.getDefaultListListener(
+		day.matchesProperty().addListener(this.getDefaultListListener(
 				day, 
 				(d,m) -> {
 					try {
@@ -1526,8 +1526,8 @@ public class SQLiteDAOImpl implements DAO {
 				"day", 
 				(c,s,ps) -> {
 					try {
-						ps.getInsertDay().setInt(1, day.getNumber().get());
-						ps.getInsertDay().setString(2, Utils.getStandardDateFrom(day.getDate().get()));
+						ps.getInsertDay().setInt(1, day.numberProperty().get());
+						ps.getInsertDay().setString(2, Utils.getStandardDateFrom(day.dateProperty().get()));
 						ps.getInsertDay().addBatch();
 
 						ps.getInsertDay().executeBatch();
@@ -1551,8 +1551,8 @@ public class SQLiteDAOImpl implements DAO {
 				day, 
 				(c,s,ps) -> {
 					try {
-						ps.getUpdateDay().setInt(1,day.getNumber().get());
-						ps.getUpdateDay().setString(2, Utils.getStandardDateFrom(day.getDate().get()));
+						ps.getUpdateDay().setInt(1,day.numberProperty().get());
+						ps.getUpdateDay().setString(2, Utils.getStandardDateFrom(day.dateProperty().get()));
 						ps.getUpdateDay().setLong(3, day.getId());
 						ps.getUpdateDay().executeUpdate();
 						return null;
@@ -1572,8 +1572,8 @@ public class SQLiteDAOImpl implements DAO {
 				(d,rs) -> {
 					try {
 						d.setId(rs.getLong("id"));
-						d.getNumber().set(rs.getInt("number"));
-						d.getDate().set(Utils.getDateFrom(rs.getString("date")));
+						d.numberProperty().set(rs.getInt("number"));
+						d.dateProperty().set(Utils.getDateFrom(rs.getString("date")));
 						return null;
 					} catch (SQLException e) {
 						return e;
@@ -1609,7 +1609,7 @@ public class SQLiteDAOImpl implements DAO {
 				() -> {
 					//before we remove a day, we need to remove every match performed in that day and the relationship with the tournament
 					day.removeAllMatches();
-					day.remove(day.getTournament().get());
+					day.remove(day.tournamentProperty().get());
 					return null;
 				},
 				() -> {
@@ -1654,7 +1654,7 @@ public class SQLiteDAOImpl implements DAO {
 			.stream()
 			.findFirst()
 			.ifPresent(d -> {
-				d.getTournament().set(tournament);
+				d.tournamentProperty().set(tournament);
 				tournament.daysProperty().add(d);
 			});
 
@@ -1665,7 +1665,7 @@ public class SQLiteDAOImpl implements DAO {
 	 * Computes the {@link Tournament} of the specific day in relationship "divide"
 	 * 
 	 * the function will fetch the data of the tournaments in relationship with the given day and then
-	 * it will add them in the {@link Day#getTournament()}. Since such element is observed by the {@link DAO} itself,
+	 * it will add them in the {@link Day#tournamentProperty()}. Since such element is observed by the {@link DAO} itself,
 	 * the {@link DAO} will be able to update the db properly
 	 * 
 	 * @param day the day involved
@@ -1692,7 +1692,7 @@ public class SQLiteDAOImpl implements DAO {
 
 		this.getAllTournamentsThat(tournament -> tournament.getId() == tournamentId).stream().findFirst().ifPresent(tournament -> {
 			//we need to set the tournament before the other because the second insturction relies on the first one
-			day.getTournament().set(tournament);
+			day.tournamentProperty().set(tournament);
 			tournament.daysProperty().add(day);
 		});
 	}
@@ -1858,7 +1858,7 @@ public class SQLiteDAOImpl implements DAO {
 						//we don't care if the match is already inside the list, because they are ObservableDistinctList
 						team1.matchesProperty().add(m);
 						team2.matchesProperty().add(m);
-						day.getMatches().add(m);
+						day.matchesProperty().add(m);
 					});
 				});
 			});

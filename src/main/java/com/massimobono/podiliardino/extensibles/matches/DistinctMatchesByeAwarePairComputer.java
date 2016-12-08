@@ -48,9 +48,9 @@ public class DistinctMatchesByeAwarePairComputer<T extends Team> implements Pair
 		
 		//first we need to determinate whether or not a bye is necessary and, whether is necessary, we need to detemrine which team will bye
 		//if every team has a bye we act like none really has (in this way the tournament can keep going more than the minimum day length)
-		if (d.getTournament().get().hasOddPartecipants()) {
+		if (d.tournamentProperty().get().hasOddPartecipants()) {
 			//ok, there are a odd number of partecipants. We need to determine which team will have no pair
-			teamToBye = this.computeTeamToBye(teams, d.getTournament().get());
+			teamToBye = this.computeTeamToBye(teams, d.tournamentProperty().get());
 			LOG.info("In this pairs {} will bye", teamToBye);
 		}
 		
@@ -85,7 +85,7 @@ public class DistinctMatchesByeAwarePairComputer<T extends Team> implements Pair
 						continue;
 					}
 					//we check if team1 and team2 has already fought against
-					if (d.getTournament().get().hasAMatchAgainst(team1, team2, maximumNumberOfMatchesAllowed)){
+					if (d.tournamentProperty().get().hasAMatchAgainst(team1, team2, maximumNumberOfMatchesAllowed)){
 						continue;
 					}
 					//ok, we have found the first team2 that "team1" has never fought against. We pair them
@@ -110,7 +110,7 @@ public class DistinctMatchesByeAwarePairComputer<T extends Team> implements Pair
 						continue;
 					}
 					//we check if team1 and team2 has already fought against
-					if (d.getTournament().get().hasAMatchAgainst(team1, team2, maximumNumberOfMatchesAllowed)){
+					if (d.tournamentProperty().get().hasAMatchAgainst(team1, team2, maximumNumberOfMatchesAllowed)){
 						continue;
 					}
 					//ok, we have found the first team2 that "team1" has never fought against. We pair them

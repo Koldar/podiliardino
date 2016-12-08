@@ -32,6 +32,8 @@ public class Day implements Indexable {
 	private final ObjectProperty<Tournament> tournament;
 	private final ObservableDistinctList<Match> matches;
 	
+	//derived properties
+	
 	public Day(long id, int number, LocalDate day, Tournament tournament, Collection<Match> matches) {
 		super();
 		this.id = id;
@@ -52,7 +54,7 @@ public class Day implements Indexable {
 	 * @return True if the 2 teams have a match/ has already fought eachother in this day, false otherwise
 	 */
 	public boolean hasAMatchAgainst(Team team1, Team team2) {
-		for (Match m : this.getMatches()) {
+		for (Match m : this.matchesProperty()) {
 			if (!m.hasTeamFoughtInThisMatch(team1)) {
 				continue;
 			}
@@ -92,13 +94,13 @@ public class Day implements Indexable {
 	}
 	
 	public void add(Match m) {
-		m.getDay().get().getMatches().add(m);
+		m.getDay().get().matchesProperty().add(m);
 		m.getTeam1().get().matchesProperty().add(m);
 		m.getTeam2().get().matchesProperty().add(m);
 	}
 	
 	public void remove(Match m) {
-		m.getDay().get().getMatches().remove(m);
+		m.getDay().get().matchesProperty().remove(m);
 		m.getTeam1().get().matchesProperty().remove(m);
 		m.getTeam2().get().matchesProperty().remove(m);
 	}
@@ -118,7 +120,7 @@ public class Day implements Indexable {
 	 * @return the number of mathces that we have left in order to conclude the day
 	 */
 	public int getNumberOfMatchesToDo() {
-		return this.getMatches().parallelStream().filter(m -> m.getStatus().get() == MatchStatus.TODO).mapToInt(m -> 1).sum();
+		return this.matchesProperty().parallelStream().filter(m -> m.getStatus().get() == MatchStatus.TODO).mapToInt(m -> 1).sum();
 	}
 	
 	/**
@@ -137,7 +139,7 @@ public class Day implements Indexable {
 	 * @return the number of matches already terminated
 	 */
 	public int getNumberOfMatchesDone(final boolean includeBye) {
-		return this.getMatches()
+		return this.matchesProperty()
 		.parallelStream()
 		.filter(m -> m.getStatus().get() == MatchStatus.DONE)
 		.filter(m -> {
@@ -150,31 +152,53 @@ public class Day implements Indexable {
 	/**
 	 * @return the matches
 	 */
-	public ObservableList<Match> getMatches() {
+	public ObservableList<Match> matchesProperty() {
 		return matches;
 	}
 
 	/**
 	 * @return the number
 	 */
-	public IntegerProperty getNumber() {
+	public IntegerProperty numberProperty() {
 		return number;
 	}
 
 	/**
 	 * @return the day
 	 */
-	public ObjectProperty<LocalDate> getDate() {
+	public ObjectProperty<LocalDate> dateProperty() {
 		return day;
 	}
 
 	/**
 	 * @return the tournament
 	 */
-	public ObjectProperty<Tournament> getTournament() {
+	public ObjectProperty<Tournament> tournamentProperty() {
 		return tournament;
 	}
 
+	
+
+	/**
+	 * @return the number
+	 */
+	public final int getNumber() {
+		return number.get();
+	}
+
+	/**
+	 * @return the day
+	 */
+	public final LocalDate getDay() {
+		return day.get();
+	}
+
+	/**
+	 * @return the tournament
+	 */
+	public final Tournament getTournament() {
+		return tournament.get();
+	}
 
 	@Override
 	public void setId(long id) {

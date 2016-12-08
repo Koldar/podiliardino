@@ -21,7 +21,7 @@ public class AddDefaultVictoryDummyMatchHandler implements DummyMatchHandler{
 	
 	@Override
 	public void handleUnPairedTeam(Day day, Team unpairedTeam) {
-		day.getMatches().add(new Match(
+		day.matchesProperty().add(new Match(
 				unpairedTeam,
 				Utils.DUMMYTEAM,
 				day, 
