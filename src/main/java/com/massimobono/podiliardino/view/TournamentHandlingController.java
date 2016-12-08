@@ -132,19 +132,19 @@ public class TournamentHandlingController {
 										if (data.getCheckBox().isSelected()) {
 											partecipation = new Partecipation(tournament, team);
 											tournament.getPartecipations().add(partecipation);
-											team.getPartecipations().add(partecipation);
+											team.partecipationsProperty().add(partecipation);
 										} else {
 											Optional<Partecipation> op = tournament.getPartecipations()
 													.parallelStream()
 													.filter(p -> {return p.getTeam().get().getId() == team.getId();}).findFirst();
 											op.ifPresent( p -> {
 												tournament.getPartecipations().remove(p);	
-												team.getPartecipations().remove(p);
+												team.partecipationsProperty().remove(p);
 											});
 
 										}
 									});
-									data.getNameLabel().setText(team.getName().get());
+									data.getNameLabel().setText(team.nameProperty().get());
 									data.getCheckBox().setSelected(tournament.getPartecipations()
 											.parallelStream()
 											.filter(p -> p.getTeam().get() == team)

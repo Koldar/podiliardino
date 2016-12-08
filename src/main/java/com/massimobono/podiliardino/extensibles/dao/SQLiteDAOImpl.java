@@ -913,7 +913,7 @@ public class SQLiteDAOImpl implements DAO {
 		for (int j = 0; j<teamIds.size(); j++) {
 			final int i = j;
 			this.getTeamThat(t -> t.getId() == teamIds.get(i)).ifPresent(t -> {
-				t.getPlayers().add(p);
+				t.playersProperty().add(p);
 				p.teamsProperty().add(t);
 			});
 		}
@@ -944,7 +944,7 @@ public class SQLiteDAOImpl implements DAO {
 		for (int j = 0; j<playerIds.size(); j++) {
 			final int i = j;
 			this.getPlayerThat(p -> p.getId() == playerIds.get(i)).ifPresent(p -> {
-				t.getPlayers().add(p);
+				t.playersProperty().add(p);
 				p.teamsProperty().add(t);
 			});
 		}
@@ -955,7 +955,7 @@ public class SQLiteDAOImpl implements DAO {
 	 * @param team
 	 */
 	private void setupTeamListeners(Team team) {
-		team.getPlayers().addListener(this.getDefaultListListener(
+		team.playersProperty().addListener(this.getDefaultListListener(
 				team, 
 				(t,p) -> {
 					try {
@@ -974,7 +974,7 @@ public class SQLiteDAOImpl implements DAO {
 					}
 					
 				}));
-		team.getPartecipations().addListener(this.getDefaultListListener(
+		team.partecipationsProperty().addListener(this.getDefaultListListener(
 				team, 
 				(t,p) -> {
 					try {
@@ -994,7 +994,7 @@ public class SQLiteDAOImpl implements DAO {
 					}
 				}
 				));
-		team.getMatches().addListener(this.getDefaultListListener(
+		team.matchesProperty().addListener(this.getDefaultListListener(
 				team,
 				(t,m) -> {
 					try {
@@ -1021,8 +1021,8 @@ public class SQLiteDAOImpl implements DAO {
 				"team",
 				(c,s,ps) -> {
 					try {
-						ps.getInsertTeam().setString(1, team.getName().get());
-						ps.getInsertTeam().setString(2, Utils.getStandardDateFrom(team.getDate().get()));
+						ps.getInsertTeam().setString(1, team.nameProperty().get());
+						ps.getInsertTeam().setString(2, Utils.getStandardDateFrom(team.dateProperty().get()));
 						ps.getInsertTeam().addBatch();
 						ps.getInsertTeam().executeBatch();
 						return null;
@@ -1044,8 +1044,8 @@ public class SQLiteDAOImpl implements DAO {
 				team,
 				(c,s,ps) -> {
 					try {
-						ps.getUpdateTeam().setString(1, team.getName().get());
-						ps.getUpdateTeam().setString(2, Utils.getStandardDateFrom(team.getDate().get()));
+						ps.getUpdateTeam().setString(1, team.nameProperty().get());
+						ps.getUpdateTeam().setString(2, Utils.getStandardDateFrom(team.dateProperty().get()));
 						ps.getUpdateTeam().setLong(3, team.getId());
 						ps.getUpdateTeam().addBatch();
 
@@ -1067,8 +1067,8 @@ public class SQLiteDAOImpl implements DAO {
 				(t, rs) -> {
 					try {
 						t.setId(rs.getLong("id"));
-						t.getName().set(rs.getString("name"));
-						t.getDate().set(Utils.getDateFrom(rs.getString("date")));
+						t.nameProperty().set(rs.getString("name"));
+						t.dateProperty().set(Utils.getDateFrom(rs.getString("date")));
 						return null;
 					} catch (SQLException e) {
 						return e;
@@ -1110,8 +1110,8 @@ public class SQLiteDAOImpl implements DAO {
 						//we need to remove all the composition
 						team.removeAllPlayers();
 						//we need to remove all the tournaments where this team took part. This because all the logics are based upon the partecipants
-						while (!team.getPartecipations().isEmpty()) {
-							Partecipation p = team.getPartecipations().get(0);
+						while (!team.partecipationsProperty().isEmpty()) {
+							Partecipation p = team.partecipationsProperty().get(0);
 							this.remove(p.getTournament().get());
 						}
 						return null;
@@ -1403,7 +1403,7 @@ public class SQLiteDAOImpl implements DAO {
 			this.getTeamThat(p -> p.getId() == team_ids.get(i)).ifPresent(team -> {
 				Partecipation p = new Partecipation(tournament, team);
 				p.getTournament().get().getPartecipations().add(p);
-				p.getTeam().get().getPartecipations().add(p);
+				p.getTeam().get().partecipationsProperty().add(p);
 			});
 		}
 	}
@@ -1437,7 +1437,7 @@ public class SQLiteDAOImpl implements DAO {
 			this.getTournamentThat(p -> p.getId() == tournament_ids.get(i)).ifPresent(tournament -> {
 				Partecipation p = new Partecipation(tournament, team);
 				p.getTournament().get().getPartecipations().add(p);
-				p.getTeam().get().getPartecipations().add(p);
+				p.getTeam().get().partecipationsProperty().add(p);
 			});
 		}
 	}
@@ -1856,8 +1856,8 @@ public class SQLiteDAOImpl implements DAO {
 					oday.ifPresent(day -> {
 						Match m = new Match(team1, team2, day, pointsEarnedFromWinnings.get(i), pointsEarnedFromLosings.get(i), team1Goals.get(i), team2Goals.get(i), statuses.get(i));
 						//we don't care if the match is already inside the list, because they are ObservableDistinctList
-						team1.getMatches().add(m);
-						team2.getMatches().add(m);
+						team1.matchesProperty().add(m);
+						team2.matchesProperty().add(m);
 						day.getMatches().add(m);
 					});
 				});

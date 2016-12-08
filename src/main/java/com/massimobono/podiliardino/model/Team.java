@@ -33,6 +33,8 @@ public class Team implements Indexable {
 	private final ObservableDistinctList<Partecipation> partecipations;
 	private final ObservableDistinctList<Match> matches;
 	
+	//derived properties
+	
 	public Team(long id, String name, LocalDate date, Collection<Player> players, Collection<Partecipation> partecipations, Collection<Match> matches){
 		super();
 		this.id = new SimpleLongProperty(id);
@@ -86,7 +88,7 @@ public class Team implements Indexable {
 	 * @return true if the team has fought at least once in that day, false otherwise
 	 */
 	public boolean hasTeamFoughtInDay(Day d, boolean includeBye) {
-		return this.getMatches()
+		return this.matchesProperty()
 		.parallelStream()
 		.filter(m -> m.getDay().get() == d) //consider only a particular day
 		.filter(m -> m.getStatus().get() == MatchStatus.DONE)
@@ -164,8 +166,8 @@ public class Team implements Indexable {
 		if (!m.hasTeamFoughtInThisMatch(this)){
 			throw new UnsupportedOperationException();
 		}
-		m.getTeam1().get().getMatches().add(m);
-		m.getTeam2().get().getMatches().add(m);
+		m.getTeam1().get().matchesProperty().add(m);
+		m.getTeam2().get().matchesProperty().add(m);
 		m.getDay().get().getMatches().add(m);
 	}
 	
@@ -179,8 +181,8 @@ public class Team implements Indexable {
 		if (!m.hasTeamFoughtInThisMatch(this)){
 			throw new UnsupportedOperationException();
 		}
-		m.getTeam1().get().getMatches().remove(m);
-		m.getTeam2().get().getMatches().remove(m);
+		m.getTeam1().get().matchesProperty().remove(m);
+		m.getTeam2().get().matchesProperty().remove(m);
 		m.getDay().get().getMatches().remove(m);
 	}
 	
@@ -190,7 +192,7 @@ public class Team implements Indexable {
 	 * @return the sum of the number of points all your opponents in the given tournament scored in their matches 
 	 */
 	public int getPointsYourOpponentsScored(Tournament t) {
-		return this.getMatches()
+		return this.matchesProperty()
 				.parallelStream()
 				.filter(m -> m.getDay().get().getTournament().get() == t)
 				.filter(m -> m.getStatus().get() == MatchStatus.DONE)
@@ -204,7 +206,7 @@ public class Team implements Indexable {
 	 * @return the number of points scored by the team in the whole tournament 
 	 */
 	public int getPointsScoredIn(Tournament t) {
-		return this.getMatches()
+		return this.matchesProperty()
 				.parallelStream()
 				.filter(m -> {
 					return m.getDay().get().getTournament().get() == t;
@@ -228,7 +230,7 @@ public class Team implements Indexable {
 	 * @return the number of goals this team scored in the whole tournament
 	 */
 	public int getNumberOfGoalsScored(Tournament t) {
-		return this.getMatches()
+		return this.matchesProperty()
 				.parallelStream()
 				.filter(m -> m.getDay().get().getTournament().get() == t)
 				.filter(m -> m.getStatus().get() == MatchStatus.DONE)
@@ -243,7 +245,7 @@ public class Team implements Indexable {
 	 * @return the number of goals this team received in the whole tournament
 	 */
 	public int getNumberOfGoalsReceived(Tournament t) {
-		return this.getMatches()
+		return this.matchesProperty()
 				.parallelStream()
 				.filter(m -> m.getDay().get().getTournament().get() == t)
 				.filter(m -> m.getStatus().get() == MatchStatus.DONE)
@@ -257,7 +259,7 @@ public class Team implements Indexable {
 	 * @return the number of goals all your opponents have scored
 	 */
 	public int getNumberOfGoalsYourOpponentsScored(Tournament t) {
-		return this.getMatches()
+		return this.matchesProperty()
 				.parallelStream()
 				.filter(m -> m.getDay().get().getTournament().get() == t)
 				.filter(m -> m.getStatus().get() == MatchStatus.DONE)
@@ -272,7 +274,7 @@ public class Team implements Indexable {
 	 */
 	public boolean containsAnyPlayerOfTeam(Team team) {
 		for (Player p : this.players) {
-			if (team.getPlayers().contains(p)) {
+			if (team.playersProperty().contains(p)) {
 				return true;
 			}
 		}
@@ -287,7 +289,7 @@ public class Team implements Indexable {
 	public Collection<Player> getSharedTeammates(Team team) {
 		Collection<Player> retVal = new ArrayList<>();
 		for (Player p: this.players) {
-			if (team.getPlayers().contains(p)) {
+			if (team.playersProperty().contains(p)) {
 				retVal.add(p);
 			}
 		}
@@ -299,7 +301,7 @@ public class Team implements Indexable {
 	 * @return a list of tournaments this team is partcepating/have partecipated in the past.
 	 */
 	public Collection<Tournament> getAllPartecipatingTournaments() {
-		return this.getPartecipations().parallelStream().map(p -> p.getTournament().get()).collect(Collectors.toList());
+		return this.partecipationsProperty().parallelStream().map(p -> p.getTournament().get()).collect(Collectors.toList());
 	}
 	
 	/**
@@ -308,42 +310,57 @@ public class Team implements Indexable {
 	 * @return True if the team is partecipating/partecipated in the given tournament, false otherwise
 	 */
 	public boolean isPartecipatingIn(Tournament t) {
-		return this.getPartecipations().parallelStream().filter(p -> p.getTournament().get() == t).count() > 0;
+		return this.partecipationsProperty().parallelStream().filter(p -> p.getTournament().get() == t).count() > 0;
 	}
 
 	/**
 	 * @return the matches
 	 */
-	public ObservableList<Match> getMatches() {
+	public ObservableList<Match> matchesProperty() {
 		return matches;
 	}
 
 	/**
 	 * @return the name
 	 */
-	public StringProperty getName() {
+	public StringProperty nameProperty() {
 		return name;
 	}
 
 	/**
 	 * @return the date
 	 */
-	public ObjectProperty<LocalDate> getDate() {
+	public ObjectProperty<LocalDate> dateProperty() {
 		return date;
 	}
 
 	/**
 	 * @return the players
 	 */
-	public ObservableList<Player> getPlayers() {
+	public ObservableList<Player> playersProperty() {
 		return players;
 	}
 	
 	/**
 	 * @return the partecipations
 	 */
-	public ObservableList<Partecipation> getPartecipations() {
+	public ObservableList<Partecipation> partecipationsProperty() {
 		return partecipations;
+	}
+	
+
+	/**
+	 * @return the name
+	 */
+	public final String getName() {
+		return name.get();
+	}
+
+	/**
+	 * @return the date
+	 */
+	public final LocalDate getDate() {
+		return date.get();
 	}
 
 	@Override

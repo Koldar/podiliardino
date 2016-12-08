@@ -93,14 +93,14 @@ public class Day implements Indexable {
 	
 	public void add(Match m) {
 		m.getDay().get().getMatches().add(m);
-		m.getTeam1().get().getMatches().add(m);
-		m.getTeam2().get().getMatches().add(m);
+		m.getTeam1().get().matchesProperty().add(m);
+		m.getTeam2().get().matchesProperty().add(m);
 	}
 	
 	public void remove(Match m) {
 		m.getDay().get().getMatches().remove(m);
-		m.getTeam1().get().getMatches().remove(m);
-		m.getTeam2().get().getMatches().remove(m);
+		m.getTeam1().get().matchesProperty().remove(m);
+		m.getTeam2().get().matchesProperty().remove(m);
 	}
 	
 	/**

@@ -118,11 +118,11 @@ public class TeamEditDialogController {
 	@FXML
 	private void handleOK() {
 		if (this.checkValues()) {
-			this.teamInvolved.getName().set(this.nameTextField.getText());
-			this.teamInvolved.getDate().set(Utils.getDateFrom(this.dateTextField.getText()));
-			this.teamInvolved.getPlayers().clear();
-			this.teamInvolved.getPlayers().add(this.firstTeamMemberChoiceBox.getValue());
-			this.teamInvolved.getPlayers().add(this.secondTeamMemberChoiceBox.getValue());
+			this.teamInvolved.nameProperty().set(this.nameTextField.getText());
+			this.teamInvolved.dateProperty().set(Utils.getDateFrom(this.dateTextField.getText()));
+			this.teamInvolved.playersProperty().clear();
+			this.teamInvolved.playersProperty().add(this.firstTeamMemberChoiceBox.getValue());
+			this.teamInvolved.playersProperty().add(this.secondTeamMemberChoiceBox.getValue());
 			this.clickedOK = true;
 			this.dialog.close();
 		}
@@ -176,12 +176,12 @@ public class TeamEditDialogController {
 	public void setTeam(Team team) {
 		this.teamInvolved = team;
 		
-		this.nameTextField.setText(team.getName().get());
-		if (team.getPlayers().size() >= 2) { 
-			this.firstTeamMemberChoiceBox.setValue(team.getPlayers().get(0));
-			this.secondTeamMemberChoiceBox.setValue(team.getPlayers().get(1));
+		this.nameTextField.setText(team.nameProperty().get());
+		if (team.playersProperty().size() >= 2) { 
+			this.firstTeamMemberChoiceBox.setValue(team.playersProperty().get(0));
+			this.secondTeamMemberChoiceBox.setValue(team.playersProperty().get(1));
 		}
-		this.dateTextField.setText(Utils.getStandardDateFrom(team.getDate().get()));
+		this.dateTextField.setText(Utils.getStandardDateFrom(team.dateProperty().get()));
 	}
 
 	/**

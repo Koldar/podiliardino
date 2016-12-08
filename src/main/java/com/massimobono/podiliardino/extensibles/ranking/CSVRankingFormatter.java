@@ -46,7 +46,7 @@ public class CSVRankingFormatter implements Formatter<List<Team>, File> {
 				team = toFormat.get(i);
 				pw.println(String.join(DELIMITER,
 						String.format("%3d", i+1),
-						team.getName().get(),
+						team.nameProperty().get(),
 						String.format("%3d", team.getPointsScoredIn(this.day.getTournament().get())),
 						String.format("%3d", team.getNumberOfGoalsScored(this.day.getTournament().get()) - team.getNumberOfGoalsReceived(this.day.getTournament().get())),
 						String.format("%3d", team.getNumberOfGoalsScored(this.day.getTournament().get())),

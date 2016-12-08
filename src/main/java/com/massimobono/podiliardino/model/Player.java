@@ -83,7 +83,7 @@ public class Player implements Indexable{
 	 */
 	public void add(Team t) {
 		this.teams.add(t);
-		t.getPlayers().add(this);
+		t.playersProperty().add(this);
 	}
 	
 	/**
@@ -93,7 +93,7 @@ public class Player implements Indexable{
 	 */
 	public void remove(Team t) {
 		this.teams.remove(t);
-		t.getPlayers().remove(this);
+		t.playersProperty().remove(this);
 	}
 
 	/**

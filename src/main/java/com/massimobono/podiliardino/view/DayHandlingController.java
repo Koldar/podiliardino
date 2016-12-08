@@ -120,8 +120,8 @@ public class DayHandlingController {
 		
 		this.vsTableColumn.setCellValueFactory(celldata -> new SimpleStringProperty(String.format(
 				"%s / %s", 
-				celldata.getValue().getTeam1().get().getName().get(),
-				celldata.getValue().getTeam2().get().getName().get()
+				celldata.getValue().getTeam1().get().nameProperty().get(),
+				celldata.getValue().getTeam2().get().nameProperty().get()
 		)));
 		this.vsTableColumn.setSortable(false);
 		this.goalsColumn.setCellValueFactory(celldata -> new SimpleStringProperty(String.format(

@@ -53,8 +53,8 @@ public class SimpleCSVMatchesFormatter implements Formatter<Day, File> {
 				i++;
 				pw.println(String.join(DELIMITER,
 						String.format("%3d", i),
-						match.getTeam1().get().getName().get(),
-						match.getTeam2().get().getName().get()
+						match.getTeam1().get().nameProperty().get(),
+						match.getTeam2().get().nameProperty().get()
 						));
 			}
 			pw.flush();

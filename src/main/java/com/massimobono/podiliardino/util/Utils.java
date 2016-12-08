@@ -48,18 +48,18 @@ public class Utils {
 			DUMMYPLAYER2.setId(dao.getPlayerThat(p -> p.nameProperty().get().equals(DUMMYPLAYER2.nameProperty().get())).get().getId());			
 		}
 		
-		if (!dao.getTeamThat(t -> t.getName().get().equals(DUMMYTEAM.getName().get())).isPresent()) {
+		if (!dao.getTeamThat(t -> t.nameProperty().get().equals(DUMMYTEAM.nameProperty().get())).isPresent()) {
 			dao.addTeam(DUMMYTEAM);
 			DUMMYTEAM.add(DUMMYPLAYER1);
 			DUMMYTEAM.add(DUMMYPLAYER2);
 		} else {
-			DUMMYTEAM.setId(dao.getTeamThat(t -> t.getName().get().equals(DUMMYTEAM.getName().get())).get().getId());
+			DUMMYTEAM.setId(dao.getTeamThat(t -> t.nameProperty().get().equals(DUMMYTEAM.nameProperty().get())).get().getId());
 		}
 		
 	}
 	
 	public static Team getDummyTeam(DAO dao) throws DAOException {
-		Optional<Team> retVal = dao.getTeamThat(t -> t.getName().get().equals(DUMMYTEAM.getName().get()));
+		Optional<Team> retVal = dao.getTeamThat(t -> t.nameProperty().get().equals(DUMMYTEAM.nameProperty().get()));
 		if (!retVal.isPresent()) {
 			throw new DAOException("Dummy team not present. Are you sure you've called at least once addDummyTeam?");
 		}

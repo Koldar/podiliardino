@@ -57,10 +57,10 @@ public class TeamHandlingController {
 	@FXML
 	private void initialize() {
 		// Initialize the person table with the two columns.
-		this.teamNameColumn.setCellValueFactory(cellData -> cellData.getValue().getName());
+		this.teamNameColumn.setCellValueFactory(cellData -> cellData.getValue().nameProperty());
 		this.teamMembersColumn.setCellValueFactory(
 				cellData -> new SimpleStringProperty(
-						cellData.getValue().getPlayers().stream()
+						cellData.getValue().playersProperty().stream()
 						.map(p -> p.nameProperty().get())
 						.collect(Collectors.joining(", "))));
 		
@@ -95,8 +95,8 @@ public class TeamHandlingController {
 				//we have added a new team. We copy the players from the newly generated team, we flush its list, we add the team inside the DAO
 				//and then we readd the players inside it. Why do we do that? because the dao start listening for changes in the players list on
 				//after addTeam. If we didn't do this procedure the DAO would never know about the new players
-				Collection<Player> players = new ArrayList<>(t.get().getPlayers());
-				t.get().getPlayers().clear();
+				Collection<Player> players = new ArrayList<>(t.get().playersProperty());
+				t.get().playersProperty().clear();
 				this.mainApp.getDAO().addTeam(t.get());
 				for (Player p : players) {
 					t.get().add(p);
@@ -149,7 +149,7 @@ public class TeamHandlingController {
 				return;
 			}
 			Team t =this.teamTable.getSelectionModel().getSelectedItem();
-			if (!Utils.waitUserReplyForConfirmationDialog(String.format("Do you really want to delete team \"%s\"?",t.getName().get()), "Removing the team wil lalso remove every tournament the team has ever partecipate in in, all its days and all its matches. Are you sure?")){
+			if (!Utils.waitUserReplyForConfirmationDialog(String.format("Do you really want to delete team \"%s\"?",t.nameProperty().get()), "Removing the team wil lalso remove every tournament the team has ever partecipate in in, all its days and all its matches. Are you sure?")){
 				return;
 			}
 			this.mainApp.getDAO().remove(t);
@@ -168,10 +168,10 @@ public class TeamHandlingController {
 				this.firstTeamMemberLabel.setText("");
 				this.secondTeamMemberLabel.setText("");
 			} else {
-				this.teamNameLabel.setText(newValue.getName().get());
-				this.teamDateLabel.setText(Utils.getStandardDateFrom(newValue.getDate().get()));
-				this.firstTeamMemberLabel.setText(newValue.getPlayers().size() > 0 ? newValue.getPlayers().get(0).nameProperty().get() : "");
-				this.secondTeamMemberLabel.setText(newValue.getPlayers().size() > 1 ? newValue.getPlayers().get(1).nameProperty().get() : "");
+				this.teamNameLabel.setText(newValue.nameProperty().get());
+				this.teamDateLabel.setText(Utils.getStandardDateFrom(newValue.dateProperty().get()));
+				this.firstTeamMemberLabel.setText(newValue.playersProperty().size() > 0 ? newValue.playersProperty().get(0).nameProperty().get() : "");
+				this.secondTeamMemberLabel.setText(newValue.playersProperty().size() > 1 ? newValue.playersProperty().get(1).nameProperty().get() : "");
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

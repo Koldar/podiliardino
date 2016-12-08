@@ -31,7 +31,7 @@ public class Partecipation{
 	public String toString() {
 		return String.format("<%s team_name=%s tournament_name=%s>", 
 				this.getClass().getSimpleName(), 
-				this.team.get().getName().get(), 
+				this.team.get().nameProperty().get(), 
 				this.tournament.get().getName().get());
 	}
 

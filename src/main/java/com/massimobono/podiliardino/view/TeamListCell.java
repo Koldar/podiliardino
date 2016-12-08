@@ -43,8 +43,8 @@ public class TeamListCell extends ListCell<Team>
             	if (data.getCheckBox().isSelected()) {
             		partecipation = new Partecipation(tournament, team);
             		tournament.getPartecipations().add(partecipation);
-            		team.getPartecipations().add(partecipation);
-            		this.availableTeams.removeIf(t -> t.getPlayers().contains(team.getPlayers().get(0)) || t.getPlayers().contains(team.getPlayers().get(1)));
+            		team.partecipationsProperty().add(partecipation);
+            		this.availableTeams.removeIf(t -> t.playersProperty().contains(team.playersProperty().get(0)) || t.playersProperty().contains(team.playersProperty().get(1)));
             	} else {
             		Optional<Partecipation> op = tournament.getPartecipations()
             		.stream()
@@ -52,12 +52,12 @@ public class TeamListCell extends ListCell<Team>
             		.filter(p -> {return p.getTeam().get().getId() == team.getId();}).findFirst();
             		op.ifPresent( p -> {
             			this.tournamentTable.getSelectionModel().getSelectedItem().getPartecipations().remove(p);	
-            			team.getPartecipations().remove(p);
+            			team.partecipationsProperty().remove(p);
             		});
             		
             	}
             });
-            data.getNameLabel().setText(team.getName().get());
+            data.getNameLabel().setText(team.nameProperty().get());
 			data.getCheckBox().setSelected(this.tournamentTable.getSelectionModel().getSelectedItem().getPartecipations().parallelStream().filter(p -> p.getTeam().get() == team).findFirst().isPresent());
             setGraphic(data.getPane());
         }

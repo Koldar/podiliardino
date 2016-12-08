@@ -158,7 +158,7 @@ public class Tournament implements Indexable {
 	 * @return the number of players that will be attending to the tournament
 	 */
 	public int getNumberOfPartecipants() {
-		return this.getPartecipations().parallelStream().mapToInt(p -> p.getTeam().get().getPlayers().size()).sum();
+		return this.getPartecipations().parallelStream().mapToInt(p -> p.getTeam().get().playersProperty().size()).sum();
 	}
 	
 	public ReadOnlyIntegerProperty numberOfPartecipantsProperty() {
@@ -195,7 +195,7 @@ public class Tournament implements Indexable {
 	public Collection<Player> getPartecipatingPlayers() {
 		Set<Player> retVal = new HashSet<>();
 		for (Team t : this.getPartecipatingTeams()) {
-			retVal.addAll(t.getPlayers());
+			retVal.addAll(t.playersProperty());
 		}
 		return retVal;
 	}
