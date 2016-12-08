@@ -61,7 +61,7 @@ public class TeamHandlingController {
 		this.teamMembersColumn.setCellValueFactory(
 				cellData -> new SimpleStringProperty(
 						cellData.getValue().getPlayers().stream()
-						.map(p -> p.getName().get())
+						.map(p -> p.nameProperty().get())
 						.collect(Collectors.joining(", "))));
 		
 		// Listen for selection changes and show the person details when changed.
@@ -170,8 +170,8 @@ public class TeamHandlingController {
 			} else {
 				this.teamNameLabel.setText(newValue.getName().get());
 				this.teamDateLabel.setText(Utils.getStandardDateFrom(newValue.getDate().get()));
-				this.firstTeamMemberLabel.setText(newValue.getPlayers().size() > 0 ? newValue.getPlayers().get(0).getName().get() : "");
-				this.secondTeamMemberLabel.setText(newValue.getPlayers().size() > 1 ? newValue.getPlayers().get(1).getName().get() : "");
+				this.firstTeamMemberLabel.setText(newValue.getPlayers().size() > 0 ? newValue.getPlayers().get(0).nameProperty().get() : "");
+				this.secondTeamMemberLabel.setText(newValue.getPlayers().size() > 1 ? newValue.getPlayers().get(1).nameProperty().get() : "");
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

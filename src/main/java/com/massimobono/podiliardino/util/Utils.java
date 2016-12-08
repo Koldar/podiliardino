@@ -37,15 +37,15 @@ public class Utils {
 	 * @throws DAOException
 	 */
 	public static void addDummyTeam(DAO dao) throws DAOException {
-		if (!dao.getPlayerThat(p -> p.getName().get().equals(DUMMYPLAYER1.getName().get())).isPresent()) {
+		if (!dao.getPlayerThat(p -> p.nameProperty().get().equals(DUMMYPLAYER1.nameProperty().get())).isPresent()) {
 			dao.add(DUMMYPLAYER1);
 		} else {
-			DUMMYPLAYER1.setId(dao.getPlayerThat(p -> p.getName().get().equals(DUMMYPLAYER1.getName().get())).get().getId());			
+			DUMMYPLAYER1.setId(dao.getPlayerThat(p -> p.nameProperty().get().equals(DUMMYPLAYER1.nameProperty().get())).get().getId());			
 		}
-		if (!dao.getPlayerThat(p -> p.getName().get().equals(DUMMYPLAYER2.getName().get())).isPresent()) {
+		if (!dao.getPlayerThat(p -> p.nameProperty().get().equals(DUMMYPLAYER2.nameProperty().get())).isPresent()) {
 			dao.add(DUMMYPLAYER2);
 		} else {
-			DUMMYPLAYER2.setId(dao.getPlayerThat(p -> p.getName().get().equals(DUMMYPLAYER2.getName().get())).get().getId());			
+			DUMMYPLAYER2.setId(dao.getPlayerThat(p -> p.nameProperty().get().equals(DUMMYPLAYER2.nameProperty().get())).get().getId());			
 		}
 		
 		if (!dao.getTeamThat(t -> t.getName().get().equals(DUMMYTEAM.getName().get())).isPresent()) {

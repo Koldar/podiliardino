@@ -69,10 +69,10 @@ public class PlayerEditDialogController {
 	@FXML
 	private void handleOK() {
 		if (this.checkValues()) {
-			this.playerInvolved.getName().set(this.nameTextField.getText());
-			this.playerInvolved.getSurname().set(this.surnameTextField.getText());
+			this.playerInvolved.nameProperty().set(this.nameTextField.getText());
+			this.playerInvolved.surnameProperty().set(this.surnameTextField.getText());
 			this.playerInvolved.setBirthdayFromStandardString(this.birthdayTextField.getText().length() == 0 ? null : this.birthdayTextField.getText());
-			this.playerInvolved.getPhone().set(Optional.ofNullable(this.phoneTextField.getText().length() == 0 ? null : this.phoneTextField.getText()));
+			this.playerInvolved.phoneProperty().set(Optional.ofNullable(this.phoneTextField.getText().length() == 0 ? null : this.phoneTextField.getText()));
 			this.clickedOK = true;
 			this.dialog.close();
 		}
@@ -126,10 +126,10 @@ public class PlayerEditDialogController {
 		this.playerInvolved = player;
 		
 		Optional<String>  birthday = player.getBirthdayAsStandardString();
-		this.nameTextField.setText(player.getName().get());
-		this.surnameTextField.setText(player.getSurname().get());
+		this.nameTextField.setText(player.nameProperty().get());
+		this.surnameTextField.setText(player.surnameProperty().get());
 		this.birthdayTextField.setText(birthday.isPresent() ? birthday.get() : Utils.EMPTY_DATE);
-		this.phoneTextField.setText(player.getPhone().get().isPresent() ? player.getPhone().get().get() : Utils.EMPTY_PHONE);
+		this.phoneTextField.setText(player.phoneProperty().get().isPresent() ? player.phoneProperty().get().get() : Utils.EMPTY_PHONE);
 	}
 
 	/**

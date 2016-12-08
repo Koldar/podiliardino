@@ -60,8 +60,8 @@ public class PlayerHandlingController {
 	@FXML
 	private void initialize() {
 		// Initialize the person table with the two columns.
-		this.nameColumn.setCellValueFactory(cellData -> cellData.getValue().getName());
-		this.surnameColumn.setCellValueFactory(cellData -> cellData.getValue().getSurname());
+		this.nameColumn.setCellValueFactory(cellData -> cellData.getValue().nameProperty());
+		this.surnameColumn.setCellValueFactory(cellData -> cellData.getValue().surnameProperty());
 
 		// Listen for selection changes and show the person details when changed.
 		this.playersTable.getSelectionModel().selectedItemProperty().addListener(this::handleUserSelectPlayer);
@@ -132,7 +132,7 @@ public class PlayerHandlingController {
 				return;
 			}
 			Player p = this.playersTable.getSelectionModel().getSelectedItem();
-			if (!Utils.waitUserReplyForConfirmationDialog(String.format("Do you really want to remove the player \"%s\"?", p.getName().get()), "If you remove the following player all the team he belongs will be removed as well. This will also removes all the tournament they partecipate in with all the related days and related matches. Are you sure?")){
+			if (!Utils.waitUserReplyForConfirmationDialog(String.format("Do you really want to remove the player \"%s\"?", p.nameProperty().get()), "If you remove the following player all the team he belongs will be removed as well. This will also removes all the tournament they partecipate in with all the related days and related matches. Are you sure?")){
 				return;
 			}
 			this.mainApp.getDAO().remove(p);
@@ -152,10 +152,10 @@ public class PlayerHandlingController {
 				this.phoneLabel.setText("");
 			}else {
 				Optional<String> birthday = newValue.getBirthdayAsStandardString();
-				this.nameLabel.setText(newValue.getName().get());
-				this.surnameLabel.setText(newValue.getSurname().get());
+				this.nameLabel.setText(newValue.nameProperty().get());
+				this.surnameLabel.setText(newValue.surnameProperty().get());
 				this.birthdayLabel.setText(birthday.isPresent() ? birthday.get() : Utils.EMPTY_DATE);
-				this.phoneLabel.setText(newValue.getPhone().get().isPresent() ? newValue.getPhone().get().get() : Utils.EMPTY_PHONE);
+				this.phoneLabel.setText(newValue.phoneProperty().get().isPresent() ? newValue.phoneProperty().get().get() : Utils.EMPTY_PHONE);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

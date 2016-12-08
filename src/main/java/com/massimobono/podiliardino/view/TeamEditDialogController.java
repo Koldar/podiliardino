@@ -79,7 +79,7 @@ public class TeamEditDialogController {
 	            if (bln) {
 	                setText("");
 	            } else {
-	                setText(String.format("%s %s (age: %s)", t.getName().get(), t.getSurname().get(), t.getAge().isPresent() ? t.getAge().get() : "unknown"));
+	                setText(String.format("%s %s (age: %s)", t.nameProperty().get(), t.surnameProperty().get(), t.getAge().isPresent() ? t.getAge().get() : "unknown"));
 	            }
 	        }
 		};
@@ -96,7 +96,7 @@ public class TeamEditDialogController {
                         if (item == null || empty) {
                             setGraphic(null);
                         } else {
-                            setText(String.format("%s %s (age: %s)", item.getName().get(), item.getSurname().get(), item.getAge().isPresent() ? item.getAge().get() : "unknown"));
+                            setText(String.format("%s %s (age: %s)", item.nameProperty().get(), item.surnameProperty().get(), item.getAge().isPresent() ? item.getAge().get() : "unknown"));
                         }
                     }
                 } ;

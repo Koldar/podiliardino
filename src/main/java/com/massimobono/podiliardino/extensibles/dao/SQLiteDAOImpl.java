@@ -702,7 +702,7 @@ public class SQLiteDAOImpl implements DAO {
 	 */
 	private void setupPlayerListeners(Player p) {
 		//we have added the player. Now we need to listens forrelationships changes
-		p.getTeams().addListener(this.getDefaultListListener(p, 
+		p.teamsProperty().addListener(this.getDefaultListListener(p, 
 			(s,c) -> {
 				try {
 					addDBCompose(p, c);
@@ -729,10 +729,10 @@ public class SQLiteDAOImpl implements DAO {
 				(c,s,ps) -> {
 					try {
 						Optional<String> birthday = p.getBirthdayAsStandardString();
-						ps.getInsertPlayer().setString(1, p.getName().get());
-						ps.getInsertPlayer().setString(2, p.getSurname().get());
+						ps.getInsertPlayer().setString(1, p.nameProperty().get());
+						ps.getInsertPlayer().setString(2, p.surnameProperty().get());
 						ps.getInsertPlayer().setString(3, birthday.isPresent() ? birthday.get() : Utils.EMPTY_DATE);
-						ps.getInsertPlayer().setString(4, p.getPhone().get().isPresent() ? p.getPhone().get().get() : Utils.EMPTY_PHONE);
+						ps.getInsertPlayer().setString(4, p.phoneProperty().get().isPresent() ? p.phoneProperty().get().get() : Utils.EMPTY_PHONE);
 						ps.getInsertPlayer().addBatch();
 						
 						ps.getInsertPlayer().executeBatch();
@@ -756,10 +756,10 @@ public class SQLiteDAOImpl implements DAO {
 				(c,s,ps) -> {
 					try {
 						Optional<String> birthday = player.getBirthdayAsStandardString();
-						ps.getUpdatePlayer().setString(1, player.getName().get());
-						ps.getUpdatePlayer().setString(2, player.getSurname().get());
+						ps.getUpdatePlayer().setString(1, player.nameProperty().get());
+						ps.getUpdatePlayer().setString(2, player.surnameProperty().get());
 						ps.getUpdatePlayer().setString(3, birthday.isPresent() ? birthday.get() : Utils.EMPTY_DATE);
-						ps.getUpdatePlayer().setString(4, player.getPhone().get().isPresent() ? player.getPhone().get().get() : Utils.EMPTY_PHONE);
+						ps.getUpdatePlayer().setString(4, player.phoneProperty().get().isPresent() ? player.phoneProperty().get().get() : Utils.EMPTY_PHONE);
 						ps.getUpdatePlayer().setLong(5, player.getId());
 						ps.getUpdatePlayer().addBatch();
 
@@ -790,8 +790,8 @@ public class SQLiteDAOImpl implements DAO {
 				() -> {
 					try {
 						//we remove all the team annexed
-						while (!p.getTeams().isEmpty()){
-							Team t = p.getTeams().get(0);
+						while (!p.teamsProperty().isEmpty()){
+							Team t = p.teamsProperty().get(0);
 							p.remove(t);
 							this.remove(t);
 						}
@@ -814,10 +814,10 @@ public class SQLiteDAOImpl implements DAO {
 				(p, rs) -> {
 					try {
 						p.setId(rs.getLong("id"));
-						p.getName().set(rs.getString("name"));
-						p.getSurname().set(rs.getString("surname"));
-						p.getBirthday().set(Optional.ofNullable(!rs.getString("birthday").equalsIgnoreCase(Utils.EMPTY_DATE) ? Utils.getDateFrom(rs.getString("birthday")) : null));
-						p.getPhone().set(Optional.ofNullable(!rs.getString("phone").equalsIgnoreCase(Utils.EMPTY_PHONE) ? rs.getString("phone") : null));
+						p.nameProperty().set(rs.getString("name"));
+						p.surnameProperty().set(rs.getString("surname"));
+						p.birthdayProperty().set(Optional.ofNullable(!rs.getString("birthday").equalsIgnoreCase(Utils.EMPTY_DATE) ? Utils.getDateFrom(rs.getString("birthday")) : null));
+						p.phoneProperty().set(Optional.ofNullable(!rs.getString("phone").equalsIgnoreCase(Utils.EMPTY_PHONE) ? rs.getString("phone") : null));
 						return null;
 					} catch (SQLException e) {
 						return e;
@@ -914,7 +914,7 @@ public class SQLiteDAOImpl implements DAO {
 			final int i = j;
 			this.getTeamThat(t -> t.getId() == teamIds.get(i)).ifPresent(t -> {
 				t.getPlayers().add(p);
-				p.getTeams().add(t);
+				p.teamsProperty().add(t);
 			});
 		}
 	}
@@ -945,7 +945,7 @@ public class SQLiteDAOImpl implements DAO {
 			final int i = j;
 			this.getPlayerThat(p -> p.getId() == playerIds.get(i)).ifPresent(p -> {
 				t.getPlayers().add(p);
-				p.getTeams().add(t);
+				p.teamsProperty().add(t);
 			});
 		}
 	}

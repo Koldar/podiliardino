@@ -48,7 +48,7 @@ public class Team implements Indexable {
 	}
 	
 	public String toString() {
-		return String.format("<%s name=%s players=%s>", this.getClass().getSimpleName(), this.name.get(), String.join(", ", this.players.stream().map(p -> p.getName().get()).collect(Collectors.toList())));
+		return String.format("<%s name=%s players=%s>", this.getClass().getSimpleName(), this.name.get(), String.join(", ", this.players.stream().map(p -> p.nameProperty().get()).collect(Collectors.toList())));
 	}
 	
 	/**
