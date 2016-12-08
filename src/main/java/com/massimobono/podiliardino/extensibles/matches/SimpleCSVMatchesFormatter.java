@@ -42,8 +42,7 @@ public class SimpleCSVMatchesFormatter implements Formatter<Day, File> {
 		int i = 0;
 		
 		try (CSVHandler csvHandler = new CSVHandler(this.csvFile.getAbsolutePath(), HEADER)) {
-			csvHandler.setDelimiter(",");
-			csvHandler.addOption("sep", ",");
+			csvHandler.addOption("sep", CSVHandler.DEFAULT_DELIMITER);
 			for (Match match : toFormat.matchesProperty()){
 				if (match.getStatus().get() != MatchStatus.TODO) {
 					continue;

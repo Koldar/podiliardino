@@ -165,26 +165,26 @@ public class DistinctMatchesByeAwarePairComputer<T extends Team> implements Pair
 	 */
 	private T computeTeamToBye(List<T> ranking, Tournament tournament) {
 		T teamAnalyzed = null;
-		int minBye = Integer.MAX_VALUE;
-		int bye = Integer.MAX_VALUE;
-		List<T> teamsWithMinimumBye = new ArrayList<>();
-		Random rnd = new Random(ranking.size() * System.currentTimeMillis());
-		//we generate a random sequence that depends on the clock AND on the ranking involved 
+		int minBye, bye;
 		
-		//compute the list of teams with minimum bye
-		for (int i=(ranking.size()-1); i>=0; i--){
-			teamAnalyzed = ranking.get(i);
-			bye = teamAnalyzed.checkByeNumber(tournament, false);
-			if (minBye > bye) {
-				minBye = bye;
-				teamsWithMinimumBye.clear();
+		bye = 0;
+		minBye = 0;
+		while (true) {
+			//find the first team from the bottom of the ranking with bye to minBye
+			for (int i=(ranking.size()-1); i>=0; i--){
+				teamAnalyzed = ranking.get(i);
+				bye = teamAnalyzed.getByeNumber(tournament, false);
+				if (bye > minBye) {
+					//this team has already used more bye that the threashold we set. Skipping
+					continue;
+				}
+				//ok, we found a team!
+				LOG.info("The team that will use the bye is {}", teamAnalyzed);
+				return teamAnalyzed;
 			}
-			if (minBye == bye) {
-				teamsWithMinimumBye.add(teamAnalyzed);
-			}
+			//all the team have already used at least "minBye" byes. We increase our threshold
+			minBye++;
 		}
-		//pick a team inside the just computed collection randomly
-		return teamsWithMinimumBye.get(rnd.nextInt(teamsWithMinimumBye.size()));
 	}
 
 }

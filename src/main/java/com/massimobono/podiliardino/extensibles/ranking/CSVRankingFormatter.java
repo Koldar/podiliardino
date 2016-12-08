@@ -39,8 +39,7 @@ public class CSVRankingFormatter implements Formatter<List<Team>, File> {
 		Team team = null;
 		
 		try (CSVHandler csvHandler = new CSVHandler(this.csvFilePath, HEADER)) {
-			csvHandler.addOption("sep", ",");
-			csvHandler.setDelimiter(",");
+			csvHandler.addOption("sep", CSVHandler.DEFAULT_DELIMITER);
 			for (int i=0 ; i<toFormat.size(); i++) {
 				team = toFormat.get(i);
 				csvHandler.printRow(

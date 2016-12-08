@@ -68,7 +68,7 @@ public class Team implements Indexable {
 	 * Usually you want to not take into account those days because they are temporary
 	 * @return the number of bye of this team
 	 */
-	public int checkByeNumber(Tournament t, boolean checkDaysWithNoMatches) {
+	public int getByeNumber(Tournament t, boolean checkDaysWithNoMatches) {
 		int retVal = 0;
 		for (Day d : t.daysProperty()) {
 			if (!checkDaysWithNoMatches && (d.matchesProperty().size() == 0)) {

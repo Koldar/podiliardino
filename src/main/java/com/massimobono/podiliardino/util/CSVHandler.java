@@ -16,6 +16,8 @@ import java.util.Map.Entry;
  */
 public class CSVHandler implements Closeable{
 
+	public static final String DEFAULT_DELIMITER = ";"; 
+	
 	private File file;
 	private PrintWriter pw;
 	private String delimiter;
@@ -37,7 +39,7 @@ public class CSVHandler implements Closeable{
 	}
 	
 	public CSVHandler(String path, String... header) throws IOException {
-		this(path, ",", "UTF-8", header);
+		this(path, DEFAULT_DELIMITER, "UTF-8", header);
 	}
 	
 	public void addOption(String key, String value) {
