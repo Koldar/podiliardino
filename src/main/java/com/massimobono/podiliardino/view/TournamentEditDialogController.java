@@ -60,7 +60,7 @@ public class TournamentEditDialogController {
 	
 	@FXML
 	private void initialize() {
-		
+		this.okButton.setDefaultButton(true);
 	}
 	
 	@FXML

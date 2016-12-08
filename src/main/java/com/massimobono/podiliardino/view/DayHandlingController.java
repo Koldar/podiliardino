@@ -37,11 +37,13 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.EventType;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
@@ -118,12 +120,25 @@ public class DayHandlingController {
 		this.tournamentTableView.getSelectionModel().selectedItemProperty().addListener(this::handleUserSelectTournament);
 		this.dayTableView.getSelectionModel().selectedItemProperty().addListener(this::handleUserSelectDay);
 		
+		//double click on the match will automatically call update match result
+		this.matchesTableView.setRowFactory( tv -> {
+		    TableRow<Match> row = new TableRow<>();
+		    row.setOnMouseClicked(event -> {
+		        if (event.getClickCount() == 2 && (! row.isEmpty()) ) {
+		        	this.matchesTableView.getSelectionModel().select(row.getItem());
+		        	this.handleUpdateMatchResult();
+		        }
+		    });
+		    return row ;
+		});
+		
 		this.vsTableColumn.setCellValueFactory(celldata -> new SimpleStringProperty(String.format(
 				"%s / %s", 
 				celldata.getValue().getTeam1().get().nameProperty().get(),
 				celldata.getValue().getTeam2().get().nameProperty().get()
 		)));
 		this.vsTableColumn.setSortable(false);
+		
 		this.goalsColumn.setCellValueFactory(celldata -> new SimpleStringProperty(String.format(
 				"%d / %d",
 				celldata.getValue().getTeam1Goals().get(),

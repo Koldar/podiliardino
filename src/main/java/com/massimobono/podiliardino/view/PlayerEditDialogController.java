@@ -58,7 +58,7 @@ public class PlayerEditDialogController {
 	
 	@FXML
 	private void initialize() {
-		
+		this.okButton.setDefaultButton(true);
 	}
 	
 	@FXML

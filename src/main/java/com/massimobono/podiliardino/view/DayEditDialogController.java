@@ -58,6 +58,7 @@ public class DayEditDialogController {
 	
 	@FXML
 	private void initialize() {
+		this.okButton.setDefaultButton(true);
 	}
 	
 	private ListCell<Tournament> getDefaultButtonCell() {

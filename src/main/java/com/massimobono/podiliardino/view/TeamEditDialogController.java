@@ -69,6 +69,8 @@ public class TeamEditDialogController {
 		
 		this.secondTeamMemberChoiceBox.setCellFactory(this.getDefaultCellFactory());
 		this.secondTeamMemberChoiceBox.setButtonCell(this.getDefaultButtonCell());
+		
+		this.okButton.setDefaultButton(true);
 	}
 	
 	private ListCell<Player> getDefaultButtonCell() {

@@ -66,6 +66,7 @@ public class MatchResultEditDialogController {
 	
 	@FXML
 	private void initialize() {
+		this.okButton.setDefaultButton(true);
 	}
 	
 	public void setup(Stage dialog, Match matchToHandle) {
