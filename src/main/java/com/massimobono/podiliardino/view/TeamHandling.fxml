@@ -21,8 +21,8 @@
                <children>
                   <TableView fx:id="teamTable" prefHeight="598.0" prefWidth="396.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                     <columns>
-                      <TableColumn fx:id="teamNameColumn" editable="false" prefWidth="75.0" text="Name" />
-                      <TableColumn fx:id="teamMembersColumn" editable="false" prefWidth="75.0" text="Members" />
+                      <TableColumn fx:id="teamNameColumn" editable="false" prefWidth="75.0" text="%name" />
+                      <TableColumn fx:id="teamMembersColumn" editable="false" prefWidth="75.0" text="%members" />
                     </columns>
                      <columnResizePolicy>
                         <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
@@ -34,14 +34,14 @@
                <bottom>
                   <ButtonBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
                     <buttons>
-                      <Button fx:id="addTeam" mnemonicParsing="false" onAction="#handleAddTeam" text="New" />
-                        <Button fx:id="editTeam" mnemonicParsing="false" onAction="#handleEditTeam" text="Edit" />
-                        <Button fx:id="deleteTeam" mnemonicParsing="false" onAction="#handleDeleteTeam" text="Delete" />
+                      <Button fx:id="addTeam" mnemonicParsing="false" onAction="#handleAddTeam" text="%new" />
+                        <Button fx:id="editTeam" mnemonicParsing="false" onAction="#handleEditTeam" text="%edit" />
+                        <Button fx:id="deleteTeam" mnemonicParsing="false" onAction="#handleDeleteTeam" text="%delete" />
                     </buttons>
                   </ButtonBar>
                </bottom>
                <top>
-                  <Label text="Team information" BorderPane.alignment="CENTER" />
+                  <Label text="%team_information" BorderPane.alignment="CENTER" />
                </top>
                <center>
                   <AnchorPane prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
@@ -58,10 +58,10 @@
                               <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                           </rowConstraints>
                            <children>
-                              <Label text="Name" />
-                              <Label text="Team Member #1" GridPane.rowIndex="1" />
-                              <Label text="Team Member #2" GridPane.rowIndex="2" />
-                              <Label text="Team fundation date" GridPane.rowIndex="3" />
+                              <Label text="%name" />
+                              <Label text="%team_member_1" GridPane.rowIndex="1" />
+                              <Label text="%team_member_2" GridPane.rowIndex="2" />
+                              <Label text="%foundation_date" GridPane.rowIndex="3" />
                               <Label fx:id="teamNameLabel" GridPane.columnIndex="1" />
                               <Label fx:id="firstTeamMemberLabel" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                               <Label fx:id="secondTeamMemberLabel" GridPane.columnIndex="1" GridPane.rowIndex="2" />

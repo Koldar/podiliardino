@@ -17,8 +17,8 @@
          <bottom>
             <ButtonBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
               <buttons>
-                <Button fx:id="cancelButton" mnemonicParsing="false" onAction="#handleCancel" text="Cancel" />
-                  <Button fx:id="okButton" mnemonicParsing="false" onAction="#handleOK" text="OK" />
+                <Button fx:id="cancelButton" mnemonicParsing="false" onAction="#handleCancel" text="%cancel" />
+                  <Button fx:id="okButton" mnemonicParsing="false" onAction="#handleOK" text="%ok" />
               </buttons>
             </ButtonBar>
          </bottom>
@@ -39,10 +39,10 @@
                   <TextField fx:id="surnameTextField" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                   <TextField fx:id="birthdayTextField" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                   <TextField fx:id="phoneTextField" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                  <Label text="Name" />
-                  <Label text="Surname" GridPane.rowIndex="1" />
-                  <Label text="Birthday" GridPane.rowIndex="2" />
-                  <Label text="Phone" GridPane.rowIndex="3" />
+                  <Label text="%name" />
+                  <Label text="%surname" GridPane.rowIndex="1" />
+                  <Label text="%birthday" GridPane.rowIndex="2" />
+                  <Label text="%phone" GridPane.rowIndex="3" />
                </children>
             </GridPane>
          </center>

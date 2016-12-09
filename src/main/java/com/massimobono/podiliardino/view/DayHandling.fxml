@@ -22,7 +22,7 @@
                <children>
                   <TableView fx:id="tournamentTableView" prefHeight="598.0" prefWidth="395.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                     <columns>
-                      <TableColumn fx:id="tournamentTableColumn" prefWidth="75.0" text="Tournament" />
+                      <TableColumn fx:id="tournamentTableColumn" prefWidth="75.0" text="%tournament" />
                     </columns>
                      <columnResizePolicy>
                         <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
@@ -34,7 +34,7 @@
                <children>
                   <TableView fx:id="dayTableView" prefHeight="598.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                     <columns>
-                      <TableColumn fx:id="dayTableColumn" prefWidth="75.0" text="Day" />
+                      <TableColumn fx:id="dayTableColumn" prefWidth="75.0" text="%day" />
                     </columns>
                      <columnResizePolicy>
                         <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
@@ -47,24 +47,24 @@
                   <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                </padding>
                <top>
-                  <Label text="Day Information" BorderPane.alignment="CENTER" />
+                  <Label text="%day_information" BorderPane.alignment="CENTER" />
                </top>
                <bottom>
                   <VBox prefWidth="100.0" BorderPane.alignment="CENTER">
                      <children>
                         <ButtonBar prefHeight="40.0" prefWidth="200.0">
                           <buttons>
-                            <Button fx:id="addDay" mnemonicParsing="false" onAction="#handleAddDay" text="Add Day" />
-                              <Button fx:id="editDay" mnemonicParsing="false" onAction="#handleEditDay" text="Edit Day" />
-                              <Button fx:id="deleteDay" mnemonicParsing="false" onAction="#handleRemoveDay" text="Delete Day" />
+                            <Button fx:id="addDay" mnemonicParsing="false" onAction="#handleAddDay" text="%new" />
+                              <Button fx:id="editDay" mnemonicParsing="false" onAction="#handleEditDay" text="%edit" />
+                              <Button fx:id="deleteDay" mnemonicParsing="false" onAction="#handleRemoveDay" text="%delete" />
                           </buttons>
                         </ButtonBar>
                         <ButtonBar prefHeight="40.0" prefWidth="200.0">
                            <buttons>
-                              <Button fx:id="generateMatch" mnemonicParsing="false" onAction="#handleGenerateMatches" text="Generate Matches" />
-                              <Button fx:id="updateMatchResult" mnemonicParsing="false" onAction="#handleUpdateMatchResult" text="Update match result" />
-                              <Button fx:id="exportRanking" mnemonicParsing="false" onAction="#exportRanking" text="Export Ranking" />
-                              <Button fx:id="exportMatches" mnemonicParsing="false" onAction="#exportMatches" text="Export Matches" />
+                              <Button fx:id="generateMatch" mnemonicParsing="false" onAction="#handleGenerateMatches" text="%generate_matches" />
+                              <Button fx:id="updateMatchResult" mnemonicParsing="false" onAction="#handleUpdateMatchResult" text="%update_match_result" />
+                              <Button fx:id="exportRanking" mnemonicParsing="false" onAction="#exportRanking" text="%export_ranking" />
+                              <Button fx:id="exportMatches" mnemonicParsing="false" onAction="#exportMatches" text="%export_matches" />
                            </buttons>
                         </ButtonBar>
                      </children>
@@ -75,11 +75,11 @@
                      <children>
                         <TableView fx:id="matchesTableView" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="150.0">
                           <columns>
-                            <TableColumn fx:id="vsTableColumn" prefWidth="75.0" text="VS" />
-                              <TableColumn fx:id="goalsColumn" prefWidth="75.0" text="Goals" />
-                              <TableColumn fx:id="totalGoalsDifferenceColumn" prefWidth="75.0" text="Total Goal Difference" />
-                              <TableColumn fx:id="totalOpponentsGoalColumn" prefWidth="75.0" text="Total Opponents Goal Difference" />
-                              <TableColumn fx:id="statusColumn" prefWidth="75.0" text="Status" />
+                            <TableColumn fx:id="vsTableColumn" prefWidth="75.0" text="%vs" />
+                              <TableColumn fx:id="goalsColumn" prefWidth="75.0" text="%goals" />
+                              <TableColumn fx:id="totalGoalsDifferenceColumn" prefWidth="75.0" text="%total_goal_difference" />
+                              <TableColumn fx:id="totalOpponentsGoalColumn" prefWidth="75.0" text="%total_opponents_goal_difference" />
+                              <TableColumn fx:id="statusColumn" prefWidth="75.0" text="%status" />
                           </columns>
                            <columnResizePolicy>
                               <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
@@ -97,13 +97,13 @@
                             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                           </rowConstraints>
                            <children>
-                              <Label text="Number" />
-                              <Label text="Matches to do" GridPane.rowIndex="2" />
-                              <Label text="Matches done" GridPane.rowIndex="3" />
+                              <Label text="%number" />
+                              <Label text="%matches_to_do" GridPane.rowIndex="2" />
+                              <Label text="%matches_done" GridPane.rowIndex="3" />
                               <Label fx:id="dayNumberLabel" GridPane.columnIndex="1" />
                               <Label fx:id="matchesToDoLabel" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                               <Label fx:id="matchesDoneLabel" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                              <Label text="Date" GridPane.rowIndex="1" />
+                              <Label text="%date" GridPane.rowIndex="1" />
                               <Label fx:id="dayDateLabel" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                            </children>
                         </GridPane>

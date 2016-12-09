@@ -17,8 +17,8 @@
          <bottom>
             <ButtonBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
               <buttons>
-                <Button fx:id="cancelButton" mnemonicParsing="false" onAction="#handleCancel" text="Cancel" />
-                  <Button fx:id="okButton" mnemonicParsing="false" onAction="#handleOK" text="OK" />
+                <Button fx:id="cancelButton" mnemonicParsing="false" onAction="#handleCancel" text="%cancel" />
+                  <Button fx:id="okButton" mnemonicParsing="false" onAction="#handleOK" text="%ok" />
               </buttons>
             </ButtonBar>
          </bottom>
@@ -33,7 +33,7 @@
               </rowConstraints>
                <children>
                   <TextField fx:id="dateTextField" GridPane.columnIndex="1" />
-                  <Label text="Date" />
+                  <Label text="%date" />
                </children>
             </GridPane>
          </center>

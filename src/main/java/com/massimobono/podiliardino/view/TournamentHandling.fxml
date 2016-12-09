@@ -20,13 +20,13 @@
         <items>
             <BorderPane prefHeight="200.0" prefWidth="200.0">
                <top>
-                  <Label text="Tournaments created" BorderPane.alignment="CENTER" />
+                  <Label text="%tournaments_created" BorderPane.alignment="CENTER" />
                </top>
                <center>
                   <TableView fx:id="tournamentTable" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
                     <columns>
-                      <TableColumn fx:id="tournamentNameColumn" prefWidth="75.0" text="Name" />
-                      <TableColumn fx:id="tournamentInfoColumn" prefWidth="75.0" text="# Partecipants" />
+                      <TableColumn fx:id="tournamentNameColumn" prefWidth="75.0" text="%name" />
+                      <TableColumn fx:id="tournamentInfoColumn" prefWidth="75.0" text="%number_of_partecipants" />
                     </columns>
                      <columnResizePolicy>
                         <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
@@ -36,7 +36,7 @@
             </BorderPane>
             <BorderPane prefHeight="200.0" prefWidth="200.0">
                <top>
-                  <Label text="Mark all the teams you want to join the tournament" BorderPane.alignment="CENTER" />
+                  <Label text="%mark_all_the_teams_you_want_to_join_the_tournament" BorderPane.alignment="CENTER" />
                </top>
                <center>
                   <ListView fx:id="availableTeamsList" prefHeight="598.0" prefWidth="235.0" BorderPane.alignment="CENTER" />
@@ -44,14 +44,14 @@
             </BorderPane>
             <BorderPane prefHeight="200.0" prefWidth="200.0">
                <top>
-                  <Label text="Tournament information" BorderPane.alignment="CENTER" />
+                  <Label text="%tournament_information" BorderPane.alignment="CENTER" />
                </top>
                <bottom>
                   <ButtonBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
                     <buttons>
-                      <Button fx:id="addTournament" mnemonicParsing="false" onAction="#handleAddTournament" text="New" />
-                        <Button fx:id="editTournament" mnemonicParsing="false" onAction="#handleEditTournament" text="Edit" />
-                        <Button fx:id="removeTournament" mnemonicParsing="false" onAction="#handleRemoveTournament" text="Delete" />
+                      <Button fx:id="addTournament" mnemonicParsing="false" onAction="#handleAddTournament" text="%new" />
+                        <Button fx:id="editTournament" mnemonicParsing="false" onAction="#handleEditTournament" text="%edit" />
+                        <Button fx:id="removeTournament" mnemonicParsing="false" onAction="#handleRemoveTournament" text="%delete" />
                     </buttons>
                   </ButtonBar>
                </bottom>
@@ -70,13 +70,13 @@
                               <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                           </rowConstraints>
                            <children>
-                              <Label text="Name" />
-                              <Label text="Start date" GridPane.rowIndex="1" />
-                              <Label text="End date" GridPane.rowIndex="2" />
+                              <Label text="%name" />
+                              <Label text="%start_date" GridPane.rowIndex="1" />
+                              <Label text="%end_date" GridPane.rowIndex="2" />
                               <Label fx:id="tournamentNameLabel" GridPane.columnIndex="1" />
                               <Label fx:id="tournamentStartDateLabel" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                               <Label fx:id="tournamentEndDateLabel" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                              <Label text="Minimum days required" GridPane.rowIndex="3" />
+                              <Label text="%minimum_days_required" GridPane.rowIndex="3" />
                               <Label fx:id="minimumDaysRequiredLabel" GridPane.columnIndex="1" GridPane.rowIndex="3" />
                            </children>
                         </GridPane>

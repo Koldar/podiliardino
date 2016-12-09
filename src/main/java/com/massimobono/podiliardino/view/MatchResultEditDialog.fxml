@@ -17,8 +17,8 @@
          <bottom>
             <ButtonBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
               <buttons>
-                <Button fx:id="cancelButton" mnemonicParsing="false" onAction="#handleCancel" text="Cancel" />
-                  <Button fx:id="okButton" mnemonicParsing="false" onAction="#handleOK" text="OK" />
+                <Button fx:id="cancelButton" mnemonicParsing="false" onAction="#handleCancel" text="%cancel" />
+                  <Button fx:id="okButton" mnemonicParsing="false" onAction="#handleOK" text="%ok" />
               </buttons>
             </ButtonBar>
          </bottom>
@@ -36,10 +36,10 @@
               </rowConstraints>
                <children>
                   <TextField fx:id="team1GoalsTextField" GridPane.columnIndex="1" />
-                  <Label text="Team1 goals" />
-                  <Label text="Team2 goals" GridPane.rowIndex="1" />
-                  <Label text="Points earned by winning" GridPane.rowIndex="2" />
-                  <Label text="Points earned by losing" GridPane.rowIndex="3" />
+                  <Label text="%team1_goals" />
+                  <Label text="%team2_goals" GridPane.rowIndex="1" />
+                  <Label text="%points_earned_by_winning" GridPane.rowIndex="2" />
+                  <Label text="%points_earned_by_losing" GridPane.rowIndex="3" />
                   <TextField fx:id="team2GoalsTextField" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                   <TextField fx:id="pointsEarnedFromWinningTextField" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                   <TextField fx:id="pointsEarnedFromLosingTextField" GridPane.columnIndex="1" GridPane.rowIndex="3" />

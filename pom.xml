@@ -3,7 +3,11 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.massimobono</groupId>
 	<artifactId>podiliardino</artifactId>
-	<version>0.11</version>
+	<version>0.12</version>
+
+	<name>Podiliardino</name>
+	<url>https://github.com/Koldar/podiliardino</url>
+	<description>A software helping you managing your &quot;biliardino&quot; tournaments. Bathed with holy water as well!</description>
 
 	<properties>
 		<maven.compiler.source>1.8</maven.compiler.source>
@@ -16,6 +20,12 @@
 	</organization>
 
 	<build>
+		<resources>
+			<resource>
+				<directory>src/main/targetDirectoryResources</directory>
+				<targetPath>${project.build.directory}</targetPath>
+			</resource>
+		</resources>
 		<plugins>
 			<plugin>
 				<groupId>com.zenjava</groupId>
@@ -47,6 +57,7 @@
 					</execution>
 				</executions>
 			</plugin>
+
 		</plugins>
 	</build>
 	<reporting>
@@ -82,8 +93,4 @@
 
 
 	</dependencies>
-
-	<name>Podiliardino</name>
-	<url>https://github.com/Koldar/podiliardino</url>
-	<description>A software helping you managing your &quot;biliardino&quot; tournaments. Bathed with holy water as well!</description>
 </project>

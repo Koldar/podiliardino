@@ -6,13 +6,16 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.ResourceBundle;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.output.Format;
@@ -22,6 +25,8 @@ import com.massimobono.podiliardino.extensibles.dao.DAO;
 import com.massimobono.podiliardino.extensibles.dao.DAOException;
 import com.massimobono.podiliardino.extensibles.dao.SQLiteDAOImpl;
 import com.massimobono.podiliardino.util.ExceptionAlert;
+import com.massimobono.podiliardino.util.I18N;
+import com.massimobono.podiliardino.util.INIHandler;
 import com.massimobono.podiliardino.util.Utils;
 import com.massimobono.podiliardino.view.DayHandlingController;
 import com.massimobono.podiliardino.view.PlayerHandlingController;
@@ -39,26 +44,49 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 
-
+/**
+ * Entry point of the application
+ * 
+ * The class contains references to the main concepts of the application:
+ * <ul>
+ * 	<li>{@link DAO}</li>
+ * 	<li>the stage where everything is drawn into: {@link #primaryStage}</li>
+ * 	<li>utility methods to quickly load custom diaogs and tab panes</li>
+ * 	<li>variable used to exploit locale differences: {@link #i18n}</li>
+ * </ul>
+ * 
+ * @author massi
+ *
+ */
 public class Main extends Application {
 	
 	private static Logger LOG = LogManager.getLogger(Main.class.getName());
+	
+	private static final String INI_FILENAME = "settings.ini";
+	private static final String INI_SECTION = "podiliardino";
+	private static final String INI_LANG = "lang";
 	
 	private Stage primaryStage;
 	private BorderPane rootScene;
 	
 	private DAO dao;
+	private INIHandler settings;
 	
 	public static void main(String[] args) throws IOException {
 		launch(args);
 	}
 	
 	
-	public Main() throws DAOException {
+	public Main() throws DAOException, IOException {
+		this.settings = new INIHandler(INI_FILENAME, true);
+		
 		this.dao = new SQLiteDAOImpl(new File("data.db"), true);
 		//ensure to have a dummy team with 2 dummy players
 		Utils.addDummyTeam(this.dao);
-		//this.dao.clearAll();
+		
+		//we use the locale defined by the ini, if rpesent
+		Optional<String> lang = this.settings.getString(INI_SECTION, INI_LANG);
+		I18N.set(lang.orElse("en"));
 	}
 
 	@Override
@@ -128,6 +156,7 @@ public class Main extends Application {
 	private void loadAndShowRootLayout() throws IOException {
 		FXMLLoader loader = new FXMLLoader();
 		loader.setLocation(Main.class.getResource("/com/massimobono/podiliardino/view/RootLayout.fxml"));
+		loader.setResources(I18N.get());
 		this.rootScene = loader.load();
 		this.rootScene.getStylesheets().add(Main.class.getResource("application.css").toExternalForm());
 		this.primaryStage.setScene(new Scene(this.rootScene));
@@ -155,6 +184,7 @@ public class Main extends Application {
 			throw new FileNotFoundException(String.format("Couldn't find %s", baseUrl));
 		} else {
 			loader.setLocation(resourceURL.get());
+			loader.setResources(I18N.get());
 			Tab tab = new Tab(tabName);
 			tab.setContent(loader.load());
 			((TabPane)this.rootScene.getCenter()).getTabs().add(tab);
@@ -164,16 +194,6 @@ public class Main extends Application {
 			CONTROLLER c = loader.getController();
 			initializeController.accept(c);
 		}
-	}
-	
-	/**
-	 * like {@link #setMainTo(String, Consumer)}, but the controller isn't loaded at all
-	 * @param fxmlFile
-	 * @param tabName
-	 * @throws IOException
-	 */
-	private <CONTROLLER> void setMainTo(String fxmlFile, String tabName) throws IOException {
-		this.addMainSceneToStage(fxmlFile, tabName, null);
 	}
 	
 	/**
@@ -202,6 +222,7 @@ public class Main extends Application {
 		if (!resourceURL.isPresent()) {
 			throw new FileNotFoundException(String.format("Couldn't find %s", baseUrl));
 		} else {
+			loader.setResources(I18N.get());
 			loader.setLocation(resourceURL.get());
 			Pane page = loader.load();
 			

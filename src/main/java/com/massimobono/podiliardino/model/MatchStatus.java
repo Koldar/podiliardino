@@ -2,9 +2,11 @@ package com.massimobono.podiliardino.model;
 
 import java.util.NoSuchElementException;
 
+import com.massimobono.podiliardino.util.I18N;
+
 public enum MatchStatus {
-	TODO(0, "Todo"),
-	DONE(1, "Done");
+	TODO(0, "todo"),
+	DONE(1, "done");
 	
 	private int id;
 	private String toString;
@@ -24,7 +26,7 @@ public enum MatchStatus {
 	}
 	
 	public String toString() {
-		return this.toString;
+		return I18N.get().getString(this.toString);
 	}
 	
 	public int getId() {

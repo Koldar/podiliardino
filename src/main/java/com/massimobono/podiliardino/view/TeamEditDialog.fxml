@@ -18,8 +18,8 @@
          <bottom>
             <ButtonBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
               <buttons>
-                <Button fx:id="cancelButton" mnemonicParsing="false" onAction="#handleCancel" text="Cancel" />
-                  <Button fx:id="okButton" mnemonicParsing="false" onAction="#handleOK" text="OK" />
+                <Button fx:id="cancelButton" mnemonicParsing="false" onAction="#handleCancel" text="%cancel" />
+                  <Button fx:id="okButton" mnemonicParsing="false" onAction="#handleOK" text="%ok" />
               </buttons>
             </ButtonBar>
          </bottom>
@@ -38,10 +38,10 @@
                <children>
                   <TextField fx:id="nameTextField" GridPane.columnIndex="1" />
                   <TextField fx:id="dateTextField" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                  <Label text="Name" />
-                  <Label text="Foundation date" GridPane.rowIndex="1" />
-                  <Label text="Team member #1" GridPane.rowIndex="2" />
-                  <Label text="Team member #2" GridPane.rowIndex="3" />
+                  <Label text="%name" />
+                  <Label text="%foundation_date" GridPane.rowIndex="1" />
+                  <Label text="%team_member_1" GridPane.rowIndex="2" />
+                  <Label text="%team_member_2" GridPane.rowIndex="3" />
                   <ComboBox fx:id="firstTeamMemberChoiceBox" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="2" />
                   <ComboBox fx:id="secondTeamMemberChoiceBox" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="3" />
                </children>

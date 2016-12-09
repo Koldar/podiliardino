@@ -14,6 +14,7 @@ import com.massimobono.podiliardino.model.Day;
 import com.massimobono.podiliardino.model.Match;
 import com.massimobono.podiliardino.model.MatchStatus;
 import com.massimobono.podiliardino.util.CSVHandler;
+import com.massimobono.podiliardino.util.I18N;
 
 /**
  * A Formatter that save inside a CSV all the match to do in a day
@@ -28,8 +29,6 @@ import com.massimobono.podiliardino.util.CSVHandler;
 public class SimpleCSVMatchesFormatter implements Formatter<Day, File> {
 	
 	private static final Logger LOG = LogManager.getLogger(SimpleCSVMatchesFormatter.class);
-
-	private static final String[] HEADER = new String[]{"MATCH NUMBER", "TEAM 1", "TEAM 2"};
 	
 	private File csvFile;
 	
@@ -41,7 +40,9 @@ public class SimpleCSVMatchesFormatter implements Formatter<Day, File> {
 	public File format(Day toFormat) throws FormatException{
 		int i = 0;
 		
-		try (CSVHandler csvHandler = new CSVHandler(this.csvFile.getAbsolutePath(), HEADER)) {
+		String[] header = new String[] {I18N.get().getString("match_number"), I18N.get().getString("team1"), I18N.get().getString("team2")};
+		
+		try (CSVHandler csvHandler = new CSVHandler(this.csvFile.getAbsolutePath(), header)) {
 			csvHandler.addOption("sep", CSVHandler.DEFAULT_DELIMITER);
 			for (Match match : toFormat.matchesProperty()){
 				if (match.getStatus().get() != MatchStatus.TODO) {

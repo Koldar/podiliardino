@@ -85,11 +85,30 @@ public class TournamentHandlingController {
 	 * or if a partecipation has been dismissed
 	 */
 	private ListChangeListener<Partecipation> tournamentParticipationsListener;
+	/**
+	 * The listener listening to changes inside {@link #availableTeams}. Since {@link #teamsToDisplay} is a totally different list than {@link #availableTeams},
+	 * if someone adds a new team, {@link #teamsToDisplay} is not updated. Thanks to this listener, the update is carried till {@link #teamsToDisplay}
+	 */
+	private ListChangeListener<Team> availableTeamsListener;
 
 	public TournamentHandlingController() {
 		this.tournamentPartcipations = FXCollections.observableArrayList();
 		this.teamsToDisplay = FXCollections.observableArrayList();
-		tournamentParticipationsListener = null;
+		this.tournamentParticipationsListener = null;
+		this.availableTeamsListener = new ListChangeListener<Team>() {
+
+			@Override
+			public void onChanged(ListChangeListener.Change<? extends Team> c) {
+				while (c.next()) {
+					for (Team t : c.getAddedSubList()) {
+						teamsToDisplay.add(t);
+					}
+					for (Team t : c.getRemoved()) {
+						teamsToDisplay.remove(t);
+					}
+				}
+			}
+		};
 	}
 
 	@FXML
@@ -161,6 +180,11 @@ public class TournamentHandlingController {
 		this.mainApp = mainApp;
 
 		this.availableTeams = this.mainApp.getDAO().getTeamList().filtered(t -> !t.isSpecial());
+		//we first remove the listener in order to avoid listener pollution
+		this.availableTeams.removeListener(this.availableTeamsListener);
+		this.availableTeams.addListener(this.availableTeamsListener);
+		
+		
 		this.tournamentTable.setItems(this.mainApp.getDAO().getTournamentList());
 	}
 

@@ -81,7 +81,7 @@ public class Utils {
 	
 	public static Alert createDefaultErrorAlert(String header, String body) {
 		Alert alert = new Alert(AlertType.ERROR);
-		alert.setTitle("Error Dialog");
+		alert.setTitle(I18N.get().getString("error_dialog_title"));
 		alert.setHeaderText(header);
 		alert.setContentText(body);
 		alert.showAndWait();
@@ -96,7 +96,7 @@ public class Utils {
 	 */
 	public static boolean waitUserReplyForConfirmationDialog(String header, String body) {
 		Alert alert = new Alert(AlertType.CONFIRMATION);
-		alert.setTitle("Confirmation Dialog");
+		alert.setTitle(I18N.get().getString("confirmation_dialog_title"));
 		alert.setHeaderText(header);
 		alert.setContentText(body);
 
@@ -106,7 +106,7 @@ public class Utils {
 	
 	public static Alert createInformationAlert(String header, String body) {
 		Alert alert = new Alert(AlertType.INFORMATION);
-		alert.setTitle("Information");
+		alert.setTitle(I18N.get().getString("information_dialog_title"));
 		alert.setHeaderText(header);
 		alert.setContentText(body);
 		alert.showAndWait();
