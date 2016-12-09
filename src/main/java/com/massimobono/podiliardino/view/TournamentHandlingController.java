@@ -18,6 +18,7 @@ import com.massimobono.podiliardino.model.Partecipation;
 import com.massimobono.podiliardino.model.Team;
 import com.massimobono.podiliardino.model.Tournament;
 import com.massimobono.podiliardino.util.ExceptionAlert;
+import com.massimobono.podiliardino.util.I18N;
 import com.massimobono.podiliardino.util.Utils;
 
 import javafx.beans.property.SimpleIntegerProperty;
@@ -115,7 +116,6 @@ public class TournamentHandlingController {
 	private void initialize() {
 		// Initialize the person table with the two columns.
 		this.tournamentNameColumn.setCellValueFactory(cellData -> cellData.getValue().nameProperty());
-		//this.tournamentInfoColumn.setCellValueFactory(new PropertyValueFactory<Tournament, Integer>("numberOfPartecipants"));
 		this.tournamentInfoColumn.setCellValueFactory(cellData -> {
 			return cellData.getValue().numberOfPartecipantsProperty().asObject();
 		});
@@ -193,7 +193,7 @@ public class TournamentHandlingController {
 		try {
 			Optional<Tournament> t = this.mainApp.showCustomDialog(
 					"TournamentEditDialog", 
-					"New Tournament", 
+					String.format(I18N.get().getString("new_object"), I18N.get().getString("tournament")), 
 					(TournamentEditDialogController c, Stage s) -> {
 						try {
 							c.setup(s, new Tournament());
@@ -224,7 +224,7 @@ public class TournamentHandlingController {
 			}
 			Optional<Tournament> t = this.mainApp.showCustomDialog(
 					"TournamentEditDialog", 
-					"Edit Tournmanet", 
+					String.format(I18N.get().getString("update_object"), I18N.get().getString("tournament")), 
 					(TournamentEditDialogController c, Stage s) -> {
 						try {
 							c.setup(s, this.tournamentTable.getSelectionModel().getSelectedItem());
@@ -250,11 +250,15 @@ public class TournamentHandlingController {
 	private void handleRemoveTournament() {
 		try {
 			if (this.tournamentTable.getSelectionModel().getSelectedItem() == null) {
-				Utils.createDefaultErrorAlert("Can't remove tournament", "In order to remove a tournament you need to select one first.");
+				Utils.createDefaultErrorAlert(
+						String.format(I18N.get().getString("cant_remove"), I18N.get().getString("tournament")),
+						I18N.get().getString("in_order_to_remove_a_tournament_you_need_to_select_one_first"));
 				return;
 			}
 			Tournament t =this.tournamentTable.getSelectionModel().getSelectedItem();
-			if (!Utils.waitUserReplyForConfirmationDialog(String.format("Are you sure to delete tournament \"%s\"?", t.nameProperty().get()), "Removing a tournament will delete all its days and the matches of that tournament within the database! Are you sure?")){
+			if (!Utils.waitUserReplyForConfirmationDialog(
+					String.format(I18N.get().getString("are_you_sure_yo_delete_tournament"), t.getName()), 
+					I18N.get().getString("removing_a_tournament_will_delete_all_its_days_and_the_matches_of_that_tournament_within_the_database_are_you_sure"))){
 				return;
 			}
 			this.mainApp.getDAO().remove(t);

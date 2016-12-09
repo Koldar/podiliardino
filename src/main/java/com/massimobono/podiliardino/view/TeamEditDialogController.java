@@ -11,6 +11,7 @@ import java.util.zip.DataFormatException;
 
 import com.massimobono.podiliardino.model.Player;
 import com.massimobono.podiliardino.model.Team;
+import com.massimobono.podiliardino.util.I18N;
 import com.massimobono.podiliardino.util.Utils;
 
 import javafx.collections.FXCollections;
@@ -81,7 +82,7 @@ public class TeamEditDialogController {
 	            if (bln) {
 	                setText("");
 	            } else {
-	                setText(String.format("%s %s (age: %s)", t.nameProperty().get(), t.surnameProperty().get(), t.getAge().isPresent() ? t.getAge().get() : "unknown"));
+	                setText(String.format("%s %s (age: %s)", t.getName(), t.getSurname(), t.getAge().isPresent() ? t.getAge().get() : "unknown"));
 	            }
 	        }
 		};
@@ -139,31 +140,29 @@ public class TeamEditDialogController {
 	private boolean checkValues() {
 		Collection<String>strs = new ArrayList<>();
 		if (!this.nameTextField.getText().matches(NAME_REGEX)) {
-			strs.add("Name must be non empty and have only alphanumeric characters or spaces");
+			strs.add(I18N.get().getString("name_must_be_non_empty_and_have_only_alphanumeric_characters_or_spaces"));
 		}
 		
 		try {
 			DateTimeFormatter.ofPattern(Utils.STANDARD_DATE_PATTERN).parse(this.dateTextField.getText());
 		} catch (DateTimeParseException e) {
-			strs.add("Cannot parse date. It has to be of format "+Utils.STANDARD_DATE_PATTERN);
+			strs.add(String.format(I18N.get().getString("cannot_parse_date_it_has_to_be_of_format"), Utils.STANDARD_DATE_PATTERN));
 		}
 		
 		if (this.firstTeamMemberChoiceBox.getSelectionModel().getSelectedItem() == null) {
-			strs.add("The first member of the team is unselected. Please select one member of the team.");
+			strs.add(I18N.get().getString("the_first_member_of_the_team_is_unselected_please_select_one_member_of_the_team"));
 		}
 		if (this.secondTeamMemberChoiceBox.getSelectionModel().getSelectedItem() == null) {
-			strs.add("The second member of the team is unselected. Please select one member of the team.");
+			strs.add(I18N.get().getString("the_second_member_of_the_team_is_unselected_please_select_one_member_of_the_team"));
 		}
 		if (this.firstTeamMemberChoiceBox.getSelectionModel().getSelectedItem() == this.secondTeamMemberChoiceBox.getSelectionModel().getSelectedItem()) {
-			strs.add("A team cannot be formed by a single person (even if he's Superman).");
+			strs.add(I18N.get().getString("a_team_canot_be_formed_by_a_single_person"));
 		}
 		
 		if (!strs.isEmpty()) {
-			Alert alert = new Alert(AlertType.ERROR);
-			alert.setTitle("Error");
-			alert.setHeaderText("Error In input data");
-			alert.setContentText(String.join("\n", strs));
-			alert.showAndWait();
+			Utils.createDefaultErrorAlert(
+					I18N.get().getString("error_in_input_data"), 
+					String.join("\n", strs));
 		}
 		
 		return strs.isEmpty();

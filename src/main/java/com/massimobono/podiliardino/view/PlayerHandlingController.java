@@ -10,6 +10,7 @@ import com.massimobono.podiliardino.extensibles.dao.DAOException;
 import com.massimobono.podiliardino.model.Player;
 import com.massimobono.podiliardino.model.Team;
 import com.massimobono.podiliardino.util.ExceptionAlert;
+import com.massimobono.podiliardino.util.I18N;
 import com.massimobono.podiliardino.util.Utils;
 
 import javafx.beans.value.ObservableValue;
@@ -77,7 +78,7 @@ public class PlayerHandlingController {
 		try {
 			Optional<Player> p = this.mainApp.showCustomDialog(
 					"PlayerEditDialog", 
-					"New Player", 
+					String.format(I18N.get().getString("new_object"), I18N.get().getString("player")), 
 					(PlayerEditDialogController c, Stage s) -> {
 						c.setDialog(s);
 						c.setPlayer(new Player());
@@ -105,7 +106,7 @@ public class PlayerHandlingController {
 			}
 			Optional<Player> p = this.mainApp.showCustomDialog(
 					"PlayerEditDialog", 
-					"New Player", 
+					String.format(I18N.get().getString("update_object"), I18N.get().getString("player")), 
 					(PlayerEditDialogController c, Stage s) -> {
 						c.setDialog(s);
 						c.setPlayer(this.playersTable.getSelectionModel().getSelectedItem());
@@ -129,10 +130,16 @@ public class PlayerHandlingController {
 		try {
 			if (this.playersTable.getSelectionModel().getSelectedItem() == null) {
 				//the user has selected nothing
+				Utils.createDefaultErrorAlert(
+						String.format(I18N.get().getString("cant_remove"), I18N.get().getString("player")),
+						I18N.get().getString("in_order_to_remove_a_player_you_need_to_select_one"));
 				return;
 			}
 			Player p = this.playersTable.getSelectionModel().getSelectedItem();
-			if (!Utils.waitUserReplyForConfirmationDialog(String.format("Do you really want to remove the player \"%s\"?", p.nameProperty().get()), "If you remove the following player all the team he belongs will be removed as well. This will also removes all the tournament they partecipate in with all the related days and related matches. Are you sure?")){
+			if (!Utils.waitUserReplyForConfirmationDialog(
+					String.format(
+							I18N.get().getString("do_you_really_want_to_remove_the_player"), p.getName()),
+							I18N.get().getString("if_you_remove_the_following_player_all_the_team_he_belongs_will_be_removed_as_well_this_will_also_remove_all_the_tournaments_they_partecipate_in_whe_all_the_related_day_and_related_matches_are_you_sure"))){
 				return;
 			}
 			this.mainApp.getDAO().remove(p);

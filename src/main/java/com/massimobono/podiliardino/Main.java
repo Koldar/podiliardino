@@ -96,7 +96,7 @@ public class Main extends Application {
 		
 		try {
 			this.loadAndShowRootLayout();
-			this.addMainSceneToStage("PlayerHandling", "Player Management", (PlayerHandlingController c) -> {
+			this.addMainSceneToStage("PlayerHandling", I18N.get().getString("player_management"), (PlayerHandlingController c) -> {
 				try {
 					c.setup(this);
 				} catch (Exception e) {
@@ -104,7 +104,7 @@ public class Main extends Application {
 					ExceptionAlert.showAndWait(e);
 				}
 			});
-			this.addMainSceneToStage("TeamHandling", "Team Management", (TeamHandlingController c) -> {
+			this.addMainSceneToStage("TeamHandling", I18N.get().getString("team_management"), (TeamHandlingController c) -> {
 				try {
 					c.setup(this);
 				} catch (Exception e) {
@@ -112,7 +112,7 @@ public class Main extends Application {
 					ExceptionAlert.showAndWait(e);
 				}
 			});
-			this.addMainSceneToStage("TournamentHandling", "Tournament Management", (TournamentHandlingController c) -> {
+			this.addMainSceneToStage("TournamentHandling", I18N.get().getString("tournament_management"), (TournamentHandlingController c) -> {
 				try {
 					c.setup(this);
 				} catch (Exception e) {
@@ -120,7 +120,7 @@ public class Main extends Application {
 					ExceptionAlert.showAndWait(e);
 				}
 			});
-			this.addMainSceneToStage("DayHandling", "Day Management", (DayHandlingController c) -> {
+			this.addMainSceneToStage("DayHandling", I18N.get().getString("day_management"), (DayHandlingController c) -> {
 				try {
 					c.setup(this);
 				} catch (Exception e) {

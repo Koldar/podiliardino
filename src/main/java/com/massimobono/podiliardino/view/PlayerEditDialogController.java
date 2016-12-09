@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.zip.DataFormatException;
 
 import com.massimobono.podiliardino.model.Player;
+import com.massimobono.podiliardino.util.I18N;
 import com.massimobono.podiliardino.util.Utils;
 
 import javafx.fxml.FXML;
@@ -87,11 +88,11 @@ public class PlayerEditDialogController {
 	private boolean checkValues() {
 		Collection<String>strs = new ArrayList<>();
 		if (!this.nameTextField.getText().matches(NAME_REGEX)) {
-			strs.add("Name must be non empty and have only alphabetic characters");
+			strs.add(I18N.get().getString("name_must_be_non_empty_and_have_only_alphabetic_characters"));
 		}
 		
 		if (!this.surnameTextField.getText().matches(SURNAME_REGEX)){
-			strs.add("Surname must be non empty and have only alphabetic characters");
+			strs.add(I18N.get().getString("surname_must_be_non_empty_and_have_only_alphabetic_characters"));
 		}
 		
 		
@@ -106,11 +107,9 @@ public class PlayerEditDialogController {
 		}
 		
 		if (!strs.isEmpty()) {
-			Alert alert = new Alert(AlertType.ERROR);
-			alert.setTitle("Error");
-			alert.setHeaderText("Error In input data");
-			alert.setContentText(String.join("\n", strs));
-			alert.showAndWait();
+			Utils.createDefaultErrorAlert(
+					I18N.get().getString("error_in_input_data"), 
+					String.join("\n", strs));
 		}
 		
 		return strs.isEmpty();

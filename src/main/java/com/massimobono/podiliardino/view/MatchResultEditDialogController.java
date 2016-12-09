@@ -15,6 +15,7 @@ import com.massimobono.podiliardino.model.MatchStatus;
 import com.massimobono.podiliardino.model.Player;
 import com.massimobono.podiliardino.model.Team;
 import com.massimobono.podiliardino.model.Tournament;
+import com.massimobono.podiliardino.util.I18N;
 import com.massimobono.podiliardino.util.Utils;
 
 import javafx.collections.FXCollections;
@@ -104,33 +105,31 @@ public class MatchResultEditDialogController {
 		try {
 			Integer.parseInt(this.team1GoalsTextField.getText());
 		} catch (NumberFormatException e) {
-			strs.add("Team 1 goals can't be converted into a number!");
+			strs.add(I18N.get().getString("team_1_goals_cant_be_converted_into_a_number"));
 		}
 		
 		try {
 			Integer.parseInt(this.team2GoalsTextField.getText());
 		} catch (NumberFormatException e) {
-			strs.add("Team 2 goals can't be converted into a number!");
+			strs.add(I18N.get().getString("team_2_goals_cant_be_converted_into_a_number"));
 		}
 		
 		try {
 			Integer.parseInt(this.pointsEarnedFromWinningTextField.getText());
 		} catch (NumberFormatException e) {
-			strs.add("Points earned from winning can't be converted into a number!");
+			strs.add(I18N.get().getString("points_earned_from_winning_cant_be_converted_into_a_number"));
 		}
 		
 		try {
 			Integer.parseInt(this.pointsEarnedFromLosingTextField.getText());
 		} catch (NumberFormatException e) {
-			strs.add("Points earned from losing can't be converted into a number!");
+			strs.add(I18N.get().getString("points_earned_from_losing_cant_be_converted_into_a_number"));
 		}
 		
 		if (!strs.isEmpty()) {
-			Alert alert = new Alert(AlertType.ERROR);
-			alert.setTitle("Error");
-			alert.setHeaderText("Error In input data");
-			alert.setContentText(String.join("\n", strs));
-			alert.showAndWait();
+			Utils.createDefaultErrorAlert(
+					I18N.get().getString("error_in_input_data"), 
+					String.join("\n", strs));
 		}
 		
 		return strs.isEmpty();

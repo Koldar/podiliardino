@@ -11,6 +11,7 @@ import com.massimobono.podiliardino.model.Partecipation;
 import com.massimobono.podiliardino.model.Player;
 import com.massimobono.podiliardino.model.Team;
 import com.massimobono.podiliardino.util.ExceptionAlert;
+import com.massimobono.podiliardino.util.I18N;
 import com.massimobono.podiliardino.util.Utils;
 
 import javafx.beans.property.SimpleStringProperty;
@@ -80,7 +81,7 @@ public class TeamHandlingController {
 		try {
 			Optional<Team> t = this.mainApp.showCustomDialog(
 					"TeamEditDialog", 
-					"New Team",
+					String.format(I18N.get().getString("new_object"), I18N.get().getString("team")),
 					(TeamEditDialogController c, Stage s) -> {
 						try {
 							c.setup(s, new Team(), this.mainApp.getDAO().getAllPlayersThat(p -> !p.isSpecial()));
@@ -114,11 +115,15 @@ public class TeamHandlingController {
 	private void handleEditTeam() {
 		try {
 			if (this.teamTable.getSelectionModel().getSelectedItem() == null) {
+				Utils.createDefaultErrorAlert(
+						String.format(I18N.get().getString("cant_update"), I18N.get().getString("team")),
+						I18N.get().getString("in_order_to_update_a_team_you_need_to_select_one")
+						);
 				return;
 			}
 			Optional<Team> t = this.mainApp.showCustomDialog(
 					"TeamEditDialog", 
-					"Edit Team", 
+					String.format(I18N.get().getString("update_object"), I18N.get().getString("team")), 
 					(TeamEditDialogController c, Stage s) -> {
 						try {
 							c.setup(s, this.teamTable.getSelectionModel().getSelectedItem(), this.mainApp.getDAO().getAllPlayers());
@@ -145,11 +150,16 @@ public class TeamHandlingController {
 	private void handleDeleteTeam() {
 		try {
 			if (this.teamTable.getSelectionModel().getSelectedItem() == null) {
+				Utils.createDefaultErrorAlert(
+						String.format(I18N.get().getString("cant_remove"), I18N.get().getString("team")), 
+						I18N.get().getString("in_order_to_remove_a_team_you_need_to_select_one"));
 				//the user has selected nothing
 				return;
 			}
 			Team t =this.teamTable.getSelectionModel().getSelectedItem();
-			if (!Utils.waitUserReplyForConfirmationDialog(String.format("Do you really want to delete team \"%s\"?",t.nameProperty().get()), "Removing the team wil lalso remove every tournament the team has ever partecipate in in, all its days and all its matches. Are you sure?")){
+			if (!Utils.waitUserReplyForConfirmationDialog(
+					String.format(I18N.get().getString("do_you_really_want_to_delete_team"),t.getName()),
+					I18N.get().getString("removing_the_team_will_also_remove_every_tournament_the_team_has_ever_partecipate_in_it_all_its_day_and_all_its_matches_are_you_sure"))){
 				return;
 			}
 			this.mainApp.getDAO().remove(t);
