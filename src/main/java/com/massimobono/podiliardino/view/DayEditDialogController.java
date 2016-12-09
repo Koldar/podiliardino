@@ -126,12 +126,12 @@ public class DayEditDialogController {
 		try {
 			DateTimeFormatter.ofPattern(Utils.STANDARD_DATE_PATTERN).parse(this.dateTextField.getText());
 		} catch (DateTimeParseException e) {
-			strs.add(String.format(I18N.get().getString("cannot_parse_date_it_has_to_be_of_format"), Utils.STANDARD_DATE_PATTERN));
+			strs.add(String.format(I18N.get("cannot_parse_date_it_has_to_be_of_format"), Utils.STANDARD_DATE_PATTERN));
 		}
 		
 		if (!strs.isEmpty()) {
 			Utils.createDefaultErrorAlert(
-					I18N.get().getString("error_in_input_data"), 
+					I18N.get("error_in_input_data"), 
 					String.join("\n", strs));
 		}
 		

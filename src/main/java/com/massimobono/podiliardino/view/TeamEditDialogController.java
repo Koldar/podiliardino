@@ -140,28 +140,28 @@ public class TeamEditDialogController {
 	private boolean checkValues() {
 		Collection<String>strs = new ArrayList<>();
 		if (!this.nameTextField.getText().matches(NAME_REGEX)) {
-			strs.add(I18N.get().getString("name_must_be_non_empty_and_have_only_alphanumeric_characters_or_spaces"));
+			strs.add(I18N.get("name_must_be_non_empty_and_have_only_alphanumeric_characters_or_spaces"));
 		}
 		
 		try {
 			DateTimeFormatter.ofPattern(Utils.STANDARD_DATE_PATTERN).parse(this.dateTextField.getText());
 		} catch (DateTimeParseException e) {
-			strs.add(String.format(I18N.get().getString("cannot_parse_date_it_has_to_be_of_format"), Utils.STANDARD_DATE_PATTERN));
+			strs.add(String.format(I18N.get("cannot_parse_date_it_has_to_be_of_format"), Utils.STANDARD_DATE_PATTERN));
 		}
 		
 		if (this.firstTeamMemberChoiceBox.getSelectionModel().getSelectedItem() == null) {
-			strs.add(I18N.get().getString("the_first_member_of_the_team_is_unselected_please_select_one_member_of_the_team"));
+			strs.add(I18N.get("the_first_member_of_the_team_is_unselected_please_select_one_member_of_the_team"));
 		}
 		if (this.secondTeamMemberChoiceBox.getSelectionModel().getSelectedItem() == null) {
-			strs.add(I18N.get().getString("the_second_member_of_the_team_is_unselected_please_select_one_member_of_the_team"));
+			strs.add(I18N.get("the_second_member_of_the_team_is_unselected_please_select_one_member_of_the_team"));
 		}
 		if (this.firstTeamMemberChoiceBox.getSelectionModel().getSelectedItem() == this.secondTeamMemberChoiceBox.getSelectionModel().getSelectedItem()) {
-			strs.add(I18N.get().getString("a_team_canot_be_formed_by_a_single_person"));
+			strs.add(I18N.get("a_team_canot_be_formed_by_a_single_person"));
 		}
 		
 		if (!strs.isEmpty()) {
 			Utils.createDefaultErrorAlert(
-					I18N.get().getString("error_in_input_data"), 
+					I18N.get("error_in_input_data"), 
 					String.join("\n", strs));
 		}
 		

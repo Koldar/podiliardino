@@ -28,5 +28,9 @@ public class I18N {
 		return i18n;
 	}
 	
+	public static String get(String key) {
+		return i18n.getString(key);
+	}
+	
 	
 }

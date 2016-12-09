@@ -88,11 +88,11 @@ public class PlayerEditDialogController {
 	private boolean checkValues() {
 		Collection<String>strs = new ArrayList<>();
 		if (!this.nameTextField.getText().matches(NAME_REGEX)) {
-			strs.add(I18N.get().getString("name_must_be_non_empty_and_have_only_alphabetic_characters"));
+			strs.add(I18N.get("name_must_be_non_empty_and_have_only_alphabetic_characters"));
 		}
 		
 		if (!this.surnameTextField.getText().matches(SURNAME_REGEX)){
-			strs.add(I18N.get().getString("surname_must_be_non_empty_and_have_only_alphabetic_characters"));
+			strs.add(I18N.get("surname_must_be_non_empty_and_have_only_alphabetic_characters"));
 		}
 		
 		
@@ -108,7 +108,7 @@ public class PlayerEditDialogController {
 		
 		if (!strs.isEmpty()) {
 			Utils.createDefaultErrorAlert(
-					I18N.get().getString("error_in_input_data"), 
+					I18N.get("error_in_input_data"), 
 					String.join("\n", strs));
 		}
 		

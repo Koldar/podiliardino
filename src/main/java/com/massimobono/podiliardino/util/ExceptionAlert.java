@@ -14,8 +14,8 @@ public class ExceptionAlert extends Alert {
 	
 	public ExceptionAlert(Exception ex) {
 		super(AlertType.ERROR);
-		this.setTitle(I18N.get().getString("exception_dialog_title"));
-		this.setHeaderText(I18N.get().getString("exception_dialog_header"));
+		this.setTitle(I18N.get("exception_dialog_title"));
+		this.setHeaderText(I18N.get("exception_dialog_header"));
 		this.setContentText(ex.getMessage());
 
 		// Create expandable Exception.
@@ -24,7 +24,7 @@ public class ExceptionAlert extends Alert {
 		ex.printStackTrace(pw);
 		String exceptionText = sw.toString();
 
-		Label label = new Label(I18N.get().getString("exception_dialog_stacktrace_header"));
+		Label label = new Label(I18N.get("exception_dialog_stacktrace_header"));
 
 		TextArea textArea = new TextArea(exceptionText);
 		textArea.setEditable(false);

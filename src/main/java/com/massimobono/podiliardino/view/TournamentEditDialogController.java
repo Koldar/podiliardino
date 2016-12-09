@@ -89,14 +89,14 @@ public class TournamentEditDialogController {
 	private boolean checkValues() {
 		Collection<String>strs = new ArrayList<>();
 		if (!this.nameTextField.getText().matches(NAME_REGEX)) {
-			strs.add(I18N.get().getString("name_must_be_non_empty_and_have_only_alphabetic_characters"));
+			strs.add(I18N.get("name_must_be_non_empty_and_have_only_alphabetic_characters"));
 		}
 		
 		
 		try {
 			DateTimeFormatter.ofPattern(Utils.STANDARD_DATE_PATTERN).parse(this.startDateTextField.getText());
 		} catch (DateTimeParseException e) {
-			strs.add(String.format(I18N.get().getString("tournament_start_date_have_to_be_set_it_must_follow_the_pattern"), Utils.STANDARD_DATE_PATTERN));
+			strs.add(String.format(I18N.get("tournament_start_date_have_to_be_set_it_must_follow_the_pattern"), Utils.STANDARD_DATE_PATTERN));
 		}
 		
 		try {
@@ -107,7 +107,7 @@ public class TournamentEditDialogController {
 		
 		if (!strs.isEmpty()) {
 			Utils.createDefaultErrorAlert(
-					I18N.get().getString("error_in_input_data"), 
+					I18N.get("error_in_input_data"), 
 					String.join("\n", strs));
 		}
 		

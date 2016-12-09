@@ -26,7 +26,7 @@ public enum MatchStatus {
 	}
 	
 	public String toString() {
-		return I18N.get().getString(this.toString);
+		return I18N.get(this.toString);
 	}
 	
 	public int getId() {

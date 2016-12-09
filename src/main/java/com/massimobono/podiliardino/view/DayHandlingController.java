@@ -170,23 +170,23 @@ public class DayHandlingController {
 		try {
 			if (this.tournamentTableView.getSelectionModel().getSelectedItem() == null) {
 				Utils.createDefaultErrorAlert(
-						I18N.get().getString("cant_add_a_new_day"), 
-						I18N.get().getString("in_order_to_create_a_new_day_a_tournament_needs_to_be_selected_in_the_current_frame"));
+						I18N.get("cant_add_a_new_day"), 
+						I18N.get("in_order_to_create_a_new_day_a_tournament_needs_to_be_selected_in_the_current_frame"));
 				return;
 			}
 			Tournament t = this.tournamentTableView.getSelectionModel().getSelectedItem();
 			for (Day d : t.daysProperty()) {
 				if (!d.isDayCompleted()) {
 					Utils.createDefaultErrorAlert(
-							I18N.get().getString("cant_add_a_new_day"),
-							I18N.get().getString("in_order_to_create_a_new_dat_all_previous_days_of_the_tournament_needs_to_be_completed_no_matches_are_left_to_run"));
+							I18N.get("cant_add_a_new_day"),
+							I18N.get("in_order_to_create_a_new_dat_all_previous_days_of_the_tournament_needs_to_be_completed_no_matches_are_left_to_run"));
 					return;
 				}
 			}
 			
 			Optional<Day> d = this.mainApp.showCustomDialog(
 					"DayEditDialog", 
-					I18N.get().getString("new_day"), 
+					I18N.get("new_day"), 
 					(DayEditDialogController c, Stage s) -> {
 						Day newDay = new Day();
 						newDay.numberProperty().set(this.tournamentTableView.getSelectionModel().getSelectedItem().daysProperty().size()+1);
@@ -214,19 +214,19 @@ public class DayHandlingController {
 		try {
 			if (this.tournamentTableView.getSelectionModel().getSelectedItem() == null) {
 				Utils.createDefaultErrorAlert(
-						I18N.get().getString("cant_edit_a_new_day"), 
-						I18N.get().getString("in_order_to_edit_a_day_a_yournament_needs_to_be_selected_in_the_current_frame"));
+						I18N.get("cant_edit_a_new_day"), 
+						I18N.get("in_order_to_edit_a_day_a_yournament_needs_to_be_selected_in_the_current_frame"));
 				return;
 			}
 			if (this.dayTableView.getSelectionModel().getSelectedItem() == null) {
 				Utils.createDefaultErrorAlert(
-						I18N.get().getString("cant_edit_a_new_day"), 
-						I18N.get().getString("in_order_to_edit_a_day_a_day_needs_to_be_selected_in_the_current_frame"));
+						I18N.get("cant_edit_a_new_day"), 
+						I18N.get("in_order_to_edit_a_day_a_day_needs_to_be_selected_in_the_current_frame"));
 				return;
 			}
 			Optional<Day> d = this.mainApp.showCustomDialog(
 					"DayEditDialog", 
-					I18N.get().getString("edit_day"), 
+					I18N.get("edit_day"), 
 					(DayEditDialogController c, Stage s) -> {
 						c.setup(s,this.dayTableView.getSelectionModel().getSelectedItem());
 					},
@@ -248,22 +248,22 @@ public class DayHandlingController {
 		try {
 			if (this.tournamentTableView.getSelectionModel().getSelectedItem() == null) {
 				Utils.createDefaultErrorAlert(
-						String.format(I18N.get().getString("cant_remove"), I18N.get().getString("day")),
-						I18N.get().getString("in_order_to_remove_a_day_a_tournament_needs_to_be_selected_in_the_current_frame"));
+						String.format(I18N.get("cant_remove"), I18N.get("day")),
+						I18N.get("in_order_to_remove_a_day_a_tournament_needs_to_be_selected_in_the_current_frame"));
 				return;
 			}
 			if (this.dayTableView.getSelectionModel().getSelectedItem() == null) {
 				Utils.createDefaultErrorAlert(
-						String.format(I18N.get().getString("cant_remove"), I18N.get().getString("day")),
-						I18N.get().getString("in_order_to_remove_a_day_a_day_needs_to_be_selected_in_the_current_frame"));
+						String.format(I18N.get("cant_remove"), I18N.get("day")),
+						I18N.get("in_order_to_remove_a_day_a_day_needs_to_be_selected_in_the_current_frame"));
 				return;
 			}
 			Day d =this.dayTableView.getSelectionModel().getSelectedItem();
 			
 			if (d.matchesProperty().size() > 0) {
 				if (!Utils.waitUserReplyForConfirmationDialog(
-						String.format(I18N.get().getString("confirm_the_deletion_of_the_whole"), I18N.get().getString("day")), 
-						I18N.get().getString("by_deleting_a_day_you_will_be_deleting_every_match_done_or_todo_in_that_day_as_well_are_you_sure"))) {
+						String.format(I18N.get("confirm_the_deletion_of_the_whole"), I18N.get("day")), 
+						I18N.get("by_deleting_a_day_you_will_be_deleting_every_match_done_or_todo_in_that_day_as_well_are_you_sure"))) {
 					return;
 				}
 			}
@@ -329,14 +329,14 @@ public class DayHandlingController {
 			LOG.debug("Starting generate matches");
 			if (this.tournamentTableView.getSelectionModel().getSelectedItem() == null) {
 				Utils.createDefaultErrorAlert(
-						String.format(I18N.get().getString("cant_generate"), I18N.get().getString("matches")), 
-						I18N.get().getString("in_order_to_generate_matches_you_need_to_select_a_tournament"));
+						String.format(I18N.get("cant_generate"), I18N.get("matches")), 
+						I18N.get("in_order_to_generate_matches_you_need_to_select_a_tournament"));
 				return;
 			}
 			if (this.dayTableView.getSelectionModel().getSelectedItem() == null) {
 				Utils.createDefaultErrorAlert(
-						String.format(I18N.get().getString("cant_generate"), I18N.get().getString("matches")),
-						I18N.get().getString("in_order_to_generate_matches_you_need_to_select_a_day"));
+						String.format(I18N.get("cant_generate"), I18N.get("matches")),
+						I18N.get("in_order_to_generate_matches_you_need_to_select_a_day"));
 				return;
 			}
 			Tournament tournament = this.tournamentTableView.getSelectionModel().getSelectedItem();
@@ -344,14 +344,14 @@ public class DayHandlingController {
 			
 			if (tournament.getNumberOfTeams() < 2) {
 				Utils.createDefaultErrorAlert(
-						String.format(I18N.get().getString("cant_generate"), I18N.get().getString("matches")),
-						I18N.get().getString("in_order_to_generate_matches_you_need_to_select_a_tournbament_with_at_least_2_attending_teams"));
+						String.format(I18N.get("cant_generate"), I18N.get("matches")),
+						I18N.get("in_order_to_generate_matches_you_need_to_select_a_tournbament_with_at_least_2_attending_teams"));
 				return;
 			}
 			if (day.getNumberOfMatchesDone() > 0) {
 				Utils.createDefaultErrorAlert(
-						String.format(I18N.get().getString("cant_generate"), I18N.get().getString("matches")),
-						I18N.get().getString("in_order_to_generate_matches_you_need_to_select_a_day_with_no_matches_already_done_it_would_be_unfair_to_generate_matches_in_a_day_when_someone_has_already_played"));
+						String.format(I18N.get("cant_generate"), I18N.get("matches")),
+						I18N.get("in_order_to_generate_matches_you_need_to_select_a_day_with_no_matches_already_done_it_would_be_unfair_to_generate_matches_in_a_day_when_someone_has_already_played"));
 				return;
 			}
 			
@@ -392,13 +392,13 @@ public class DayHandlingController {
 		try {
 			if (this.matchesTableView.getSelectionModel().getSelectedItem() == null) {
 				Utils.createDefaultErrorAlert(
-						String.format(I18N.get().getString("cant_change"), I18N.get().getString("match")),
-						I18N.get().getString("in_order_to_change_a_match_result_a_match_needs_to_be_selected_in_the_current_frame"));
+						String.format(I18N.get("cant_change"), I18N.get("match")),
+						I18N.get("in_order_to_change_a_match_result_a_match_needs_to_be_selected_in_the_current_frame"));
 				return;
 			}
 			Optional<Match> m = this.mainApp.showCustomDialog(
 					"MatchResultEditDialog",
-					String.format(I18N.get().getString("update_object"), I18N.get().getString("match_result")),
+					String.format(I18N.get("update_object"), I18N.get("match_result")),
 					(MatchResultEditDialogController c, Stage s) -> {
 						c.setup(s, this.matchesTableView.getSelectionModel().getSelectedItem()); 
 					},
@@ -422,8 +422,8 @@ public class DayHandlingController {
 		try {
 			if (this.dayTableView.getSelectionModel().getSelectedItem() == null) {
 				Utils.createDefaultErrorAlert(
-						String.format(I18N.get().getString("cant_generate"), I18N.get().getString("ranking")), 
-						I18N.get().getString("in_order_to_generate_a_ranking_you_need_to_select_a_day"));
+						String.format(I18N.get("cant_generate"), I18N.get("ranking")), 
+						I18N.get("in_order_to_generate_a_ranking_you_need_to_select_a_day"));
 				return;
 			}
 			
@@ -433,7 +433,7 @@ public class DayHandlingController {
 			
 			
 			FileChooser fileChooser = new FileChooser();
-            fileChooser.setTitle(String.format(I18N.get().getString("save_object"), I18N.get().getString("ranking")));
+            fileChooser.setTitle(String.format(I18N.get("save_object"), I18N.get("ranking")));
             fileChooser.setInitialDirectory(new File("."));
             fileChooser.getExtensionFilters().add(new ExtensionFilter("CSV", "*.csv"));
             fileChooser.setInitialFileName("ranking.csv");
@@ -443,9 +443,9 @@ public class DayHandlingController {
     			rf.format(ranks);
     			
     			Utils.createInformationAlert(
-    					String.format(I18N.get().getString("object_produced"), I18N.get().getString("ranking")),
+    					String.format(I18N.get("object_produced"), I18N.get("ranking")),
     					String.format(
-    					I18N.get().getString("the_ranking_of_the_day_of_tournament_has_been_produced_you_can_view_it_at"), 
+    					I18N.get("the_ranking_of_the_day_of_tournament_has_been_produced_you_can_view_it_at"), 
     					day.numberProperty().get(),
     					day.tournamentProperty().get().nameProperty().get(),
     					outFile.getAbsolutePath()
@@ -456,7 +456,7 @@ public class DayHandlingController {
 			Throwable cause = Utils.getBaseCause(e);
 			if (cause.getClass() == FileNotFoundException.class) {
 				Utils.createDefaultErrorAlert(
-						String.format(I18N.get().getString("cant_generate"), I18N.get().getString("ranking")), 
+						String.format(I18N.get("cant_generate"), I18N.get("ranking")), 
 						cause.getLocalizedMessage());
 				return;
 			}
@@ -473,20 +473,20 @@ public class DayHandlingController {
 			LOG.info("Export matches...");
 			if (this.dayTableView.getSelectionModel().getSelectedItem() == null) {
 				Utils.createDefaultErrorAlert(
-						String.format(I18N.get().getString("cant_generate"), I18N.get().getString("matches")), 
-						I18N.get().getString("in_order_to_export_the_matches_you_need_to_select_a_day"));
+						String.format(I18N.get("cant_generate"), I18N.get("matches")), 
+						I18N.get("in_order_to_export_the_matches_you_need_to_select_a_day"));
 				return;
 			}
 			Day day = this.dayTableView.getSelectionModel().getSelectedItem();
 			if (day.getNumberOfMatchesToDo() == 0){
 				Utils.createDefaultErrorAlert(
-						String.format(I18N.get().getString("cant_generate"), I18N.get().getString("matches")),
-						I18N.get().getString("in_order_to_export_matches_you_need_to_select_a_day_with_at_least_one_match_that_needs_to_be_done"));
+						String.format(I18N.get("cant_generate"), I18N.get("matches")),
+						I18N.get("in_order_to_export_matches_you_need_to_select_a_day_with_at_least_one_match_that_needs_to_be_done"));
 				return;
 			}
 			
 			FileChooser fileChooser = new FileChooser();
-            fileChooser.setTitle(String.format(I18N.get().getString("save_object"), I18N.get().getString("matches")));
+            fileChooser.setTitle(String.format(I18N.get("save_object"), I18N.get("matches")));
             fileChooser.setInitialDirectory(new File("."));
             fileChooser.setInitialFileName("matches.csv");
             fileChooser.getExtensionFilters().add(new ExtensionFilter("CSV", "*.csv"));
@@ -496,9 +496,9 @@ public class DayHandlingController {
     			outFile = matchesFormatter.format(day);
     			
     			Utils.createInformationAlert(
-    					String.format(I18N.get().getString("object_produced"), I18N.get().getString("matches")),
+    					String.format(I18N.get("object_produced"), I18N.get("matches")),
     					String.format(
-    					I18N.get().getString("the_matches_needed_to_do_of_the_day_of_tournament_has_been_produced_you_can_view_it_at"), 
+    					I18N.get("the_matches_needed_to_do_of_the_day_of_tournament_has_been_produced_you_can_view_it_at"), 
     					day.numberProperty().get(),
     					day.tournamentProperty().get().nameProperty().get(),
     					outFile.getAbsolutePath()
@@ -510,7 +510,7 @@ public class DayHandlingController {
 			Throwable cause = Utils.getBaseCause(e);
 			if (cause.getClass() == FileNotFoundException.class) {
 				Utils.createDefaultErrorAlert(
-						String.format(I18N.get().getString("cant_generate"), I18N.get().getString("matches")),
+						String.format(I18N.get("cant_generate"), I18N.get("matches")),
 						cause.getLocalizedMessage());
 				return;
 			}

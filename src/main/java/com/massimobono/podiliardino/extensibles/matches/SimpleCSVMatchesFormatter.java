@@ -40,7 +40,7 @@ public class SimpleCSVMatchesFormatter implements Formatter<Day, File> {
 	public File format(Day toFormat) throws FormatException{
 		int i = 0;
 		
-		String[] header = new String[] {I18N.get().getString("match_number"), I18N.get().getString("team1"), I18N.get().getString("team2")};
+		String[] header = new String[] {I18N.get("match_number"), I18N.get("team1"), I18N.get("team2")};
 		
 		try (CSVHandler csvHandler = new CSVHandler(this.csvFile.getAbsolutePath(), header)) {
 			csvHandler.addOption("sep", CSVHandler.DEFAULT_DELIMITER);

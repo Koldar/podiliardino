@@ -38,13 +38,13 @@ public class CSVRankingFormatter implements Formatter<List<Team>, File> {
 		Team team = null;
 		
 		String[] header = new String[] {
-				I18N.get().getString("rank"),
-				I18N.get().getString("team"),
-				I18N.get().getString("points"),
-				I18N.get().getString("goals_difference"),
-				I18N.get().getString("goals_scored"),
-				I18N.get().getString("opponents_points"),
-				I18N.get().getString("opponents_goals")
+				I18N.get("rank"),
+				I18N.get("team"),
+				I18N.get("points"),
+				I18N.get("goals_difference"),
+				I18N.get("goals_scored"),
+				I18N.get("opponents_points"),
+				I18N.get("opponents_goals")
 		};
 		
 		try (CSVHandler csvHandler = new CSVHandler(this.csvFilePath, header)) {
