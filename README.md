@@ -1,9 +1,9 @@
-# podiliardino
+# Podiliardino
 
 Podiliardino is a project aimed to organized tournaments. It allows to manage players, teams, tournaments, days of tournaments, matches and rankings.
 Right now it supports only Swiss tournament type with "CSV" export type. 
 
-# Features
+# Program feature description
 
 Podiliardino divide itself into 4 features:
 
@@ -59,5 +59,29 @@ While you compile the match results of the day, you can press **anytime** "expor
 ### Tournament Advancement
 
 After you totally completed a day, you may add another day in the same tournament. You may not add a day in a tournament if at least one day in the same tourney has still a match to be done.
+
+# Swiss Tournament mode
+
+Podiliardino uses swiss tournament modes. This particularly tournament mode allows to maximize the number of matches inside a tournament,
+therefore allowing to maximize the fun. But what does that means? Here's the rules to build a swiss complliant tournament:
+
+	1. Swiss tournaments accept whatever number of partecipants, both even or odd;
+	2. The tournament is divided in levels (or days). In every level the first team in the ranking fights against the seconds best, the third against the fourth, and so forth;
+	3. Every winner of a match is awarded with 3 points while every loser gets 0 points;
+	4. If the tournament has a odd number of partecipants, the unpaired one will "bye": this means that a fake match with a goals result set to 10/9 (unpaired team scored 10 goals with a dummy team and received 9 goals) will be created;
+	5. A team can bye only once in the tournament;
+	6. The team that will bye is the first team we encounter scrolling up from the bottom of the ranking which hasn't byed yet;
+	7. A team can't fight the same opponent twice in the same tournament.
+
+The ranking is computed in the following way:
+
+In the first day, the teams are allocated in the ranking randomly: however, each of them will fight according to the rules said before. But from the second day onwards the ranking can be computed in the following way:
+
+	1. team X is ranked higher than Y if X has more points than Y;
+	2. if the points are the same, team X is ranked higher than Y if the differences of goals of X (goals scored in the tournament subtracted to goals received in the tournament) is greater than Y;
+	3. if the differences of goals are the same, team X is ranked higher than Y if the goals scored in the tournament by X are greater than Y;
+	4. if the goals scored are the same, team X is ranked higher than Y if the number of goals scored by every opponent of X is greater than the number of goals scored by every opponent of Y.  
+
+ 
  
  
