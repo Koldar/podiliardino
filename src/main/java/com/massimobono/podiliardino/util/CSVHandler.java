@@ -11,7 +11,43 @@ import java.util.Map.Entry;
 /**
  * A utility class used to easily write CSV files
  * 
+ * CSV files are text files formatted in to columns; an example might be:
+ * 
+ * <pre><code>
+ * 	sep=;
+ * 	COLUMN1;COLUMN2;COLUMN3;COLUMN4
+ * 	1;2;3;4
+ *  5;6;7;8
+ *  9;10;11;12
+ * </code></pre>
+ * 
+ * CSV are divided into 3 sectors:
+ * <ol>
+ * 	<li>an option section, where you can establish some option values. For example you may set the delimiter of each column (in the example ";");</li>
+ * 	<li>an header where you define the columns of the CSV</li>
+ * 	<li>a list fo rows: for each column, you define a single value</li>
+ * </ol>
+ * 
+ * <h1>How to use the class</h1>
+ * 
+ * Using this class is easy: you create a new {@link CSVHandler}, you setup the options you want to set (recommended only if you want to improve
+ * CSV portability) and then you call {@link #printRow(String...)} as many times as rows you want to add.
+ * 
+ * <pre><code>
+ *  header = new String[] {"X", "Y", "Z"};
+ *  this.csvFile = new File(...);
+ * 	try (CSVHandler csvHandler = new CSVHandler(this.csvFile.getAbsolutePath(), header)) {
+			csvHandler.addOption("sep", CSVHandler.DEFAULT_DELIMITER);
+			for (int i=0; i<points3D.size(); i++) {
+				Point3D v = points3D.get(i)
+				csvHandler.printRow(v.getX(), v.getY(), v.getZ());
+			}
+		}
+ * </code></pre>
+ * 
+ * 
  * @author massi
+ * @version 1.0
  *
  */
 public class CSVHandler implements Closeable{
@@ -42,6 +78,17 @@ public class CSVHandler implements Closeable{
 		this(path, DEFAULT_DELIMITER, "UTF-8", header);
 	}
 	
+	/**
+	 * Adds an option in the CSV
+	 * 
+	 * Available options are:
+	 * <ul>
+	 * 	<li>sep: the column sepearator to use in the csv</li>
+	 * </ul>
+	 * 
+	 * @param key the option name
+	 * @param value the option value
+	 */
 	public void addOption(String key, String value) {
 		this.options.put(key, value);
 	}
@@ -80,6 +127,12 @@ public class CSVHandler implements Closeable{
 		}
 	}
 	
+	/**
+	 * Print a row inside the CSV
+	 * 
+	 * @param values the values of the row you want to add
+	 * @throws IOException if the <tt>values</tt> length mismatches with the length of the header you have given
+	 */
 	public void printRow(String... values) throws IOException{
 		if (values.length != this.header.length) {
 			throw new IOException("values length mismatches with header length");
